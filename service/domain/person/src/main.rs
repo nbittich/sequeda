@@ -1,10 +1,8 @@
 use std::{env::var, net::SocketAddr, str::FromStr};
 
 use sequeda_store::StoreClient;
-use tracing::Level;
-use tracing_subscriber::FmtSubscriber;
 
-use sequeda_service_common::{SERVICE_APPLICATION_NAME, SERVICE_HOST, SERVICE_PORT};
+use sequeda_service_common::{setup_tracing, SERVICE_APPLICATION_NAME, SERVICE_HOST, SERVICE_PORT};
 
 mod entity;
 mod router;
@@ -29,12 +27,4 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
-}
-
-fn setup_tracing() {
-    let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }

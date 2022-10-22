@@ -4,26 +4,30 @@ mod request_handler;
 use axum::{
     extract::Extension,
     http::{Request, Response},
-    routing::get,
+    routing::any,
     Router,
 };
 use hyper::{client::HttpConnector, Body};
-use sequeda_service_common::{SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};
+
+use hyper_rustls::HttpsConnector;
+use sequeda_service_common::{setup_tracing, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};
 use std::{env::var, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
 
 use crate::{config::Config, request_handler::RequestHandler};
 
-type Client = hyper::client::Client<HttpConnector, Body>;
+type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
-const CONFIG_FILE_NAME: &str = "gateway.yml";
+const CONFIG_FILE_NAME: &str = "CONFIG_FILE_NAME";
 
 #[tokio::main]
 async fn main() {
+    setup_tracing();
     let host = var(SERVICE_HOST).unwrap_or_else(|_| String::from("127.0.0.1"));
     let port = var(SERVICE_PORT).unwrap_or_else(|_| String::from("0"));
     let config_volume = var(SERVICE_CONFIG_VOLUME).unwrap_or_else(|_| String::from("/tmp"));
+    let config_file_name = var(CONFIG_FILE_NAME).unwrap_or_else(|_| String::from("gateway.yml"));
 
-    let path_config = PathBuf::new().join(&config_volume).join(CONFIG_FILE_NAME);
+    let path_config = PathBuf::new().join(&config_volume).join(config_file_name);
 
     if !path_config.exists() {
         panic!("Missing config `{path_config:?}`");
@@ -32,10 +36,16 @@ async fn main() {
     let config: Config = Config::deserialize_file(path_config.as_path());
     let request_handler: RequestHandler = RequestHandler::from_config(config);
 
-    let client = Client::new();
+    let https = hyper_rustls::HttpsConnectorBuilder::new()
+        .with_native_roots()
+        .https_or_http()
+        .enable_http1()
+        .build();
+
+    let client: Client = hyper::client::Client::builder().build(https);
 
     let app = Router::new()
-        .route("/", get(handler))
+        .route("/*path", any(handler))
         .layer(Extension(client))
         .layer(Extension(Arc::new(request_handler)));
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
@@ -54,19 +64,23 @@ async fn handler(
     mut req: Request<Body>,
 ) -> Response<Body> {
     match request_handler.handle(&mut req) {
-        Ok(_) => match client.request(req).await {
-            Ok(response) => response,
-            Err(er) => {
-                tracing::trace!("error in request {er}");
-                Response::builder()
-                    .status(500)
-                    .body(Body::from("unexpected error".as_bytes()))
-                    .unwrap()
+        Ok(_) => {
+            tracing::debug!("req: {req:?}");
+
+            match client.request(req).await {
+                Ok(response) => response,
+                Err(er) => {
+                    tracing::debug!("error in request {er}");
+                    Response::builder()
+                        .status(500)
+                        .body(Body::from("unexpected error".as_bytes()))
+                        .unwrap()
+                }
             }
-        },
+        }
         Err(e) => Response::builder()
             .status(500)
-            .body(Body::from(format!("unexpected error {e}")))
+            .body(Body::from(format!("unexpected error: {e}")))
             .unwrap(),
     }
 }

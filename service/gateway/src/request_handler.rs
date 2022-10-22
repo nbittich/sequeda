@@ -1,7 +1,7 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 
 use axum::{headers::HeaderName, http::HeaderValue};
-use hyper::{Body, Request, Uri};
+use hyper::{header::HOST, Body, Request, Uri};
 use regex::Regex;
 
 use crate::config::{Config, Route};
@@ -17,7 +17,7 @@ impl Display for RequestHandlerError {
         write!(f, "{}", self.msg)
     }
 }
-
+#[derive(Debug)]
 pub struct RequestHandler {
     handlers: Vec<RouteHandler>,
 }
@@ -68,12 +68,21 @@ impl RequestHandler {
                 };
                 compiled_filters.push(compiled_filter);
             }
-            route_handlers.push(RouteHandler {
+
+            let host = {
+                let iri = Uri::try_from(&uri).unwrap();
+                HeaderValue::from_str(iri.host().unwrap()).unwrap()
+            };
+            let route = RouteHandler {
                 uri,
                 id,
+                host,
                 filters: compiled_filters,
                 predicates: compiled_predicates,
-            });
+            };
+            tracing::debug!("route `{:?}` added", &route);
+
+            route_handlers.push(route);
         }
         RequestHandler {
             handlers: route_handlers,
@@ -105,8 +114,14 @@ impl RequestHandler {
                 }
             }
             let uri = &handler.uri;
-            *req.uri_mut() = Uri::try_from(format!("{uri}{path}"))
+            let uri = Uri::try_from(format!("{uri}{path}"))
                 .map_err(|e| RequestHandlerError { msg: e.to_string() })?;
+            tracing::debug!("uri {uri}");
+            *req.uri_mut() = uri;
+            req.headers_mut().remove(HOST);
+            req.headers_mut().insert(HOST, handler.host.clone());
+
+            tracing::debug!("headers {:?}", req.headers());
         } else {
             return Err(RequestHandlerError {
                 msg: format!("Could not find an handler for that uri {}", req.uri()),
@@ -117,22 +132,24 @@ impl RequestHandler {
     }
 }
 
+#[derive(Debug)]
 struct RouteHandler {
     id: String,
     uri: String,
+    host: HeaderValue,
     predicates: Vec<CompiledPredicate>,
     filters: Vec<CompiledFilter>,
 }
-
+#[derive(Debug)]
 enum CompiledPredicate {
     Host(String),
     Path(Regex),
 }
+#[derive(Debug)]
 enum CompiledFilter {
     RewritePath { source: Regex, dest: String },
     AddRequestHeader { key: HeaderName, value: HeaderValue },
 }
-
 impl CompiledPredicate {
     fn match_req(&self, req: &Request<Body>) -> bool {
         let uri = req.uri();

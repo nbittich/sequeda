@@ -7,3 +7,5 @@ edition = {workspace = true}
 
 [dependencies]
 axum = {workspace=true}
+tracing-subscriber = {workspace = true, features=["env-filter"]}
+tracing = {workspace = true}

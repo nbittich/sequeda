@@ -28,6 +28,7 @@ pub enum Predicate {
 pub enum Filter {
     RewritePath { source: String, dest: String },
     AddRequestHeader { key: String, value: String },
+    RemoveRequestHeader(String),
 }
 
 impl Config {
@@ -78,33 +79,44 @@ mod test {
               - !add_request_header
                  key: "X-Forwarded-Port"
                  value: "443"
+            - id: auth2
+              uri: http://auth2.somehost.org:8080
+              predicates:
+              - !host auth2.somehost.org
+              filters:
+              - !remove_request_header "X-Forwarded-Port"
         "#;
 
         let config = Config::deserialize(config);
         assert_eq!(
             config,
             Config {
-                routes: vec![Route {
-                    id: "yahoo_finance_chart".into(),
-                    uri: "https://query1.finance.yahoo.com".into(),
-                    predicates: vec![Predicate::Path("/proxy/yahoo-finance/chart/**".into())],
-                    filters: vec![
-                        Filter::RewritePath {
+                routes: vec![
+                    Route {
+                        id: "yahoo_finance_chart".into(),
+                        uri: "https://query1.finance.yahoo.com".into(),
+                        predicates: vec![Predicate::Path("/proxy/yahoo-finance/chart/**".into())],
+                        filters: vec![Filter::RewritePath {
                             source: "/proxy/yahoo-finance/chart/(?P<segment>.*)".into(),
                             dest: "/v8/finance/chart/${segment}".into(),
-                        }
-                    ],
-                },Route {
-                    id: "auth".into(),
-                    uri: "http://auth.somehost.org:8080".into(),
-                    predicates: vec![Predicate::Host("auth.somehost.org".into())],
-                    filters: vec![
-                        Filter::AddRequestHeader {
+                        }],
+                    },
+                    Route {
+                        id: "auth".into(),
+                        uri: "http://auth.somehost.org:8080".into(),
+                        predicates: vec![Predicate::Host("auth.somehost.org".into())],
+                        filters: vec![Filter::AddRequestHeader {
                             key: "X-Forwarded-Port".into(),
                             value: "443".into()
-                        }
-                    ],
-                }],
+                        }],
+                    },
+                    Route {
+                        id: "auth2".into(),
+                        uri: "http://auth2.somehost.org:8080".into(),
+                        predicates: vec![Predicate::Host("auth2.somehost.org".into())],
+                        filters: vec![Filter::RemoveRequestHeader("X-Forwarded-Port".into())],
+                    }
+                ],
             }
         );
     }

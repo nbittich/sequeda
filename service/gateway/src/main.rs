@@ -45,7 +45,7 @@ async fn main() {
     let client: Client = hyper::client::Client::builder().build(https);
 
     let app = Router::new()
-        .fallback( any(handler))
+        .fallback(any(handler))
         .layer(Extension(client))
         .layer(Extension(Arc::new(request_handler)));
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();

@@ -65,6 +65,9 @@ impl RequestHandler {
                             value: HeaderValue::from_str(&value).unwrap(),
                         }
                     }
+                    crate::config::Filter::RemoveRequestHeader(header) => {
+                        CompiledFilter::RemoveRequestHeader(HeaderName::from_str(&header).unwrap())
+                    }
                 };
                 compiled_filters.push(compiled_filter);
             }
@@ -111,6 +114,10 @@ impl RequestHandler {
                         let headers = req.headers_mut();
                         headers.append(key, value.clone());
                     }
+                    CompiledFilter::RemoveRequestHeader(header_name) => {
+                        let headers = req.headers_mut();
+                        headers.remove(header_name);
+                    }
                 }
             }
             let uri = &handler.uri;
@@ -149,6 +156,7 @@ enum CompiledPredicate {
 enum CompiledFilter {
     RewritePath { source: Regex, dest: String },
     AddRequestHeader { key: HeaderName, value: HeaderValue },
+    RemoveRequestHeader(HeaderName),
 }
 impl CompiledPredicate {
     fn match_req(&self, req: &Request<Body>) -> bool {

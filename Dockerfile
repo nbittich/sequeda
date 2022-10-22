@@ -29,7 +29,6 @@ ARG CRATE_NAME
 
 WORKDIR /app
 COPY --from=builder /app/target/release/${CRATE_NAME} /app
-RUN chmod a+x /app/${CRATE_NAME}
 ENV CRATE=${CRATE_NAME}
 ENV RUST_LOG=INFO
-CMD "./${CRATE}"
+ENTRYPOINT  "/app/${CRATE}"

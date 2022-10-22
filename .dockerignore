@@ -1,3 +1,5 @@
 /sequeda-docker
 /target
 /*/.vscode/**
+.clocignore
+cloc.sh

@@ -29,4 +29,5 @@ A first goal would be to replace java (almost) entirely, and keep only the relev
 ## Docker usage
 
 `docker build -t sequeda/gateway --build-arg CRATE_NAME=sequeda_gateway . # replace arg by the target crate`
+
 `docker run -v /tmp:/tmp -p 8080:8080 -e SERVICE_HOST=0.0.0.0 -e SERVICE_PORT=8080  -it sequeda`

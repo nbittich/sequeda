@@ -1,0 +1,5 @@
+pub const PUB_PERSISTENT_DIR: &str = "PUB_PERSISTENT_DIR";
+pub const PUB_HOST: &str = "PUB_HOST";
+pub const PUB_PORT: &str = "PUB_PORT";
+pub const PUB_INTERVAL_CONSUMER: &str = "PUB_INTERVAL_CONSUMER";
+pub const PUB_INTERVAL_SYNC_FILE: &str = "PUB_INTERVAL_SYNC_FILE";

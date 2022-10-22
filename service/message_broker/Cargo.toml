@@ -1,0 +1,23 @@
+[package]
+name = "sequeda_message_broker"
+version = {workspace = true}
+edition = {workspace = true}
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = {workspace=true, features=["full"]}
+tower={workspace=true, features = ["util"]}
+tracing = {workspace=true}
+tracing-subscriber = { workspace=true, features = ["env-filter"] }
+axum = {workspace=true, features=["ws"]}
+mongodb = {workspace=true}
+chrono ={workspace=true, features=["serde"]}
+uuid ={workspace=true, features=["v4"]}
+bincode={workspace=true}
+serde = {workspace=true, features = ["derive"]}
+serde_json = {workspace=true}
+dirs={workspace=true}
+futures-util={workspace=true}
+queue-file ={workspace=true}
+sequeda_common = {path = "../../libraries/common"}

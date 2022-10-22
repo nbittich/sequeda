@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  ####### MongoDB #######
+  mongo:
+    image: mongo
+    networks:
+      sequeda:
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - ./data/db:/data/db
+  ####### Keycloak #######
+  keycloak_postgresql:
+    restart: always
+    networks:
+      sequeda:
+    image: "postgres"
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    volumes:
+      - ./data/keycloak_postgresql:/var/lib/postgresql/data
+  keycloak:
+    restart: always
+    image: nbittich/keycloak:19.0.0
+    networks:
+      sequeda:
+    environment:
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_DB: "postgres"
+      KC_DB_URL: "jdbc:postgresql://keycloak_postgresql:5432/keycloak"
+      KC_PROXY: edge
+    command: start --optimized
+  ####### Redis #######
+  redis:
+    image: redis:alpine
+    restart: always
+    networks:
+      sequeda:
+    command: redis-server  --appendonly yes
+    volumes:
+      - ./data/redis:/data
+      
+networks:
+  sequeda:

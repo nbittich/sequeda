@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  mongo-express:
+    image: mongo-express
+    networks:
+      sequeda:
+    restart: "no"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/
+    ports:
+      - 8081:8081
+  keycloak:
+    environment:
+      KC_HOSTNAME: auth.somehost.org
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: root
+    user: root
+    networks:
+      sequeda:
+        aliases:
+          - auth.somehost.org
+    volumes:
+        - ./config/keycloak-dev/export:/tmp/export
+        - ./config/keycloak-dev/import:/tmp/import
+  mongo:
+    ports:
+      - 27019:27017
+  redis:
+    ports:
+      - "6380:6379"
+  tlsproxy:
+    image: caddy:2
+    networks:
+      sequeda:
+    ports:
+      - "443:443"
+    environment:
+      API_ADDRESS: "api.somehost.org"
+      AUTH_ADDRESS: "auth.somehost.org"
+    volumes:
+      - ./config/tlsproxy-mock/Caddyfile:/etc/caddy/Caddyfile

@@ -70,6 +70,11 @@ mod test {
               - !rewrite_path
                  source: /proxy/yahoo-finance/chart/(?P<segment>.*)
                  dest: /v8/finance/chart/${segment}
+            - id: auth
+              uri: http://auth.somehost.org:8080
+              predicates:
+              - !host auth.somehost.org
+              filters:
               - !add_request_header
                  key: "X-Forwarded-Port"
                  value: "443"
@@ -87,7 +92,13 @@ mod test {
                         Filter::RewritePath {
                             source: "/proxy/yahoo-finance/chart/(?P<segment>.*)".into(),
                             dest: "/v8/finance/chart/${segment}".into(),
-                        },
+                        }
+                    ],
+                },Route {
+                    id: "auth".into(),
+                    uri: "http://auth.somehost.org:8080".into(),
+                    predicates: vec![Predicate::Host("auth.somehost.org".into())],
+                    filters: vec![
                         Filter::AddRequestHeader {
                             key: "X-Forwarded-Port".into(),
                             value: "443".into()

@@ -1,4 +1,4 @@
 {$AUTH_ADDRESS}:443 {
-  reverse_proxy keycloak:8080
+  reverse_proxy gateway:80
   tls internal
 }

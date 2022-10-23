@@ -63,10 +63,10 @@ async fn handler(
     Extension(request_handler): Extension<Arc<RequestHandler>>,
     mut req: Request<Body>,
 ) -> Response<Body> {
+    tracing::debug!("req: {req:?}");
+
     match request_handler.handle(&mut req) {
         Ok(_) => {
-            tracing::debug!("req: {req:?}");
-
             match client.request(req).await {
                 Ok(response) => response,
                 Err(er) => {

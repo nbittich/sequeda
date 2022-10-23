@@ -162,7 +162,13 @@ impl CompiledPredicate {
     fn match_req(&self, req: &Request<Body>) -> bool {
         let uri = req.uri();
         match self {
-            CompiledPredicate::Host(host) => uri.host().eq(&Some(host)),
+            CompiledPredicate::Host(host) => {
+                let host_from_req = uri
+                    .host()
+                    .or_else(|| req.headers().get(HOST).and_then(|h| h.to_str().ok()));
+                tracing::debug!("{host}, {:?}", &host_from_req);
+                host_from_req.eq(&Some(host))
+            }
             CompiledPredicate::Path(path_re) => path_re.is_match(uri.path()),
         }
     }

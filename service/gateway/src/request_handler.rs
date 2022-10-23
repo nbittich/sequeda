@@ -96,7 +96,7 @@ impl RequestHandler {
         let handler = self
             .handlers
             .iter()
-            .find(|h| h.predicates.iter().any(|p| p.match_req(req)));
+            .find(|h| h.predicates.iter().all(|p| p.match_req(req)));
 
         if let Some(handler) = handler {
             let uri = req.uri().clone();

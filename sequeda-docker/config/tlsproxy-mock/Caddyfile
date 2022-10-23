@@ -2,3 +2,7 @@
   reverse_proxy gateway:80
   tls internal
 }
+{$API_ADDRESS}:443 {
+  reverse_proxy gateway:80
+  tls internal
+}

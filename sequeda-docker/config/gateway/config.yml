@@ -2,6 +2,7 @@ routes:
   - id: yahoo_finance_chart
     uri: https://query1.finance.yahoo.com
     predicates:
+    - !host api.somehost.org
     - !path /proxy/yahoo-finance/chart/**
     filters:
     - !rewrite_path

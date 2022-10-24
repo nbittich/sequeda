@@ -1,32 +1,28 @@
 use std::env;
 
-use axum::response::{IntoResponse, Redirect, Response};
 use openidconnect::core::{
     CoreAuthDisplay, CoreClaimName, CoreClaimType, CoreClient, CoreClientAuthMethod, CoreGrantType,
     CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm,
     CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm, CoreResponseMode, CoreResponseType,
-    CoreSubjectIdentifierType, CoreAuthPrompt,
+    CoreSubjectIdentifierType,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AdditionalProviderMetadata, AuthenticationFlow, CsrfToken, Nonce, ProviderMetadata,
-    RedirectUrl, RevocationUrl, Scope, AuthorizationRequest,
+    RedirectUrl, RevocationUrl, Scope,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
-const OPENID_CLIENT_ID: &str = "OPENID_CLIENT_ID";
-const OPENID_CLIENT_SECRET: &str = "OPENID_CLIENT_SECRET";
-const OPENID_ISSUER_URL: &str = "OPENID_ISSUER_URL";
-//const OPENID_REDIRECT_URL: &str = "OPENID_REDIRECT_URL";
-const OPENID_SCOPES: &str = "OPENID_SCOPES";
+use super::{
+    RawOpenIdClient, OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES,
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct RevocationEndpointProviderMetadata {
     revocation_endpoint: String,
 }
-type OpenIdClient<'a> = AuthorizationRequest<'a,  CoreAuthDisplay, CoreAuthPrompt, CoreResponseType>;
 
 impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
 type OpenIdProviderMetadata = ProviderMetadata<
@@ -49,38 +45,43 @@ type OpenIdProviderMetadata = ProviderMetadata<
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-pub struct AuthRedirect {
-    authorize_url: Url,
-    csrf_state: CsrfToken,
-    nonce: Nonce,
-    redirect_url: String,
+pub struct OpenIdClient {
+    client: RawOpenIdClient,
 }
 
-impl IntoResponse for AuthRedirect {
-    fn into_response(self) -> Response {
-        Redirect::temporary(self.authorize_url.as_str()).into_response()
-    }
-}
-
-impl AuthRedirect {
-    #[allow(dead_code)]
-    pub async fn new(redirect_url: &str) -> AuthRedirect {
-        let redirect_url =
-            RedirectUrl::new(redirect_url.to_string()).expect("Invalid redirect URL");
-
-        let scopes: Vec<Scope> = env::var(OPENID_SCOPES)
+#[allow(dead_code)]
+impl OpenIdClient {
+    fn get_scopes() -> Vec<Scope> {
+        env::var(OPENID_SCOPES)
             .unwrap_or("roles, email, profile".into())
             .split(",")
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
-            .collect();
+            .collect()
+    }
+    pub fn get_authorize_url(
+        &self,
+        redirect_url: &str,
+    ) -> (RawOpenIdClient, Url, CsrfToken, Nonce) {
+        let scopes = Self::get_scopes();
 
-        // let redirect_url = RedirectUrl::new(
-        //     env::var(OPENID_REDIRECT_URL)
-        //         .expect("Missing the OPENID_REDIRECT_URL environment variable."),
-        // )
-        // .expect("Invalid redirect URL");
+        let redirect_url =
+            RedirectUrl::new(redirect_url.to_string()).expect("Invalid redirect URL");
 
+        let client = self.client.clone().set_redirect_uri(redirect_url);
+
+        let mut authorize_url_req = client.authorize_url(
+            AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
+            CsrfToken::new_random,
+            Nonce::new_random,
+        );
+        for scope in scopes {
+            authorize_url_req = authorize_url_req.add_scope(scope);
+        }
+        let (url, csrf, nonce) = authorize_url_req.url();
+        (client, url, csrf, nonce)
+    }
+    pub async fn new() -> Self {
         let client_id = ClientId::new(
             env::var(OPENID_CLIENT_ID).expect("Missing the OPENID_CLIENT_ID environment variable."),
         );
@@ -107,33 +108,14 @@ impl AuthRedirect {
             .revocation_endpoint
             .clone();
 
-        tracing::info!("Discovered Openid revocation endpoint: {revocation_endpoint}");
-
         let client =
             CoreClient::from_provider_metadata(provider_metadata, client_id, Some(client_secret))
-                .set_redirect_uri(redirect_url.clone())
                 .set_revocation_uri(
                     RevocationUrl::new(revocation_endpoint)
                         .expect("Invalid revocation endpoint URL"),
                 );
 
-        let mut client = client.authorize_url(
-            AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
-            CsrfToken::new_random,
-            Nonce::new_random,
-        );
-        for scope in scopes {
-            client = client.add_scope(scope);
-        }
-
-        let (authorize_url, csrf_state, nonce) = client.url();
-
-        AuthRedirect {
-            authorize_url,
-            csrf_state,
-            nonce,
-            redirect_url: redirect_url.to_string(),
-        }
+        OpenIdClient { client }
     }
 }
 

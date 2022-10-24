@@ -1,10 +1,11 @@
 mod config;
+mod openid;
 mod request_handler;
-mod auth_redirect;
 
 use axum::{
     extract::Extension,
     http::{Request, Response},
+    response::IntoResponse,
     routing::any,
     Router,
 };
@@ -19,7 +20,6 @@ use crate::{config::Config, request_handler::RequestHandler};
 type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
 const CONFIG_FILE_NAME: &str = "CONFIG_FILE_NAME";
-
 
 #[tokio::main]
 async fn main() {
@@ -64,22 +64,20 @@ async fn handler(
     Extension(client): Extension<Client>,
     Extension(request_handler): Extension<Arc<RequestHandler>>,
     mut req: Request<Body>,
-) -> Response<Body> {
+) -> impl IntoResponse {
     tracing::debug!("req: {req:?}");
 
     match request_handler.handle(&mut req) {
-        Ok(_) => {
-            match client.request(req).await {
-                Ok(response) => response,
-                Err(er) => {
-                    tracing::debug!("error in request {er}");
-                    Response::builder()
-                        .status(500)
-                        .body(Body::from("unexpected error".as_bytes()))
-                        .unwrap()
-                }
+        Ok(_) => match client.request(req).await {
+            Ok(response) => response,
+            Err(er) => {
+                tracing::debug!("error in request {er}");
+                Response::builder()
+                    .status(500)
+                    .body(Body::from("unexpected error".as_bytes()))
+                    .unwrap()
             }
-        }
+        },
         Err(e) => Response::builder()
             .status(500)
             .body(Body::from(format!("unexpected error: {e}")))

@@ -1,5 +1,6 @@
 mod config;
 mod request_handler;
+mod auth_redirect;
 
 use axum::{
     extract::Extension,
@@ -18,6 +19,7 @@ use crate::{config::Config, request_handler::RequestHandler};
 type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
 const CONFIG_FILE_NAME: &str = "CONFIG_FILE_NAME";
+
 
 #[tokio::main]
 async fn main() {

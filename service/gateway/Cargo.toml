@@ -17,4 +17,6 @@ tracing = { workspace=true }
 tracing-subscriber = { workspace=true }
 hyper-rustls = { workspace=true }
 rustls = { workspace=true }
+openidconnect = {workspace=true, default-features = false}
+
 sequeda_service_common = {path = "../service_common"}

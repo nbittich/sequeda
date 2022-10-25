@@ -2,15 +2,15 @@ use std::env;
 
 use openidconnect::core::{
     CoreAuthDisplay, CoreClaimName, CoreClaimType, CoreClient, CoreClientAuthMethod, CoreGrantType,
-    CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm,
-    CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm, CoreResponseMode, CoreResponseType,
-    CoreSubjectIdentifierType,
+    CoreIdTokenClaims, CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse,
+    CoreJweContentEncryptionAlgorithm, CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm,
+    CoreResponseMode, CoreResponseType, CoreRevocableToken, CoreSubjectIdentifierType,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
-    AdditionalProviderMetadata, AuthenticationFlow, CsrfToken, Nonce, ProviderMetadata,
-    RedirectUrl, RevocationUrl, Scope,
+    AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce,
+    ProviderMetadata, RedirectUrl, RevocableToken, RevocationUrl, Scope, OAuth2TokenResponse,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
@@ -49,6 +49,12 @@ pub struct OpenIdClient {
     client: RawOpenIdClient,
 }
 
+#[derive(Debug, Clone)]
+pub struct OpenIdToken {
+    pub claims: CoreIdTokenClaims,
+    pub token_to_revoke: CoreRevocableToken,
+}
+
 #[allow(dead_code)]
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
@@ -62,6 +68,7 @@ impl OpenIdClient {
     pub fn get_authorize_url(
         &self,
         redirect_url: &str,
+        nonce: Nonce
     ) -> (RawOpenIdClient, Url, CsrfToken, Nonce) {
         let scopes = Self::get_scopes();
 
@@ -73,7 +80,7 @@ impl OpenIdClient {
         let mut authorize_url_req = client.authorize_url(
             AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
             CsrfToken::new_random,
-            Nonce::new_random,
+            || nonce,
         );
         for scope in scopes {
             authorize_url_req = authorize_url_req.add_scope(scope);
@@ -117,6 +124,41 @@ impl OpenIdClient {
 
         OpenIdClient { client }
     }
+
+    pub async fn exchange_token(
+        &self,
+        auth_request: super::auth_request::AuthRequest,
+        nonce: Nonce
+    ) -> OpenIdToken {
+        let state = CsrfToken::new(auth_request.state);
+        let code = AuthorizationCode::new(auth_request.code);
+        let token_response = self
+            .client
+            .exchange_code(code)
+            .request_async(async_http_client)
+            .await
+            .unwrap_or_else(|err| {
+                handle_error(&err, "Failed to contact token endpoint");
+                unreachable!();
+            });
+        let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
+        let claims: CoreIdTokenClaims = token_response
+            .extra_fields()
+            .id_token()
+            .expect("id token missing")
+            .claims(&id_token_verifier, &nonce)
+            .unwrap().clone();
+
+        let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
+            Some(token) => token.into(),
+            None => token_response.access_token().into(),
+        };
+
+        OpenIdToken {
+            claims,
+            token_to_revoke,
+        }
+    }
 }
 
 fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) {
@@ -126,5 +168,5 @@ fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) {
         err_msg += &format!("\n    caused by: {}", cause);
         cur_fail = cause.source();
     }
-    panic!("{}", err_msg)
+    panic!("{}", err_msg) // todo should not panic but returns an error
 }

@@ -6,10 +6,10 @@ use super::{client::OpenIdClient, RawOpenIdClient};
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct AuthRedirect {
-    client: RawOpenIdClient,
-    authorize_url: Url,
-    csrf_state: CsrfToken,
-    nonce: Nonce,
+    pub client: RawOpenIdClient,
+    pub authorize_url: Url,
+    pub csrf_state: CsrfToken,
+    pub nonce: Nonce,
 }
 
 impl IntoResponse for AuthRedirect {
@@ -20,8 +20,8 @@ impl IntoResponse for AuthRedirect {
 
 #[allow(dead_code)]
 impl AuthRedirect {
-    pub async fn new(client: &OpenIdClient, redirect_url: &str) -> AuthRedirect {
-        let (client, authorize_url, csrf_state, nonce) = client.get_authorize_url(redirect_url);
+    pub async fn new(client: &OpenIdClient, redirect_url: &str, nonce: Nonce) -> AuthRedirect {
+        let (client, authorize_url, csrf_state, nonce) = client.get_authorize_url(redirect_url, nonce);
         AuthRedirect {
             client,
             authorize_url,

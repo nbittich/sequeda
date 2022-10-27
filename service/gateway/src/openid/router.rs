@@ -4,30 +4,25 @@ use async_redis_session::RedisSessionStore;
 use async_session::{Session, SessionStore};
 use axum::{
     extract::Query,
-    headers,
     response::{IntoResponse, Redirect, Response},
     routing::get,
     routing::Router,
     Extension, TypedHeader,
 };
 use axum_sessions::{extractors::WritableSession, SessionLayer};
-use hyper::{header::SET_COOKIE, Body, HeaderMap};
 use openidconnect::Nonce;
 use rand::Rng;
-
-const REDIS_URL: &str = "SESSION_REDIS_URL";
-const COOKIE_NAME: &str = "SEQUEDA_SESSION";
-const AUTH_REDIRECT_PATH: &str = "/login/authorized";
+use crate::constant::{APP_ROOT_URL,REDIS_URL, AUTH_REDIRECT_PATH, COOKIE_NAME};
 
 use super::{
-    auth_redirect::AuthRedirect, auth_request::AuthRequest, client::OpenIdClient, APP_ROOT_URL,
+    auth_redirect::AuthRedirect, auth_request::AuthRequest, client::OpenIdClient,
 };
 #[derive(Clone)]
 struct Config {
     redirect_url: String,
 }
 
-async fn open_id_router() {
+pub async fn open_id_router() -> Router {
     let redis_url = env::var(REDIS_URL)
         .expect("Missing the REDIS_URL environment variable. e.g `redis://127.0.0.1`");
 
@@ -39,14 +34,14 @@ async fn open_id_router() {
     let secret = rand::thread_rng().gen::<[u8; 128]>();
     let session_layer = SessionLayer::new(store, &secret);
     let openid_client = OpenIdClient::new().await;
-    let app: Router<Response<Body>> = Router::new()
+    Router::new()
         .route("/login", get(login))
         .route(AUTH_REDIRECT_PATH, get(login_authorized))
         .route("/logout", get(logout))
         //.layer(Extension(store))
         .layer(Extension(openid_client))
         .layer(session_layer)
-        .layer(Extension(Config { redirect_url }));
+        .layer(Extension(Config { redirect_url }))
 }
 
 async fn login(
@@ -64,9 +59,7 @@ async fn login(
 
 async fn logout(
     mut session: WritableSession,
-    TypedHeader(cookies): TypedHeader<headers::Cookie>,
 ) -> impl IntoResponse {
-    let cookie = cookies.get(COOKIE_NAME).unwrap();
     session.destroy();
 
     Redirect::to("/login")
@@ -80,7 +73,7 @@ async fn login_authorized(
     let nonce: Nonce = session.get("_nonce").expect("nonce not in sessions");
     let token = client.exchange_token(query, nonce).await;
     session.regenerate();
-    session.insert("user", token.claims).unwrap();
+    session.insert(COOKIE_NAME, token.claims).unwrap();
 
     Redirect::to("/")
 }

@@ -10,14 +10,15 @@ use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce,
-    ProviderMetadata, RedirectUrl, RevocableToken, RevocationUrl, Scope, OAuth2TokenResponse,
+    ProviderMetadata, RedirectUrl,  RevocationUrl, Scope, OAuth2TokenResponse,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    RawOpenIdClient, OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES,
+    RawOpenIdClient, 
 };
+use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES,};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct RevocationEndpointProviderMetadata {
@@ -130,7 +131,7 @@ impl OpenIdClient {
         auth_request: super::auth_request::AuthRequest,
         nonce: Nonce
     ) -> OpenIdToken {
-        let state = CsrfToken::new(auth_request.state);
+        //let _state = CsrfToken::new(auth_request.state);
         let code = AuthorizationCode::new(auth_request.code);
         let token_response = self
             .client

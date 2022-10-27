@@ -3,12 +3,8 @@ mod auth_request;
 mod client;
 mod router;
 
-pub const OPENID_CLIENT_ID: &str = "OPENID_CLIENT_ID";
-pub const OPENID_CLIENT_SECRET: &str = "OPENID_CLIENT_SECRET";
-pub const OPENID_ISSUER_URL: &str = "OPENID_ISSUER_URL";
-pub const OPENID_SCOPES: &str = "OPENID_SCOPES";
-pub const APP_ROOT_URL: &str = "APP_ROOT_URL";
-pub const OPENID_ENABLED: &str = "OPENID_ENABLED";
+pub use router::open_id_router;
+
 
 use openidconnect::core::{
     CoreAuthDisplay, CoreAuthPrompt, CoreGenderClaim, CoreJsonWebKey, CoreJsonWebKeyType,

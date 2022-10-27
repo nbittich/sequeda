@@ -1,13 +1,13 @@
 use std::env;
 
 use async_redis_session::RedisSessionStore;
-use async_session::{Session, SessionStore};
+
 use axum::{
     extract::Query,
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect},
     routing::get,
     routing::Router,
-    Extension, TypedHeader,
+    Extension,
 };
 use axum_sessions::{extractors::WritableSession, SessionLayer};
 use openidconnect::Nonce;

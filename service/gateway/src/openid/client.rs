@@ -60,8 +60,8 @@ pub struct OpenIdToken {
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)
-            .unwrap_or("roles, email, profile".into())
-            .split(",")
+            .unwrap_or_else(|_|"roles, email, profile".into())
+            .split(',')
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
             .collect()

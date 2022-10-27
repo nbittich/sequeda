@@ -31,7 +31,7 @@ async fn main() {
     let openid_enabled = var(OPENID_ENABLED)
         .ok()
         .and_then(|enabled| enabled.parse::<bool>().ok())
-        .unwrap_or_else(|| false);
+        .unwrap_or(false);
     let config_volume = var(SERVICE_CONFIG_VOLUME).unwrap_or_else(|_| String::from("/tmp"));
     let config_file_name = var(CONFIG_FILE_NAME).unwrap_or_else(|_| String::from("gateway.yml"));
 

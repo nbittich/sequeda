@@ -1,20 +1,20 @@
 use std::env;
 
 use openidconnect::core::{
-    CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
+    CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,
-    RevocationUrl, Scope, UserInfoClaims,
+    RevocationUrl, Scope,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
 use super::{OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
-use crate::openid::{AllOtherClaims, CustomIdTokenClaims};
+use crate::openid::{CustomIdTokenClaims};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]

@@ -9,13 +9,15 @@ use async_session::serde_json;
 pub use router::open_id_router;
 
 use openidconnect::core::{
-    CoreAuthDisplay, CoreAuthPrompt, CoreGenderClaim, CoreJsonWebKey, CoreJsonWebKeyType,
-    CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreClientAuthMethod, CoreClaimName, CoreClaimType, CoreGrantType, CoreJweKeyManagementAlgorithm, CoreResponseMode, CoreResponseType, CoreSubjectIdentifierType,
+    CoreAuthDisplay, CoreAuthPrompt, CoreClaimName, CoreClaimType, CoreClientAuthMethod,
+    CoreGenderClaim, CoreGrantType, CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse,
+    CoreJweContentEncryptionAlgorithm, CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm,
+    CoreResponseMode, CoreResponseType, CoreSubjectIdentifierType,
 };
 use openidconnect::{
-    Client, EmptyExtraTokenFields, IdTokenFields,
-    RevocationErrorResponseType, StandardErrorResponse, StandardTokenIntrospectionResponse,
-    StandardTokenResponse, ProviderMetadata, AdditionalClaims, AdditionalProviderMetadata, IdTokenClaims,
+    AdditionalClaims, AdditionalProviderMetadata, Client, EmptyExtraTokenFields, IdTokenClaims,
+    IdTokenFields, ProviderMetadata, RevocationErrorResponseType, StandardErrorResponse,
+    StandardTokenIntrospectionResponse, StandardTokenResponse,
 };
 use serde::{Deserialize, Serialize};
 type RawOpenIdClient = Client<
@@ -63,7 +65,6 @@ type OpenIdProviderMetadata = ProviderMetadata<
     CoreSubjectIdentifierType,
 >;
 
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct RevocationEndpointProviderMetadata {
     revocation_endpoint: String,
@@ -71,9 +72,14 @@ struct RevocationEndpointProviderMetadata {
 
 impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
 
-
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct AllOtherClaims(pub HashMap<String, serde_json::Value>);
+pub struct AllOtherClaims {
+    realm_access: RealmAccess,
+}
+#[derive(Debug, Deserialize, Clone, Serialize)]
+pub struct RealmAccess {
+    roles: Vec<String>,
+}
 impl AdditionalClaims for AllOtherClaims {}
 
 pub type CustomIdTokenClaims = IdTokenClaims<AllOtherClaims, CoreGenderClaim>;

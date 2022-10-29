@@ -32,7 +32,7 @@ pub struct OpenIdToken {
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)
-            .unwrap_or_else(|_| "roles,s_read, email, profile".into())
+            .unwrap_or_else(|_| "roles, email, profile".into())
             .split(',')
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
@@ -127,20 +127,6 @@ impl OpenIdClient {
             .claims(&id_token_verifier, &nonce)
             .unwrap();
 
-        let userinfo_claims: UserInfoClaims<AllOtherClaims, CoreGenderClaim> = self
-            .client
-            .user_info(token_response.access_token().to_owned(), None)
-            .unwrap_or_else(|err| {
-                handle_error(&err, "No user info endpoint");
-                unreachable!();
-            })
-            .request_async(async_http_client)
-            .await
-            .unwrap_or_else(|err| {
-                handle_error(&err, "Failed requesting user info");
-                unreachable!();
-            });
-        tracing::debug!("userinfo claims {userinfo_claims:?}");
         let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
             Some(token) => token.into(),
             None => token_response.access_token().into(),

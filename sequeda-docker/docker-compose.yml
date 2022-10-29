@@ -12,7 +12,7 @@ services:
     volumes:
       - ./data/db:/data/db
   ####### Keycloak #######
-  keycloak_postgresql:
+  keycloak-postgresql:
     restart: always
     networks:
       sequeda:
@@ -26,16 +26,20 @@ services:
       - ./data/keycloak_postgresql:/var/lib/postgresql/data
   keycloak:
     restart: always
-    image: nbittich/keycloak:19.0.0
+    image: nbittich/keycloak:19.0.3
     networks:
       sequeda:
     environment:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
       KC_DB: "postgres"
-      KC_DB_URL: "jdbc:postgresql://keycloak_postgresql:5432/keycloak"
+      KC_DB_URL: "jdbc:postgresql://keycloak-postgresql:5432/keycloak"
       KC_PROXY: edge
-    command: start --optimized
+      KC_HOSTNAME_PORT: 80
+    command: start --optimized --http-port=80
+    depends_on:
+      - keycloak-postgresql
+
   ####### Redis #######
   redis:
     image: redis:alpine
@@ -58,6 +62,12 @@ services:
       SERVICE_CONFIG_VOLUME: /config
       SERVICE_HOST: 0.0.0.0
       SERVICE_PORT: 80
+      OPENID_ENABLED: "true"
+      APP_ROOT_URL: "https://api.somehost.org"
+      OPENID_ISSUER_URL: "http://auth.somehost.org:80/realms/sequeda"
+      OPENID_CLIENT_ID: "sequeda-auth"
+      OPENID_CLIENT_SECRET: "X9quJGCCpBISQt6uNs62gkPeYd4g2gsp"
+      SESSION_REDIS_URL: "redis://redis"
     networks:
       sequeda:
 

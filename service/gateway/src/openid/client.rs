@@ -1,46 +1,29 @@
+use std::collections::HashMap;
 use std::env;
 
+use async_session::serde_json;
 use openidconnect::core::{
-    CoreAuthDisplay, CoreClaimName, CoreClaimType, CoreClient, CoreClientAuthMethod, CoreGrantType,
-    CoreIdTokenClaims, CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse,
+    CoreAuthDisplay, CoreAuthPrompt, CoreClaimName, CoreClaimType, CoreClient,
+    CoreClientAuthMethod, CoreErrorResponseType, CoreGenderClaim, CoreGrantType, CoreIdTokenClaims,
+    CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse,
     CoreJweContentEncryptionAlgorithm, CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm,
-    CoreResponseMode, CoreResponseType, CoreRevocableToken, CoreSubjectIdentifierType,
+    CoreResponseMode, CoreResponseType, CoreRevocableToken, CoreRevocationErrorResponse,
+    CoreSubjectIdentifierType, CoreTokenIntrospectionResponse, CoreTokenResponse, CoreTokenType,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
-    AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce,
-    OAuth2TokenResponse, ProviderMetadata, RedirectUrl, RevocationUrl, Scope,
+    AdditionalClaims, AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, Client,
+    CsrfToken, EmptyExtraTokenFields, IdTokenFields, Nonce, OAuth2TokenResponse, ProviderMetadata,
+    RedirectUrl, RevocationUrl, Scope, StandardErrorResponse, StandardTokenResponse,
+    UserInfoClaims,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
-use super::RawOpenIdClient;
+use super::{OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-struct RevocationEndpointProviderMetadata {
-    revocation_endpoint: String,
-}
-
-impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
-type OpenIdProviderMetadata = ProviderMetadata<
-    RevocationEndpointProviderMetadata,
-    CoreAuthDisplay,
-    CoreClientAuthMethod,
-    CoreClaimName,
-    CoreClaimType,
-    CoreGrantType,
-    CoreJweContentEncryptionAlgorithm,
-    CoreJweKeyManagementAlgorithm,
-    CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
-    CoreJsonWebKeyUse,
-    CoreJsonWebKey,
-    CoreResponseMode,
-    CoreResponseType,
-    CoreSubjectIdentifierType,
->;
+use crate::openid::CustomIdTokenClaims;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -50,7 +33,7 @@ pub struct OpenIdClient {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenIdToken {
-    pub claims: CoreIdTokenClaims,
+    pub claims: CustomIdTokenClaims,
     pub token_to_revoke: CoreRevocableToken,
 }
 
@@ -116,12 +99,14 @@ impl OpenIdClient {
             .revocation_endpoint
             .clone();
 
-        let client =
-            CoreClient::from_provider_metadata(provider_metadata, client_id, Some(client_secret))
-                .set_revocation_uri(
-                    RevocationUrl::new(revocation_endpoint)
-                        .expect("Invalid revocation endpoint URL"),
-                );
+        let client = RawOpenIdClient::from_provider_metadata(
+            provider_metadata,
+            client_id,
+            Some(client_secret),
+        )
+        .set_revocation_uri(
+            RevocationUrl::new(revocation_endpoint).expect("Invalid revocation endpoint URL"),
+        );
 
         OpenIdClient { client }
     }
@@ -144,13 +129,12 @@ impl OpenIdClient {
                 unreachable!();
             });
         let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
-        let claims: CoreIdTokenClaims = token_response
+        let claims: &CustomIdTokenClaims = token_response
             .extra_fields()
             .id_token()
             .expect("id token missing")
             .claims(&id_token_verifier, &nonce)
-            .unwrap()
-            .clone();
+            .unwrap();
 
         let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
             Some(token) => token.into(),
@@ -158,7 +142,7 @@ impl OpenIdClient {
         };
 
         OpenIdToken {
-            claims,
+            claims: claims.clone(),
             token_to_revoke,
         }
     }

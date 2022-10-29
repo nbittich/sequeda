@@ -1,29 +1,20 @@
-use std::collections::HashMap;
 use std::env;
 
-use async_session::serde_json;
 use openidconnect::core::{
-    CoreAuthDisplay, CoreAuthPrompt, CoreClaimName, CoreClaimType, CoreClient,
-    CoreClientAuthMethod, CoreErrorResponseType, CoreGenderClaim, CoreGrantType, CoreIdTokenClaims,
-    CoreIdTokenVerifier, CoreJsonWebKey, CoreJsonWebKeyType, CoreJsonWebKeyUse,
-    CoreJweContentEncryptionAlgorithm, CoreJweKeyManagementAlgorithm, CoreJwsSigningAlgorithm,
-    CoreResponseMode, CoreResponseType, CoreRevocableToken, CoreRevocationErrorResponse,
-    CoreSubjectIdentifierType, CoreTokenIntrospectionResponse, CoreTokenResponse, CoreTokenType,
+    CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
-    AdditionalClaims, AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, Client,
-    CsrfToken, EmptyExtraTokenFields, IdTokenFields, Nonce, OAuth2TokenResponse, ProviderMetadata,
-    RedirectUrl, RevocationUrl, Scope, StandardErrorResponse, StandardTokenResponse,
-    UserInfoClaims,
+    AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,
+    RevocationUrl, Scope, UserInfoClaims,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
 use super::{OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
-use crate::openid::CustomIdTokenClaims;
+use crate::openid::{AllOtherClaims, CustomIdTokenClaims};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -41,7 +32,7 @@ pub struct OpenIdToken {
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)
-            .unwrap_or_else(|_| "roles, email, profile".into())
+            .unwrap_or_else(|_| "roles,s_read, email, profile".into())
             .split(',')
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
@@ -136,6 +127,20 @@ impl OpenIdClient {
             .claims(&id_token_verifier, &nonce)
             .unwrap();
 
+        let userinfo_claims: UserInfoClaims<AllOtherClaims, CoreGenderClaim> = self
+            .client
+            .user_info(token_response.access_token().to_owned(), None)
+            .unwrap_or_else(|err| {
+                handle_error(&err, "No user info endpoint");
+                unreachable!();
+            })
+            .request_async(async_http_client)
+            .await
+            .unwrap_or_else(|err| {
+                handle_error(&err, "Failed requesting user info");
+                unreachable!();
+            });
+        tracing::debug!("userinfo claims {userinfo_claims:?}");
         let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
             Some(token) => token.into(),
             None => token_response.access_token().into(),

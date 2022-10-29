@@ -13,7 +13,7 @@ use openidconnect::core::{
     CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm, CoreClientAuthMethod, CoreClaimName, CoreClaimType, CoreGrantType, CoreJweKeyManagementAlgorithm, CoreResponseMode, CoreResponseType, CoreSubjectIdentifierType,
 };
 use openidconnect::{
-    Client, EmptyAdditionalClaims, EmptyExtraTokenFields, IdTokenFields,
+    Client, EmptyExtraTokenFields, IdTokenFields,
     RevocationErrorResponseType, StandardErrorResponse, StandardTokenIntrospectionResponse,
     StandardTokenResponse, ProviderMetadata, AdditionalClaims, AdditionalProviderMetadata, IdTokenClaims,
 };

@@ -50,7 +50,7 @@ pub struct OpenIdClient {
     client: RawOpenIdClient,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenIdToken {
     pub claims: CoreIdTokenClaims,
     pub token_to_revoke: CoreRevocableToken,
@@ -66,19 +66,22 @@ impl OpenIdClient {
             .map(|scope| Scope::new(scope.trim().to_string()))
             .collect()
     }
+    pub fn with_redirect_url(&self, redirect_url: &str) -> Self {
+        let redirect_url =
+            RedirectUrl::new(redirect_url.to_string()).expect("Invalid redirect URL");
+            let client = self.client.clone().set_redirect_uri(redirect_url);
+        Self { client: client }
+    }
+
     pub fn get_authorize_url(
         &self,
         redirect_url: &str,
         nonce: Nonce
     ) -> (RawOpenIdClient, Url, CsrfToken, Nonce) {
         let scopes = Self::get_scopes();
+        let copy = self.with_redirect_url(redirect_url);
 
-        let redirect_url =
-            RedirectUrl::new(redirect_url.to_string()).expect("Invalid redirect URL");
-
-        let client = self.client.clone().set_redirect_uri(redirect_url);
-
-        let mut authorize_url_req = client.authorize_url(
+        let mut authorize_url_req = copy.client.authorize_url(
             AuthenticationFlow::<CoreResponseType>::AuthorizationCode,
             CsrfToken::new_random,
             || nonce,
@@ -87,7 +90,7 @@ impl OpenIdClient {
             authorize_url_req = authorize_url_req.add_scope(scope);
         }
         let (url, csrf, nonce) = authorize_url_req.url();
-        (client, url, csrf, nonce)
+        (copy.client, url, csrf, nonce)
     }
     pub async fn new() -> Self {
         let client_id = ClientId::new(
@@ -102,7 +105,6 @@ impl OpenIdClient {
                 .expect("Missing the OPENID_ISSUER_URL environment variable."),
         )
         .expect("Invalid issuer URL");
-
         let provider_metadata =
             OpenIdProviderMetadata::discover_async(issuer_url, async_http_client)
                 .await
@@ -132,6 +134,7 @@ impl OpenIdClient {
         nonce: Nonce
     ) -> OpenIdToken {
         //let _state = CsrfToken::new(auth_request.state);
+        tracing::debug!("code: {:?}",&auth_request);
         let code = AuthorizationCode::new(auth_request.code);
         let token_response = self
             .client

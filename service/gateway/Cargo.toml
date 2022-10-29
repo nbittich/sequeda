@@ -21,5 +21,6 @@ async-session = { workspace=true }
 async-redis-session = { workspace=true }
 openidconnect = {workspace=true, default-features = false}
 axum-sessions = { workspace=true }
+async-trait = { workspace=true }
 rand = {workspace= true, features = ["min_const_gen"]}
 sequeda_service_common = {path = "../service_common"}

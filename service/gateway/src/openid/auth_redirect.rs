@@ -21,7 +21,8 @@ impl IntoResponse for AuthRedirect {
 #[allow(dead_code)]
 impl AuthRedirect {
     pub async fn new(client: &OpenIdClient, redirect_url: &str, nonce: Nonce) -> AuthRedirect {
-        let (client, authorize_url, csrf_state, nonce) = client.get_authorize_url(redirect_url, nonce);
+        let (client, authorize_url, csrf_state, nonce) =
+            client.get_authorize_url(redirect_url, nonce);
         AuthRedirect {
             client,
             authorize_url,

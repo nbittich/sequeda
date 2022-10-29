@@ -5,7 +5,6 @@ mod router;
 
 pub use router::open_id_router;
 
-
 use openidconnect::core::{
     CoreAuthDisplay, CoreAuthPrompt, CoreGenderClaim, CoreJsonWebKey, CoreJsonWebKeyType,
     CoreJsonWebKeyUse, CoreJweContentEncryptionAlgorithm, CoreJwsSigningAlgorithm,

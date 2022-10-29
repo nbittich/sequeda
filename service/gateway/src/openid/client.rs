@@ -10,15 +10,13 @@ use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AdditionalProviderMetadata, AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce,
-    ProviderMetadata, RedirectUrl,  RevocationUrl, Scope, OAuth2TokenResponse,
+    OAuth2TokenResponse, ProviderMetadata, RedirectUrl, RevocationUrl, Scope,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
-use super::{
-    RawOpenIdClient, 
-};
-use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES,};
+use super::RawOpenIdClient;
+use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 struct RevocationEndpointProviderMetadata {
@@ -60,7 +58,7 @@ pub struct OpenIdToken {
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)
-            .unwrap_or_else(|_|"roles, email, profile".into())
+            .unwrap_or_else(|_| "roles, email, profile".into())
             .split(',')
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
@@ -69,14 +67,14 @@ impl OpenIdClient {
     pub fn with_redirect_url(&self, redirect_url: &str) -> Self {
         let redirect_url =
             RedirectUrl::new(redirect_url.to_string()).expect("Invalid redirect URL");
-            let client = self.client.clone().set_redirect_uri(redirect_url);
-        Self { client: client }
+        let client = self.client.clone().set_redirect_uri(redirect_url);
+        Self { client }
     }
 
     pub fn get_authorize_url(
         &self,
         redirect_url: &str,
-        nonce: Nonce
+        nonce: Nonce,
     ) -> (RawOpenIdClient, Url, CsrfToken, Nonce) {
         let scopes = Self::get_scopes();
         let copy = self.with_redirect_url(redirect_url);
@@ -131,10 +129,10 @@ impl OpenIdClient {
     pub async fn exchange_token(
         &self,
         auth_request: super::auth_request::AuthRequest,
-        nonce: Nonce
+        nonce: Nonce,
     ) -> OpenIdToken {
         //let _state = CsrfToken::new(auth_request.state);
-        tracing::debug!("code: {:?}",&auth_request);
+        tracing::debug!("code: {:?}", &auth_request);
         let code = AuthorizationCode::new(auth_request.code);
         let token_response = self
             .client
@@ -151,7 +149,8 @@ impl OpenIdClient {
             .id_token()
             .expect("id token missing")
             .claims(&id_token_verifier, &nonce)
-            .unwrap().clone();
+            .unwrap()
+            .clone();
 
         let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
             Some(token) => token.into(),

@@ -2,7 +2,7 @@ use std::env;
 
 use async_redis_session::RedisSessionStore;
 
-use crate::{constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, COOKIE_NAME, REDIS_URL}, config};
+use crate::constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, COOKIE_NAME, REDIS_URL};
 use async_session::{Session, SessionStore};
 use axum::{
     extract::{Path, Query},
@@ -17,11 +17,11 @@ use openidconnect::Nonce;
 
 use super::{auth_redirect::AuthRedirect, auth_request::AuthRequest, client::OpenIdClient};
 #[derive(Clone)]
+#[allow(unused)]
 struct Config {
     redirect_url: String,
     root_url: String,
 }
-
 
 pub async fn open_id_router() -> Router {
     let redis_url = env::var(REDIS_URL)
@@ -41,7 +41,10 @@ pub async fn open_id_router() -> Router {
         .route("/logout", get(logout))
         .layer(Extension(store))
         .layer(Extension(openid_client))
-        .layer(Extension(Config { redirect_url, root_url: root_url.clone() }))
+        .layer(Extension(Config {
+            redirect_url,
+            root_url: root_url.clone(),
+        }))
 }
 
 async fn login(
@@ -51,8 +54,7 @@ async fn login(
 ) -> impl IntoResponse {
     let nonce = Nonce::new_random();
     let redirect_url = format!("{}/{}", &config.redirect_url, nonce.secret());
-    let redirect = AuthRedirect::new(&client, &redirect_url, nonce.clone()).await;
-    redirect
+    AuthRedirect::new(&client, &redirect_url, nonce.clone()).await
 }
 
 async fn logout(

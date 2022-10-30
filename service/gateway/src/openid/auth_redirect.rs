@@ -31,7 +31,7 @@ impl AuthRedirect {
         }
     }
 }
-
+#[derive(Debug)]
 pub struct LoginPageRedirect;
 
 impl IntoResponse for LoginPageRedirect {

@@ -1,4 +1,5 @@
 use std::env;
+use std::fmt::Display;
 
 use async_session::chrono::Utc;
 use openidconnect::core::{
@@ -16,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use super::{AllOtherClaims, CustomTokenResponse, OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
 use crate::openid::CustomIdTokenClaims;
+use crate::Client;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -82,8 +84,8 @@ impl OpenIdClient {
             OpenIdProviderMetadata::discover_async(issuer_url, async_http_client)
                 .await
                 .unwrap_or_else(|err| {
-                    handle_error(&err, "Failed to discover OpenID Provider");
-                    unreachable!();
+                    let err = handle_error(&err, "Failed to discover OpenID Provider");
+                    panic!("{err}");
                 });
 
         let revocation_endpoint = provider_metadata
@@ -108,7 +110,7 @@ impl OpenIdClient {
         &self,
         id_token: &OpenIdToken,
         user_id: &str,
-    ) -> Option<UserInfoClaims<AllOtherClaims, CoreGenderClaim>> {
+    ) -> Result<UserInfoClaims<AllOtherClaims, CoreGenderClaim>, ClientError> {
         let token_response = &id_token.token;
         let access_token = token_response.access_token().clone();
         let request = self
@@ -117,17 +119,14 @@ impl OpenIdClient {
                 access_token,
                 Some(SubjectIdentifier::new(user_id.to_string())),
             )
-            .expect("could not create request for user info");
-        match request.request_async(async_http_client).await {
-            Ok(user_info) => Some(user_info),
-            Err(e) => {
-                tracing::error!("error: {e}");
-                None
-            }
-        }
+            .map_err(|err| handle_error(&err, "exchange_access_token"))?;
+        request
+            .request_async(async_http_client)
+            .await
+            .map_err(|err| handle_error(&err, "exchange_access_token"))
     }
 
-    pub async fn refresh_token(&self, id_token: OpenIdToken) -> OpenIdToken {
+    pub async fn refresh_token(&self, id_token: OpenIdToken) -> Result<OpenIdToken, ClientError> {
         let claims = &id_token.claims;
         let token_response = &id_token.token;
         let diff = (Utc::now() - claims.expiration()).num_seconds();
@@ -142,14 +141,14 @@ impl OpenIdClient {
                     id_token
                         .token
                         .refresh_token()
-                        .expect("refresh token not present"),
+                        .ok_or(ClientError("refresh token not present".into()))?,
                 )
                 .request_async(async_http_client)
                 .await
-                .expect("could not refresh token");
-            OpenIdToken { token, ..id_token }
+                .map_err(|err| handle_error(&err, "refresh_token"))?;
+            Ok(OpenIdToken { token, ..id_token })
         } else {
-            id_token
+            Ok(id_token)
         }
     }
 
@@ -157,7 +156,7 @@ impl OpenIdClient {
         &self,
         auth_request: super::auth_request::AuthRequest,
         nonce: Nonce,
-    ) -> OpenIdToken {
+    ) -> Result<OpenIdToken, ClientError> {
         //let _state = CsrfToken::new(auth_request.state);
         tracing::debug!("code: {:?}", &auth_request);
         let code = AuthorizationCode::new(auth_request.code);
@@ -166,25 +165,22 @@ impl OpenIdClient {
             .exchange_code(code)
             .request_async(async_http_client)
             .await
-            .unwrap_or_else(|err| {
-                handle_error(&err, "Failed to contact token endpoint");
-                unreachable!();
-            });
+            .map_err(|err| handle_error(&err, "exchange_token"))?;
         let id_token_verifier: CoreIdTokenVerifier = self.client.id_token_verifier();
         let claims: &CustomIdTokenClaims = token_response
             .extra_fields()
             .id_token()
-            .expect("id token missing")
+            .ok_or(ClientError("id token missing".into()))?
             .claims(&id_token_verifier, &nonce)
             .unwrap();
 
-        OpenIdToken {
+        Ok(OpenIdToken {
             claims: claims.clone(),
             token: token_response,
-        }
+        })
     }
 
-    pub async fn logout(&self, id_token: &OpenIdToken) {
+    pub async fn logout(&self, id_token: &OpenIdToken) -> Result<(), ClientError> {
         let token = id_token.token.clone();
         let token_to_revoke: CoreRevocableToken = match token.refresh_token() {
             Some(token) => token.into(),
@@ -195,19 +191,27 @@ impl OpenIdClient {
             .expect("no revocation_uri configured")
             .request_async(async_http_client)
             .await
-            .unwrap_or_else(|err| {
-                handle_error(&err, "Failed to contact token revocation endpoint");
-                unreachable!();
-            });
+            .map_err(|err| handle_error(&err, "logout"))?;
+        Ok(())
     }
 }
 
-fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) {
+fn handle_error<T: std::error::Error>(fail: &T, msg: &'static str) -> ClientError {
     let mut err_msg = format!("ERROR: {}", msg);
     let mut cur_fail: Option<&dyn std::error::Error> = Some(fail);
     while let Some(cause) = cur_fail {
         err_msg += &format!("\n    caused by: {}", cause);
         cur_fail = cause.source();
     }
-    panic!("{}", err_msg) // todo should not panic but returns an error
+    ClientError(err_msg)
+}
+
+#[derive(Debug)]
+pub struct ClientError(String);
+impl std::error::Error for ClientError {}
+
+impl Display for ClientError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }

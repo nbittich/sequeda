@@ -21,7 +21,7 @@ use openidconnect::Nonce;
 use super::{
     auth_redirect::{AuthRedirect, LoginPageRedirect},
     auth_request::AuthRequest,
-    client::{OpenIdClient, OpenIdToken},
+    client::{OpenIdClient, OpenIdToken}, destroy_session,
 };
 #[derive(Clone)]
 #[allow(unused)]
@@ -75,12 +75,15 @@ async fn logout(
         None => return LoginPageRedirect,
     };
     if let Some(id_token) = session.get::<OpenIdToken>("token") {
-        client.logout(&id_token).await;
+        match client.logout(&id_token).await {
+            Ok(_) => {}
+            Err(e) => {
+                tracing::error!("{e}");
+            }
+        }
     }
 
-    store.destroy_session(session).await.unwrap();
-
-    LoginPageRedirect
+    destroy_session(&store, session).await
 }
 
 async fn user_info(user: User) -> impl IntoResponse {
@@ -99,7 +102,7 @@ async fn login_authorized(
 ) -> impl IntoResponse {
     let redirect_url = format!("{}/{}", &config.redirect_url, nonce.secret());
     let client = client.with_redirect_url(&redirect_url);
-    let token = client.exchange_token(query, nonce).await;
+    let token = client.exchange_token(query, nonce).await.unwrap();
     tracing::debug!("{:?}", &token);
     let mut session = Session::new();
     session.insert("token", token).unwrap();

@@ -4,6 +4,8 @@ mod client;
 mod router;
 mod user;
 
+use async_redis_session::RedisSessionStore;
+use async_session::{Session, SessionStore};
 pub use router::open_id_router;
 
 use openidconnect::core::{
@@ -29,6 +31,8 @@ type CustomTokenResponse = StandardTokenResponse<
     openidconnect::core::CoreTokenType,
 >;
 use serde::{Deserialize, Serialize};
+
+use self::auth_redirect::LoginPageRedirect;
 type RawOpenIdClient = Client<
     AllOtherClaims,
     CoreAuthDisplay,
@@ -82,3 +86,13 @@ pub struct RealmAccess {
 impl AdditionalClaims for AllOtherClaims {}
 
 pub type CustomIdTokenClaims = IdTokenClaims<AllOtherClaims, CoreGenderClaim>;
+
+pub async fn destroy_session(
+    store: &RedisSessionStore,
+    session: Session,
+) -> LoginPageRedirect {
+    if let Err(e) = store.destroy_session(session).await {
+        tracing::error!("{e}");
+    }
+    LoginPageRedirect
+}

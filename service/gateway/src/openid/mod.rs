@@ -78,6 +78,7 @@ impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct AllOtherClaims {
     realm_access: RealmAccess,
+    groups: Vec<String>,
 }
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct RealmAccess {
@@ -87,10 +88,7 @@ impl AdditionalClaims for AllOtherClaims {}
 
 pub type CustomIdTokenClaims = IdTokenClaims<AllOtherClaims, CoreGenderClaim>;
 
-pub async fn destroy_session(
-    store: &RedisSessionStore,
-    session: Session,
-) -> LoginPageRedirect {
+pub async fn destroy_session(store: &RedisSessionStore, session: Session) -> LoginPageRedirect {
     if let Err(e) = store.destroy_session(session).await {
         tracing::error!("{e}");
     }

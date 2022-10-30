@@ -21,7 +21,8 @@ use openidconnect::Nonce;
 use super::{
     auth_redirect::{AuthRedirect, LoginPageRedirect},
     auth_request::AuthRequest,
-    client::{OpenIdClient, OpenIdToken}, destroy_session,
+    client::{OpenIdClient, OpenIdToken},
+    destroy_session,
 };
 #[derive(Clone)]
 #[allow(unused)]

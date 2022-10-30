@@ -1,6 +1,6 @@
 use crate::{constant::COOKIE_NAME, openid::destroy_session};
 use async_redis_session::RedisSessionStore;
-use async_session::{async_trait, Session, SessionStore};
+use async_session::{async_trait, SessionStore};
 use axum::{
     extract::{rejection::TypedHeaderRejectionReason, FromRequest, RequestParts},
     headers, Extension, TypedHeader,
@@ -152,7 +152,7 @@ where
             Ok(id) => id,
             Err(e) => {
                 tracing::error!("{e}");
-                return Err(destroy_session(&store, session).await)
+                return Err(destroy_session(&store, session).await);
             }
         };
 
@@ -160,19 +160,17 @@ where
             Ok(user) => Self::from_user_info(&user),
             Err(e) => {
                 tracing::error!("{e}");
-                return Err(destroy_session(&store, session).await)
+                return Err(destroy_session(&store, session).await);
             }
         };
         let user_info = match client.exchange_access_token(&id_token, &user.id).await {
             Ok(user_info) => user_info,
             Err(e) => {
                 tracing::error!("{e}");
-               return Err(destroy_session(&store, session).await)
+                return Err(destroy_session(&store, session).await);
             }
         };
 
         Ok(User::from_user_info(&user_info))
     }
 }
-
-

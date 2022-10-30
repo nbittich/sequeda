@@ -17,7 +17,6 @@ use serde::{Deserialize, Serialize};
 use super::{AllOtherClaims, CustomTokenResponse, OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
 use crate::openid::CustomIdTokenClaims;
-use crate::Client;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -35,7 +34,7 @@ pub struct OpenIdToken {
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)
-            .unwrap_or_else(|_| "roles, email, profile".into())
+            .unwrap_or_else(|_| "roles, groups, email, profile".into())
             .split(',')
             .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
@@ -141,7 +140,7 @@ impl OpenIdClient {
                     id_token
                         .token
                         .refresh_token()
-                        .ok_or(ClientError("refresh token not present".into()))?,
+                        .ok_or_else(|| ClientError("refresh token not present".into()))?,
                 )
                 .request_async(async_http_client)
                 .await
@@ -170,7 +169,7 @@ impl OpenIdClient {
         let claims: &CustomIdTokenClaims = token_response
             .extra_fields()
             .id_token()
-            .ok_or(ClientError("id token missing".into()))?
+            .ok_or_else(|| ClientError("id token missing".into()))?
             .claims(&id_token_verifier, &nonce)
             .unwrap();
 

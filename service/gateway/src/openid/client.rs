@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::env;
 
-use async_session::chrono::Duration;
+use async_session::chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
 use openidconnect::core::{
     CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
@@ -92,6 +92,7 @@ impl OpenIdClient {
             .additional_metadata()
             .revocation_endpoint
             .clone();
+      tracing::debug!("revocation endpoint: {}", revocation_endpoint);
 
         let client = RawOpenIdClient::from_provider_metadata(
             provider_metadata,
@@ -131,29 +132,26 @@ impl OpenIdClient {
     pub async fn refresh_token(&self, id_token: OpenIdToken) -> OpenIdToken {
         let claims = &id_token.claims;
         let token_response = &id_token.token;
-        let diff = claims
-            .expiration()
-            .signed_duration_since(claims.issue_time());
+        let diff = (Utc::now() - claims.expiration()).num_seconds();
+        tracing::debug!("token diff {diff:?}");
+        tracing::debug!("token expires_in {:?}", &token_response.expires_in());
 
-        match token_response.expires_in() {
-            Some(duration)
-                if duration.cmp(&diff.to_std().expect("could not convert to std"))
-                    == Ordering::Less =>
-            {
-                let token = self
-                    .client
-                    .exchange_refresh_token(
-                        id_token
-                            .token
-                            .refresh_token()
-                            .expect("refresh token not present"),
-                    )
-                    .request_async(async_http_client)
-                    .await
-                    .expect("could not refresh token");
-                OpenIdToken { token, ..id_token }
-            }
-            _ => id_token,
+        if diff >= 0 {
+            tracing::debug!("token expired");
+            let token = self
+                .client
+                .exchange_refresh_token(
+                    id_token
+                        .token
+                        .refresh_token()
+                        .expect("refresh token not present"),
+                )
+                .request_async(async_http_client)
+                .await
+                .expect("could not refresh token");
+            OpenIdToken { token, ..id_token }
+        } else {
+            id_token
         }
     }
 
@@ -181,14 +179,28 @@ impl OpenIdClient {
             .expect("id token missing")
             .claims(&id_token_verifier, &nonce)
             .unwrap();
-        // let token: CoreRevocableToken = match token_response.refresh_token() {
-        //     Some(token) => token.into(),
-        //     None => token_response.access_token().into(),
-        // };
+
         OpenIdToken {
             claims: claims.clone(),
             token: token_response,
         }
+    }
+
+    pub async fn logout(&self, id_token: &OpenIdToken) {
+        let token = id_token.token.clone();
+        let token_to_revoke: CoreRevocableToken = match token.refresh_token() {
+            Some(token) => token.into(),
+            None => token.access_token().into(),
+        };
+        self.client
+            .revoke_token(token_to_revoke)
+            .expect("no revocation_uri configured")
+            .request_async(async_http_client)
+            .await
+            .unwrap_or_else(|err| {
+                handle_error(&err, "Failed to contact token revocation endpoint");
+                unreachable!();
+            });
     }
 }
 

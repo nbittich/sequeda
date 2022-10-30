@@ -15,7 +15,7 @@ use axum::{
 use hyper::{header::SET_COOKIE, HeaderMap};
 use openidconnect::Nonce;
 
-use super::{auth_redirect::{AuthRedirect, LoginPageRedirect}, auth_request::AuthRequest, client::OpenIdClient};
+use super::{auth_redirect::{AuthRedirect, LoginPageRedirect}, auth_request::AuthRequest, client::{OpenIdClient, OpenIdToken}};
 #[derive(Clone)]
 #[allow(unused)]
 struct Config {
@@ -58,6 +58,7 @@ async fn login(
 }
 
 async fn logout(
+    Extension(client): Extension<OpenIdClient>,
     Extension(store): Extension<RedisSessionStore>,
     TypedHeader(cookies): TypedHeader<headers::Cookie>,
 ) -> impl IntoResponse {
@@ -66,6 +67,10 @@ async fn logout(
         Some(s) => s,
         None => return LoginPageRedirect,
     };
+    if let Some(id_token) = session.get::<OpenIdToken>("token") {
+        client.logout(&id_token).await;
+    }
+
 
     store.destroy_session(session).await.unwrap();
 

@@ -3,13 +3,10 @@ use async_redis_session::RedisSessionStore;
 use async_session::{async_trait, SessionStore};
 use axum::{
     extract::{rejection::TypedHeaderRejectionReason, FromRequest, RequestParts},
-    headers,
-    Extension, TypedHeader,
+    headers, Extension, TypedHeader,
 };
-use hyper::{
-    header::{self, },
-};
-use openidconnect::{core::CoreGenderClaim, UserInfoClaims};
+use hyper::header::{self, SET_COOKIE};
+use openidconnect::{core::CoreGenderClaim, OAuth2TokenResponse, UserInfoClaims};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -139,10 +136,10 @@ where
             })?;
         let session_cookie = cookies.get(COOKIE_NAME).ok_or(LoginPageRedirect)?;
 
-        let mut session = store
+        let session = store
             .load_session(session_cookie.to_string())
             .await
-            .unwrap()
+            .map_err(|_| LoginPageRedirect)?
             .ok_or(LoginPageRedirect)?;
 
         let id_token: OpenIdToken = session.get("token").ok_or(LoginPageRedirect)?;
@@ -157,9 +154,6 @@ where
             .exchange_access_token(&id_token, &user.id)
             .await
             .ok_or(LoginPageRedirect)?;
-
-        session.remove("token");
-        session.insert("token", &id_token).unwrap();
 
         Ok(User::from_user_info(&user_info))
     }

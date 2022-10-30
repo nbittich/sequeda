@@ -1,16 +1,14 @@
-use std::cmp::Ordering;
 use std::env;
 
-use async_session::chrono::{DateTime, Duration, Local, NaiveDateTime, Utc};
+use async_session::chrono::Utc;
 use openidconnect::core::{
     CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
-    AccessToken, AuthenticationFlow, AuthorizationCode, CsrfToken, GenderClaim, Nonce,
-    OAuth2TokenResponse, RedirectUrl, RevocationUrl, Scope, SubjectIdentifier, TokenResponse,
-    UserInfoClaims,
+    AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,
+    RevocationUrl, Scope, SubjectIdentifier, UserInfoClaims,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
@@ -92,7 +90,7 @@ impl OpenIdClient {
             .additional_metadata()
             .revocation_endpoint
             .clone();
-      tracing::debug!("revocation endpoint: {}", revocation_endpoint);
+        tracing::debug!("revocation endpoint: {}", revocation_endpoint);
 
         let client = RawOpenIdClient::from_provider_metadata(
             provider_metadata,

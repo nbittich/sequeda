@@ -17,16 +17,16 @@ use openidconnect::{
     IdTokenFields, ProviderMetadata, RevocationErrorResponseType, StandardErrorResponse,
     StandardTokenIntrospectionResponse, StandardTokenResponse,
 };
-type CustomTokenResponse =  StandardTokenResponse<
-IdTokenFields<
-    AllOtherClaims,
-    EmptyExtraTokenFields,
-    CoreGenderClaim,
-    CoreJweContentEncryptionAlgorithm,
-    CoreJwsSigningAlgorithm,
-    CoreJsonWebKeyType,
->,
-openidconnect::core::CoreTokenType,
+type CustomTokenResponse = StandardTokenResponse<
+    IdTokenFields<
+        AllOtherClaims,
+        EmptyExtraTokenFields,
+        CoreGenderClaim,
+        CoreJweContentEncryptionAlgorithm,
+        CoreJwsSigningAlgorithm,
+        CoreJsonWebKeyType,
+    >,
+    openidconnect::core::CoreTokenType,
 >;
 use serde::{Deserialize, Serialize};
 type RawOpenIdClient = Client<
@@ -82,5 +82,3 @@ pub struct RealmAccess {
 impl AdditionalClaims for AllOtherClaims {}
 
 pub type CustomIdTokenClaims = IdTokenClaims<AllOtherClaims, CoreGenderClaim>;
-
-

@@ -5,8 +5,8 @@ use axum::{
     extract::{rejection::TypedHeaderRejectionReason, FromRequest, RequestParts},
     headers, Extension, TypedHeader,
 };
-use hyper::header::{self, SET_COOKIE};
-use openidconnect::{core::CoreGenderClaim, OAuth2TokenResponse, UserInfoClaims};
+use hyper::header::{self};
+use openidconnect::{core::CoreGenderClaim, UserInfoClaims};
 use serde::{Deserialize, Serialize};
 
 use super::{

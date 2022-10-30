@@ -2,7 +2,10 @@ use std::env;
 
 use async_redis_session::RedisSessionStore;
 
-use crate::{constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, COOKIE_NAME, REDIS_URL}, openid::user::User};
+use crate::{
+    constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, COOKIE_NAME, REDIS_URL},
+    openid::user::User,
+};
 use async_session::{Session, SessionStore};
 use axum::{
     extract::{Path, Query},
@@ -15,7 +18,11 @@ use axum::{
 use hyper::{header::SET_COOKIE, HeaderMap};
 use openidconnect::Nonce;
 
-use super::{auth_redirect::{AuthRedirect, LoginPageRedirect}, auth_request::AuthRequest, client::{OpenIdClient, OpenIdToken}};
+use super::{
+    auth_redirect::{AuthRedirect, LoginPageRedirect},
+    auth_request::AuthRequest,
+    client::{OpenIdClient, OpenIdToken},
+};
 #[derive(Clone)]
 #[allow(unused)]
 struct Config {
@@ -70,7 +77,6 @@ async fn logout(
     if let Some(id_token) = session.get::<OpenIdToken>("token") {
         client.logout(&id_token).await;
     }
-
 
     store.destroy_session(session).await.unwrap();
 

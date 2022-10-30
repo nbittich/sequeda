@@ -1,20 +1,23 @@
+use std::cmp::Ordering;
 use std::env;
 
+use async_session::chrono::Duration;
 use openidconnect::core::{
-    CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
+    CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
 use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
-    AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,
-    RevocationUrl, Scope,
+    AccessToken, AuthenticationFlow, AuthorizationCode, CsrfToken, GenderClaim, Nonce,
+    OAuth2TokenResponse, RedirectUrl, RevocationUrl, Scope, SubjectIdentifier, TokenResponse,
+    UserInfoClaims,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
 
-use super::{OpenIdProviderMetadata, RawOpenIdClient};
+use super::{AllOtherClaims, CustomTokenResponse, OpenIdProviderMetadata, RawOpenIdClient};
 use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL, OPENID_SCOPES};
-use crate::openid::{CustomIdTokenClaims};
+use crate::openid::CustomIdTokenClaims;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -25,7 +28,7 @@ pub struct OpenIdClient {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenIdToken {
     pub claims: CustomIdTokenClaims,
-    pub token_to_revoke: CoreRevocableToken,
+    pub token: CustomTokenResponse,
 }
 
 #[allow(dead_code)]
@@ -102,6 +105,58 @@ impl OpenIdClient {
         OpenIdClient { client }
     }
 
+    pub async fn exchange_access_token(
+        &self,
+        id_token: &OpenIdToken,
+        user_id: &str,
+    ) -> Option<UserInfoClaims<AllOtherClaims, CoreGenderClaim>> {
+        let token_response = &id_token.token;
+        let access_token = token_response.access_token().clone();
+        let request = self
+            .client
+            .user_info(
+                access_token,
+                Some(SubjectIdentifier::new(user_id.to_string())),
+            )
+            .expect("could not create request for user info");
+        match request.request_async(async_http_client).await {
+            Ok(user_info) => Some(user_info),
+            Err(e) => {
+                tracing::error!("error: {e}");
+                None
+            }
+        }
+    }
+
+    pub async fn refresh_token(&self, id_token: OpenIdToken) -> OpenIdToken {
+        let claims = &id_token.claims;
+        let token_response = &id_token.token;
+        let diff = claims
+            .expiration()
+            .signed_duration_since(claims.issue_time());
+
+        match token_response.expires_in() {
+            Some(duration)
+                if duration.cmp(&diff.to_std().expect("could not convert to std"))
+                    == Ordering::Less =>
+            {
+                let token = self
+                    .client
+                    .exchange_refresh_token(
+                        id_token
+                            .token
+                            .refresh_token()
+                            .expect("refresh token not present"),
+                    )
+                    .request_async(async_http_client)
+                    .await
+                    .expect("could not refresh token");
+                OpenIdToken { token, ..id_token }
+            }
+            _ => id_token,
+        }
+    }
+
     pub async fn exchange_token(
         &self,
         auth_request: super::auth_request::AuthRequest,
@@ -126,15 +181,13 @@ impl OpenIdClient {
             .expect("id token missing")
             .claims(&id_token_verifier, &nonce)
             .unwrap();
-
-        let token_to_revoke: CoreRevocableToken = match token_response.refresh_token() {
-            Some(token) => token.into(),
-            None => token_response.access_token().into(),
-        };
-
+        // let token: CoreRevocableToken = match token_response.refresh_token() {
+        //     Some(token) => token.into(),
+        //     None => token_response.access_token().into(),
+        // };
         OpenIdToken {
             claims: claims.clone(),
-            token_to_revoke,
+            token: token_response,
         }
     }
 }

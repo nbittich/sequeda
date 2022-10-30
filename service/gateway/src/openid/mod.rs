@@ -2,9 +2,7 @@ mod auth_redirect;
 mod auth_request;
 mod client;
 mod router;
-
-
-
+mod user;
 
 pub use router::open_id_router;
 
@@ -19,6 +17,17 @@ use openidconnect::{
     IdTokenFields, ProviderMetadata, RevocationErrorResponseType, StandardErrorResponse,
     StandardTokenIntrospectionResponse, StandardTokenResponse,
 };
+type CustomTokenResponse =  StandardTokenResponse<
+IdTokenFields<
+    AllOtherClaims,
+    EmptyExtraTokenFields,
+    CoreGenderClaim,
+    CoreJweContentEncryptionAlgorithm,
+    CoreJwsSigningAlgorithm,
+    CoreJsonWebKeyType,
+>,
+openidconnect::core::CoreTokenType,
+>;
 use serde::{Deserialize, Serialize};
 type RawOpenIdClient = Client<
     AllOtherClaims,
@@ -31,17 +40,7 @@ type RawOpenIdClient = Client<
     CoreJsonWebKey,
     CoreAuthPrompt,
     StandardErrorResponse<openidconnect::core::CoreErrorResponseType>,
-    StandardTokenResponse<
-        IdTokenFields<
-            AllOtherClaims,
-            EmptyExtraTokenFields,
-            CoreGenderClaim,
-            CoreJweContentEncryptionAlgorithm,
-            CoreJwsSigningAlgorithm,
-            CoreJsonWebKeyType,
-        >,
-        openidconnect::core::CoreTokenType,
-    >,
+    CustomTokenResponse,
     openidconnect::core::CoreTokenType,
     StandardTokenIntrospectionResponse<EmptyExtraTokenFields, openidconnect::core::CoreTokenType>,
     openidconnect::core::CoreRevocableToken,
@@ -83,3 +82,5 @@ pub struct RealmAccess {
 impl AdditionalClaims for AllOtherClaims {}
 
 pub type CustomIdTokenClaims = IdTokenClaims<AllOtherClaims, CoreGenderClaim>;
+
+

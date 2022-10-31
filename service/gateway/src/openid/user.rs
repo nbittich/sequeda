@@ -26,6 +26,7 @@ pub struct User {
     pub email: Option<String>,
     pub roles: Vec<String>,
     pub groups: Vec<String>,
+    pub tenant: Option<String>,
 }
 
 impl User {
@@ -58,6 +59,7 @@ impl User {
         let email = user_info.email().cloned().map(|name| name.to_string());
         let roles = user_info.additional_claims().realm_access.roles.clone();
         let groups = user_info.additional_claims().groups.clone().unwrap_or_else(|| vec![]);
+        let tenant = user_info.additional_claims().tenant.clone();
         User {
             id,
             full_name,
@@ -65,6 +67,7 @@ impl User {
             family_name,
             email,
             roles,
+            tenant,
             groups,
             middle_name,
             username,
@@ -100,6 +103,8 @@ impl User {
         let email = claims.email().cloned().map(|name| name.to_string());
         let roles = claims.additional_claims().realm_access.roles.clone();
         let groups = claims.additional_claims().groups.clone().unwrap_or_else(||vec![]);
+        let tenant = claims.additional_claims().tenant.clone();
+
         User {
             id,
             full_name,
@@ -107,6 +112,7 @@ impl User {
             family_name,
             email,
             roles,
+            tenant,
             groups,
             middle_name,
             username,

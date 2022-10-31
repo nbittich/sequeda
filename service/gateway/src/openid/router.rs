@@ -1,9 +1,7 @@
-use std::env;
-
 use async_redis_session::RedisSessionStore;
 
 use crate::{
-    constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, COOKIE_NAME, REDIS_URL},
+    constant::{COOKIE_NAME},
     openid::user::User,
 };
 use async_session::{Session, SessionStore};
@@ -31,28 +29,23 @@ struct Config {
     root_url: String,
 }
 
-pub async fn open_id_router() -> Router {
-    let redis_url = env::var(REDIS_URL)
-        .expect("Missing the REDIS_URL environment variable. e.g `redis://127.0.0.1`");
-
-    let root_url = env::var(APP_ROOT_URL).expect("Missing the APP_ROOT_URL environment variable.");
-
-    let redirect_url = root_url.clone() + AUTH_REDIRECT_PATH;
-
-    let store = RedisSessionStore::new(redis_url).unwrap();
-    // let session_layer = SessionLayer::new(store, &secret);
-    let openid_client = OpenIdClient::new().await;
-    let auth_redirect = format!("{AUTH_REDIRECT_PATH}/:nonce");
+pub async fn open_id_router(
+    auth_redirect: &str,
+    store: RedisSessionStore,
+    openid_client: OpenIdClient,
+    redirect_url: &str,
+    root_url: &str,
+) -> Router {
     Router::new()
         .route("/login", get(login))
-        .route(&auth_redirect, get(login_authorized))
+        .route(auth_redirect, get(login_authorized))
         .route("/logout", get(logout))
         .route("/@me", get(user_info))
         .layer(Extension(store))
         .layer(Extension(openid_client))
         .layer(Extension(Config {
-            redirect_url,
-            root_url: root_url.clone(),
+            redirect_url: redirect_url.to_string(),
+            root_url: root_url.to_string(),
         }))
 }
 

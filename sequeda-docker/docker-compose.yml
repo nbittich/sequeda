@@ -70,7 +70,25 @@ services:
     restart: "always"
     networks:
       sequeda:
-
+  ####### service person - for testing #######
+  person:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_person
+    environment:
+      RUST_LOG: DEBUG
+      SERVICE_CONFIG_VOLUME: /config
+      SERVICE_HOST: 0.0.0.0
+      SERVICE_PORT: 80
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USERNAME: root
+      MONGO_PASSWORD: root
+      MONGO_ADMIN_DATABASE: admin
+    restart: "always"
+    networks:
+      sequeda:
       
 networks:
   sequeda:

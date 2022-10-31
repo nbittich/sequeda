@@ -8,11 +8,35 @@ routes:
     - !rewrite_path
         source: /proxy/yahoo-finance/chart/(?P<segment>.*)
         dest: /v8/finance/chart/${segment}
-  - id: auth
-    uri: http://auth.somehost.org:8080
+    authorizations:
+    - !authorization
+        method: "GET"
+        has_roles:
+        - creep
+  - id: person_find_all
+    uri: http://person
     predicates:
-    - !host auth.somehost.org
+    - !path /person/find-all/** # todo doesn't work with /find-all/ but works with /find-all
+    authorizations:
+    - !authorization
+        method: "GET"
+        has_roles:
+        - creep
     filters:
-    - !add_request_header
-        key: "X-Forwarded-Port"
-        value: "443"
+    - !rewrite_path
+        source: /person/(?P<segment>.*)
+        dest: /${segment}
+  - id: person_upsert
+    uri: http://person
+    filters:
+    - !rewrite_path
+        source: /person/(?P<segment>.*)
+        dest: /${segment}
+    predicates:
+    - !path /person/
+    - !method POST
+    authorizations:
+    - !authorization
+        method: "POST"
+        has_roles:
+        - creep

@@ -1,17 +1,17 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 
-use async_redis_session::RedisSessionStore;
 use axum::{
-    headers::{Cookie, HeaderMapExt, HeaderName},
+    headers::{HeaderName},
     http::HeaderValue,
     http::Request,
 };
 use hyper::{header::HOST, Body, StatusCode, Uri};
 use regex::Regex;
+use sequeda_service_common::X_TENANT_ID_HEADER;
 
 use crate::{
     config::{Authorization, Config, Route},
-    openid::{OpenIdClient, User},
+    openid::{User},
 };
 #[derive(Debug)]
 pub struct RequestHandlerError {
@@ -51,17 +51,20 @@ impl RequestHandler {
             let mut compiled_predicates = vec![];
             let mut compiled_filters = vec![];
 
-            for predicate in predicates {
+            for predicate in predicates.unwrap_or_else(||vec![]) {
                 let compiled_predicate = match predicate {
                     crate::config::Predicate::Host(host) => CompiledPredicate::Host(host),
                     crate::config::Predicate::Path(path) => {
                         CompiledPredicate::Path(Regex::new(&path).unwrap())
                     }
+                    crate::config::Predicate::Method(method) => {
+                        CompiledPredicate::Method(method)
+                    }
                 };
                 compiled_predicates.push(compiled_predicate);
             }
 
-            for filter in filters {
+            for filter in filters.unwrap_or_else(||vec![]) {
                 let compiled_filter = match filter {
                     crate::config::Filter::RewritePath { source, dest } => {
                         CompiledFilter::RewritePath {
@@ -120,11 +123,13 @@ impl RequestHandler {
         }
     }
 
-    pub async fn handle(&self, req: &mut Request<Body>) -> Result<(), RequestHandlerError> {
+    pub async fn handle(&self, req: &mut Request<Body>, user: Option<User>) -> Result<(), RequestHandlerError> {
         let handler = self
             .handlers
             .iter()
             .find(|h| h.predicates.iter().all(|p| p.match_req(req)));
+
+        tracing::debug!("found handler {handler:?}");
 
         if let Some(handler) = handler {
             let uri = req.uri().clone();
@@ -149,30 +154,9 @@ impl RequestHandler {
                 }
             }
             if !&handler.authorizations.is_empty() {
-                let store = req
-                    .extensions()
-                    .get::<RedisSessionStore>()
-                    .cloned()
-                    .expect("`RedisSessionStore` extension is missing");
-                let client = req
-                    .extensions()
-                    .get::<OpenIdClient>()
-                    .cloned()
-                    .expect("`OpenIdClient` extension is missing");
-
-                let cookies = match req.headers().typed_get::<Cookie>() {
-                    Some(cookie) => cookie,
+                let user = match user {
+                    Some(user) => user,
                     None => {
-                        return Err(RequestHandlerError {
-                            status: Some(StatusCode::FORBIDDEN),
-                            msg: "Missing cookies".into(),
-                        });
-                    }
-                };
-
-                let user = match User::from_cookie(store, client, cookies).await {
-                    Ok(user) => user,
-                    Err(_) => {
                         return Err(RequestHandlerError {
                             status: Some(StatusCode::FORBIDDEN),
                             msg: "Could not retrieve user".to_string(),
@@ -187,6 +171,15 @@ impl RequestHandler {
                             msg: "Forbidden access".into(),
                         });
                     }
+                }
+                if let Some(tenant) = user.tenant {
+                    req.headers_mut().insert(
+                        X_TENANT_ID_HEADER,
+                        HeaderValue::from_str(&tenant).map_err(|e| RequestHandlerError {
+                            msg: e.to_string(),
+                            status: None,
+                        })?,
+                    );
                 }
             }
 
@@ -225,6 +218,7 @@ struct RouteHandler {
 enum CompiledPredicate {
     Host(String),
     Path(Regex),
+    Method(String),
 }
 
 #[derive(Debug)]
@@ -273,6 +267,7 @@ impl CompiledPredicate {
                 host_from_req.eq(&Some(host))
             }
             CompiledPredicate::Path(path_re) => path_re.is_match(uri.path()),
+            CompiledPredicate::Method(method) => method.eq_ignore_ascii_case(req.method().as_str()),
         }
     }
 }

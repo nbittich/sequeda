@@ -2,6 +2,7 @@ mod config;
 mod constant;
 mod openid;
 mod request_handler;
+use async_redis_session::RedisSessionStore;
 pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};
 
 use axum::{
@@ -14,10 +15,22 @@ use axum::{
 use hyper::{client::HttpConnector, Body};
 
 use hyper_rustls::HttpsConnector;
+use openid::User;
 use sequeda_service_common::setup_tracing;
-use std::{env::var, net::SocketAddr, path::PathBuf, str::FromStr, sync::Arc};
+use std::{
+    env::{self, var},
+    net::SocketAddr,
+    path::PathBuf,
+    str::FromStr,
+    sync::Arc,
+};
 
-use crate::{config::Config, openid::open_id_router, request_handler::RequestHandler};
+use crate::{
+    config::Config,
+    constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, REDIS_URL},
+    openid::{open_id_router, OpenIdClient},
+    request_handler::RequestHandler,
+};
 
 type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
@@ -58,8 +71,29 @@ async fn main() {
         .layer(Extension(Arc::new(request_handler)));
 
     if openid_enabled {
-        let openid_router = open_id_router().await;
-        app = openid_router.merge(app);
+        let redis_url = env::var(REDIS_URL)
+            .expect("Missing the REDIS_URL environment variable. e.g `redis://127.0.0.1`");
+
+        let root_url =
+            env::var(APP_ROOT_URL).expect("Missing the APP_ROOT_URL environment variable.");
+
+        let redirect_url = root_url.clone() + AUTH_REDIRECT_PATH;
+
+        let store = RedisSessionStore::new(redis_url).unwrap();
+        let openid_client = OpenIdClient::new().await;
+        let auth_redirect = format!("{AUTH_REDIRECT_PATH}/:nonce");
+        let openid_router = open_id_router(
+            &auth_redirect,
+            store.clone(),
+            openid_client.clone(),
+            &redirect_url,
+            &root_url,
+        )
+        .await;
+        app = openid_router
+            .merge(app)
+            .layer(Extension(store))
+            .layer(Extension(openid_client));
     }
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 
@@ -74,10 +108,12 @@ async fn main() {
 async fn handler(
     Extension(client): Extension<Client>,
     Extension(request_handler): Extension<Arc<RequestHandler>>,
+    user: Option<User>,
     mut req: Request<Body>,
 ) -> impl IntoResponse {
     tracing::debug!("req: {req:?}");
-    match request_handler.handle(&mut req).await {
+
+    match request_handler.handle(&mut req, user).await {
         Ok(_) => match client.request(req).await {
             Ok(response) => response,
             Err(er) => {

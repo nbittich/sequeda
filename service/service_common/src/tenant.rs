@@ -4,9 +4,10 @@ use axum::{
     extract::{FromRequest, RequestParts},
 };
 
+use crate::constants::X_TENANT_ID_HEADER;
+
 pub struct ExtractTenantId(pub String);
 
-const X_TENANT_ID_HEADER: &str = "X-TENANT-ID";
 
 #[async_trait]
 impl<B> FromRequest<B> for ExtractTenantId

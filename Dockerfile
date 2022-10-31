@@ -20,7 +20,7 @@ COPY . .
 RUN cargo build --release --bin ${CRATE_NAME}
 
 # We do not need the Rust toolchain to run the binary!
-FROM debian:buster-slim AS runtime
+FROM debian:bullseye-slim AS runtime
 RUN apt  update && apt upgrade -y
 RUN apt install -y ca-certificates
 

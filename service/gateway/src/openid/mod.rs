@@ -80,7 +80,7 @@ impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct AllOtherClaims {
     realm_access: RealmAccess,
-    groups: Vec<String>,
+    groups: Option<Vec<String>>,
 }
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct RealmAccess {

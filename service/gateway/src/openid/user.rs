@@ -57,7 +57,7 @@ impl User {
             .map(|name| name.to_string());
         let email = user_info.email().cloned().map(|name| name.to_string());
         let roles = user_info.additional_claims().realm_access.roles.clone();
-        let groups = user_info.additional_claims().groups.clone();
+        let groups = user_info.additional_claims().groups.clone().unwrap_or_else(|| vec![]);
         User {
             id,
             full_name,
@@ -99,7 +99,7 @@ impl User {
             .map(|name| name.to_string());
         let email = claims.email().cloned().map(|name| name.to_string());
         let roles = claims.additional_claims().realm_access.roles.clone();
-        let groups = claims.additional_claims().groups.clone();
+        let groups = claims.additional_claims().groups.clone().unwrap_or_else(||vec![]);
         User {
             id,
             full_name,

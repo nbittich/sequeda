@@ -81,7 +81,7 @@ impl AdditionalProviderMetadata for RevocationEndpointProviderMetadata {}
 pub struct AllOtherClaims {
     realm_access: RealmAccess,
     groups: Option<Vec<String>>,
-    tenant: Option<String>
+    tenant: Option<String>,
 }
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct RealmAccess {
@@ -97,5 +97,3 @@ pub async fn destroy_session(store: &RedisSessionStore, session: Session) -> Log
     }
     LoginPageRedirect
 }
-
-

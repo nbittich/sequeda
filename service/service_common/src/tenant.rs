@@ -8,7 +8,6 @@ use crate::constants::X_TENANT_ID_HEADER;
 
 pub struct ExtractTenantId(pub String);
 
-
 #[async_trait]
 impl<B> FromRequest<B> for ExtractTenantId
 where

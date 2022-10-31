@@ -1,9 +1,6 @@
 use async_redis_session::RedisSessionStore;
 
-use crate::{
-    constant::{COOKIE_NAME},
-    openid::user::User,
-};
+use crate::{constant::COOKIE_NAME, openid::user::User};
 use async_session::{Session, SessionStore};
 use axum::{
     extract::{Path, Query},

@@ -105,7 +105,9 @@ mod test {
                     Route {
                         id: "yahoo_finance_chart".into(),
                         uri: "https://query1.finance.yahoo.com".into(),
-                        predicates: Some(vec![Predicate::Path("/proxy/yahoo-finance/chart/**".into())]),
+                        predicates: Some(vec![Predicate::Path(
+                            "/proxy/yahoo-finance/chart/**".into()
+                        )]),
                         filters: Some(vec![Filter::RewritePath {
                             source: "/proxy/yahoo-finance/chart/(?P<segment>.*)".into(),
                             dest: "/v8/finance/chart/${segment}".into(),

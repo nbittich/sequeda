@@ -43,6 +43,7 @@ openidconnect = "2.4.0"
 async-redis-session = "0.2.2"
 async-session = "3.0.0"
 axum-sessions = "0.3.1"
+axum-extra = "0.3.7"
 rand = "0.8.5"
 
 [workspace.package]

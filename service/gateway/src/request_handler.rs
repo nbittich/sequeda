@@ -1,17 +1,13 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 
-use axum::{
-    headers::{HeaderName},
-    http::HeaderValue,
-    http::Request,
-};
+use axum::{headers::HeaderName, http::HeaderValue, http::Request};
 use hyper::{header::HOST, Body, StatusCode, Uri};
 use regex::Regex;
 use sequeda_service_common::X_TENANT_ID_HEADER;
 
 use crate::{
     config::{Authorization, Config, Route},
-    openid::{User},
+    openid::User,
 };
 #[derive(Debug)]
 pub struct RequestHandlerError {
@@ -51,20 +47,18 @@ impl RequestHandler {
             let mut compiled_predicates = vec![];
             let mut compiled_filters = vec![];
 
-            for predicate in predicates.unwrap_or_else(||vec![]) {
+            for predicate in predicates.unwrap_or_default() {
                 let compiled_predicate = match predicate {
                     crate::config::Predicate::Host(host) => CompiledPredicate::Host(host),
                     crate::config::Predicate::Path(path) => {
                         CompiledPredicate::Path(Regex::new(&path).unwrap())
                     }
-                    crate::config::Predicate::Method(method) => {
-                        CompiledPredicate::Method(method)
-                    }
+                    crate::config::Predicate::Method(method) => CompiledPredicate::Method(method),
                 };
                 compiled_predicates.push(compiled_predicate);
             }
 
-            for filter in filters.unwrap_or_else(||vec![]) {
+            for filter in filters.unwrap_or_default() {
                 let compiled_filter = match filter {
                     crate::config::Filter::RewritePath { source, dest } => {
                         CompiledFilter::RewritePath {
@@ -123,21 +117,29 @@ impl RequestHandler {
         }
     }
 
-    pub async fn handle(&self, req: &mut Request<Body>, user: Option<User>) -> Result<(), RequestHandlerError> {
+    pub async fn handle(
+        &self,
+        req: &mut Request<Body>,
+        user: Option<User>,
+    ) -> Result<(), RequestHandlerError> {
         let handler = self
             .handlers
             .iter()
             .find(|h| h.predicates.iter().all(|p| p.match_req(req)));
+        let uri = req.uri().clone();
 
-        tracing::debug!("found handler {handler:?}");
+        tracing::debug!(
+            "found handler {handler:?} && uri {uri} && path {}",
+            uri.path()
+        );
 
         if let Some(handler) = handler {
-            let uri = req.uri().clone();
             let mut path = uri
                 .path_and_query()
                 .map(|v| v.as_str())
                 .unwrap_or_else(|| uri.path())
                 .to_string();
+
             for filter in &handler.filters {
                 match filter {
                     CompiledFilter::RewritePath { source, dest } => {
@@ -269,5 +271,19 @@ impl CompiledPredicate {
             CompiledPredicate::Path(path_re) => path_re.is_match(uri.path()),
             CompiledPredicate::Method(method) => method.eq_ignore_ascii_case(req.method().as_str()),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use hyper::Uri;
+    use regex::Regex;
+
+    #[test]
+    fn test_path() {
+        let regex = Regex::new("/hello/world/**").unwrap();
+        let uri: Uri = "/hello/world".parse().unwrap();
+
+        assert!(regex.is_match(uri.path()));
     }
 }

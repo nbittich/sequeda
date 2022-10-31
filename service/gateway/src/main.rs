@@ -7,9 +7,9 @@ pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_
 
 use axum::{
     extract::Extension,
+    handler::Handler,
     http::{Request, Response},
     response::IntoResponse,
-    routing::any,
     Router,
 };
 use hyper::{client::HttpConnector, Body};
@@ -66,7 +66,7 @@ async fn main() {
     let client: Client = hyper::client::Client::builder().build(https);
 
     let mut app = Router::new()
-        .fallback(any(handler))
+        .fallback(handler.into_service())
         .layer(Extension(client))
         .layer(Extension(Arc::new(request_handler)));
 
@@ -112,18 +112,21 @@ async fn handler(
     mut req: Request<Body>,
 ) -> impl IntoResponse {
     tracing::debug!("req: {req:?}");
-
     match request_handler.handle(&mut req, user).await {
-        Ok(_) => match client.request(req).await {
-            Ok(response) => response,
-            Err(er) => {
-                tracing::debug!("error in request {er}");
-                Response::builder()
-                    .status(500)
-                    .body(Body::from("unexpected error".as_bytes()))
-                    .unwrap()
+        Ok(_) => {
+            tracing::debug!("AFTER HANDLER req: {req:?}");
+
+            match client.request(req).await {
+                Ok(response) => response,
+                Err(er) => {
+                    tracing::debug!("error in request {er}");
+                    Response::builder()
+                        .status(500)
+                        .body(Body::from("unexpected error".as_bytes()))
+                        .unwrap()
+                }
             }
-        },
+        }
         Err(e) if e.status.is_some() => Response::builder()
             .status(e.status.unwrap())
             .body(Body::from(format!("{e}")))

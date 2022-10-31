@@ -16,7 +16,7 @@ routes:
   - id: person_find_all
     uri: http://person
     predicates:
-    - !path /person/find-all/** # todo doesn't work with /find-all/ but works with /find-all
+    - !path /person/find-all/** 
     authorizations:
     - !authorization
         method: "GET"
@@ -24,16 +24,16 @@ routes:
         - creep
     filters:
     - !rewrite_path
-        source: /person/(?P<segment>.*)
-        dest: /${segment}
+        source: /person/find-all/**
+        dest: /find-all
   - id: person_upsert
     uri: http://person
     filters:
     - !rewrite_path
-        source: /person/(?P<segment>.*)
-        dest: /${segment}
+        source: /person/**
+        dest: /
     predicates:
-    - !path /person/
+    - !path /person/**
     - !method POST
     authorizations:
     - !authorization

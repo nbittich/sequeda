@@ -6,7 +6,10 @@ mod user;
 
 use async_redis_session::RedisSessionStore;
 use async_session::{Session, SessionStore};
+pub use auth_redirect::LoginPageRedirect;
+pub use client::OpenIdClient;
 pub use router::open_id_router;
+pub use user::User;
 
 use openidconnect::core::{
     CoreAuthDisplay, CoreAuthPrompt, CoreClaimName, CoreClaimType, CoreClientAuthMethod,
@@ -32,7 +35,6 @@ type CustomTokenResponse = StandardTokenResponse<
 >;
 use serde::{Deserialize, Serialize};
 
-use self::auth_redirect::LoginPageRedirect;
 type RawOpenIdClient = Client<
     AllOtherClaims,
     CoreAuthDisplay,

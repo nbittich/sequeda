@@ -1,12 +1,21 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 
-use axum::{headers::HeaderName, http::HeaderValue};
-use hyper::{header::HOST, Body, Request, Uri};
+use async_redis_session::RedisSessionStore;
+use axum::{
+    headers::{Cookie, HeaderMapExt, HeaderName},
+    http::HeaderValue,
+    http::Request,
+};
+use hyper::{header::HOST, Body, StatusCode, Uri};
 use regex::Regex;
 
-use crate::config::{Config, Route};
+use crate::{
+    config::{Authorization, Config, Route},
+    openid::{OpenIdClient, User},
+};
 #[derive(Debug)]
 pub struct RequestHandlerError {
+    pub status: Option<StatusCode>,
     msg: String,
 }
 
@@ -31,6 +40,7 @@ impl RequestHandler {
                 uri,
                 predicates,
                 filters,
+                authorizations,
             } = route;
             tracing::info!("adding route with id {id}");
 
@@ -76,13 +86,31 @@ impl RequestHandler {
                 let iri = Uri::try_from(&uri).unwrap();
                 HeaderValue::from_str(iri.host().unwrap()).unwrap()
             };
+            let mut compiled_auth = vec![];
+
+            if let Some(authorizations) = authorizations {
+                for Authorization {
+                    method,
+                    has_roles,
+                    has_groups,
+                } in authorizations
+                {
+                    compiled_auth.push(CompiledAuthorization {
+                        method,
+                        has_groups,
+                        has_roles,
+                    })
+                }
+            }
             let route = RouteHandler {
                 uri,
                 id,
                 host,
                 filters: compiled_filters,
                 predicates: compiled_predicates,
+                authorizations: compiled_auth,
             };
+
             tracing::debug!("route `{:?}` added", &route);
 
             route_handlers.push(route);
@@ -92,7 +120,7 @@ impl RequestHandler {
         }
     }
 
-    pub fn handle(&self, req: &mut Request<Body>) -> Result<(), RequestHandlerError> {
+    pub async fn handle(&self, req: &mut Request<Body>) -> Result<(), RequestHandlerError> {
         let handler = self
             .handlers
             .iter()
@@ -120,9 +148,53 @@ impl RequestHandler {
                     }
                 }
             }
+            if !&handler.authorizations.is_empty() {
+                let store = req
+                    .extensions()
+                    .get::<RedisSessionStore>()
+                    .cloned()
+                    .expect("`RedisSessionStore` extension is missing");
+                let client = req
+                    .extensions()
+                    .get::<OpenIdClient>()
+                    .cloned()
+                    .expect("`OpenIdClient` extension is missing");
+
+                let cookies = match req.headers().typed_get::<Cookie>() {
+                    Some(cookie) => cookie,
+                    None => {
+                        return Err(RequestHandlerError {
+                            status: Some(StatusCode::FORBIDDEN),
+                            msg: "Missing cookies".into(),
+                        });
+                    }
+                };
+
+                let user = match User::from_cookie(store, client, cookies).await {
+                    Ok(user) => user,
+                    Err(_) => {
+                        return Err(RequestHandlerError {
+                            status: Some(StatusCode::FORBIDDEN),
+                            msg: "Could not retrieve user".to_string(),
+                        });
+                    }
+                };
+
+                for authorization in &handler.authorizations {
+                    if !authorization.check_auth(req.method().as_str(), &user) {
+                        return Err(RequestHandlerError {
+                            status: Some(StatusCode::FORBIDDEN),
+                            msg: "Forbidden access".into(),
+                        });
+                    }
+                }
+            }
+
             let uri = &handler.uri;
-            let uri = Uri::try_from(format!("{uri}{path}"))
-                .map_err(|e| RequestHandlerError { msg: e.to_string() })?;
+            let uri = Uri::try_from(format!("{uri}{path}")).map_err(|e| RequestHandlerError {
+                msg: e.to_string(),
+                status: None,
+            })?;
             tracing::debug!("uri {uri}");
             *req.uri_mut() = uri;
             req.headers_mut().remove(HOST);
@@ -131,6 +203,7 @@ impl RequestHandler {
             tracing::debug!("headers {:?}", req.headers());
         } else {
             return Err(RequestHandlerError {
+                status: None,
                 msg: format!("Could not find an handler for that uri {}", req.uri()),
             });
         }
@@ -146,18 +219,48 @@ struct RouteHandler {
     host: HeaderValue,
     predicates: Vec<CompiledPredicate>,
     filters: Vec<CompiledFilter>,
+    authorizations: Vec<CompiledAuthorization>,
 }
 #[derive(Debug)]
 enum CompiledPredicate {
     Host(String),
     Path(Regex),
 }
+
 #[derive(Debug)]
 enum CompiledFilter {
     RewritePath { source: Regex, dest: String },
     AddRequestHeader { key: HeaderName, value: HeaderValue },
     RemoveRequestHeader(HeaderName),
 }
+
+#[derive(Debug)]
+struct CompiledAuthorization {
+    method: String,
+    has_roles: Option<Vec<String>>,
+    has_groups: Option<Vec<String>>,
+}
+
+impl CompiledAuthorization {
+    fn check_auth(&self, method: &str, user: &User) -> bool {
+        if !self.method.eq_ignore_ascii_case(method) {
+            true
+        } else {
+            let has_roles = if let Some(roles) = &self.has_roles {
+                roles.iter().all(|a| user.roles.contains(a))
+            } else {
+                true
+            };
+            let has_groups = if let Some(groups) = &self.has_groups {
+                groups.iter().all(|a| user.groups.contains(a))
+            } else {
+                true
+            };
+            has_roles && has_groups
+        }
+    }
+}
+
 impl CompiledPredicate {
     fn match_req(&self, req: &Request<Body>) -> bool {
         let uri = req.uri();

@@ -25,6 +25,7 @@ pub struct User {
     pub username: Option<String>,
     pub email: Option<String>,
     pub roles: Vec<String>,
+    pub groups: Vec<String>,
 }
 
 impl User {
@@ -56,6 +57,7 @@ impl User {
             .map(|name| name.to_string());
         let email = user_info.email().cloned().map(|name| name.to_string());
         let roles = user_info.additional_claims().realm_access.roles.clone();
+        let groups = user_info.additional_claims().groups.clone();
         User {
             id,
             full_name,
@@ -63,6 +65,7 @@ impl User {
             family_name,
             email,
             roles,
+            groups,
             middle_name,
             username,
         }
@@ -96,6 +99,7 @@ impl User {
             .map(|name| name.to_string());
         let email = claims.email().cloned().map(|name| name.to_string());
         let roles = claims.additional_claims().realm_access.roles.clone();
+        let groups = claims.additional_claims().groups.clone();
         User {
             id,
             full_name,
@@ -103,37 +107,17 @@ impl User {
             family_name,
             email,
             roles,
+            groups,
             middle_name,
             username,
         }
     }
-}
 
-#[async_trait]
-impl<B> FromRequest<B> for User
-where
-    B: Send,
-{
-    // If anything goes wrong or no session is found, redirect to the auth page
-    type Rejection = LoginPageRedirect;
-
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let Extension(store) = Extension::<RedisSessionStore>::from_request(req)
-            .await
-            .expect("`RedisSessionStore` extension is missing");
-        let Extension(client) = Extension::<OpenIdClient>::from_request(req)
-            .await
-            .expect("`OpenIdClient` extension is missing");
-
-        let cookies = TypedHeader::<headers::Cookie>::from_request(req)
-            .await
-            .map_err(|e| match *e.name() {
-                header::COOKIE => match e.reason() {
-                    TypedHeaderRejectionReason::Missing => LoginPageRedirect,
-                    _ => panic!("unexpected error getting Cookie header(s): {}", e),
-                },
-                _ => panic!("unexpected error getting cookies: {}", e),
-            })?;
+    pub async fn from_cookie(
+        store: RedisSessionStore,
+        client: OpenIdClient,
+        cookies: headers::Cookie,
+    ) -> Result<Self, LoginPageRedirect> {
         let session_cookie = cookies.get(COOKIE_NAME).ok_or(LoginPageRedirect)?;
 
         let session = store
@@ -172,5 +156,35 @@ where
         };
 
         Ok(User::from_user_info(&user_info))
+    }
+}
+
+#[async_trait]
+impl<B> FromRequest<B> for User
+where
+    B: Send,
+{
+    // If anything goes wrong or no session is found, redirect to the auth page
+    type Rejection = LoginPageRedirect;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        let Extension(store) = Extension::<RedisSessionStore>::from_request(req)
+            .await
+            .expect("`RedisSessionStore` extension is missing");
+        let Extension(client) = Extension::<OpenIdClient>::from_request(req)
+            .await
+            .expect("`OpenIdClient` extension is missing");
+
+        let cookies = TypedHeader::<headers::Cookie>::from_request(req)
+            .await
+            .map_err(|e| match *e.name() {
+                header::COOKIE => match e.reason() {
+                    TypedHeaderRejectionReason::Missing => LoginPageRedirect,
+                    _ => panic!("unexpected error getting Cookie header(s): {}", e),
+                },
+                _ => panic!("unexpected error getting cookies: {}", e),
+            })?;
+
+        User::from_cookie(store, client, cookies.0).await
     }
 }

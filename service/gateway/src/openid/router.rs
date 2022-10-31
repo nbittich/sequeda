@@ -19,7 +19,7 @@ use hyper::{header::SET_COOKIE, HeaderMap};
 use openidconnect::Nonce;
 
 use super::{
-    auth_redirect::{AuthRedirect, LoginPageRedirect},
+    auth_redirect::LoginPageRedirect,
     auth_request::AuthRequest,
     client::{OpenIdClient, OpenIdToken},
     destroy_session,
@@ -57,12 +57,17 @@ pub async fn open_id_router() -> Router {
 }
 
 async fn login(
+    user: Option<User>,
     Extension(client): Extension<OpenIdClient>,
     Extension(config): Extension<Config>,
 ) -> impl IntoResponse {
+    if user.is_some() {
+        return Redirect::permanent("/logout").into_response();
+    }
     let nonce = Nonce::new_random();
     let redirect_url = format!("{}/{}", &config.redirect_url, nonce.secret());
-    AuthRedirect::new(&client, &redirect_url, nonce.clone()).await
+    let (_, authorize_url, _, _) = client.get_authorize_url(&redirect_url, nonce);
+    Redirect::temporary(authorize_url.as_str()).into_response()
 }
 
 async fn logout(

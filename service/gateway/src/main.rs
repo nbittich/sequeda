@@ -77,8 +77,7 @@ async fn handler(
     mut req: Request<Body>,
 ) -> impl IntoResponse {
     tracing::debug!("req: {req:?}");
-
-    match request_handler.handle(&mut req) {
+    match request_handler.handle(&mut req).await {
         Ok(_) => match client.request(req).await {
             Ok(response) => response,
             Err(er) => {
@@ -89,6 +88,10 @@ async fn handler(
                     .unwrap()
             }
         },
+        Err(e) if e.status.is_some() => Response::builder()
+            .status(e.status.unwrap())
+            .body(Body::from(format!("{e}")))
+            .unwrap(),
         Err(e) => Response::builder()
             .status(500)
             .body(Body::from(format!("unexpected error: {e}")))

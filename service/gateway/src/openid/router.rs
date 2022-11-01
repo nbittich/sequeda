@@ -8,7 +8,7 @@ use axum::{
     response::{IntoResponse, Redirect},
     routing::get,
     routing::Router,
-    Extension, TypedHeader, Json,
+    Extension, Json, TypedHeader,
 };
 use hyper::{header::SET_COOKIE, HeaderMap, StatusCode};
 use openidconnect::Nonce;

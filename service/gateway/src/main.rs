@@ -8,11 +8,12 @@ pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_
 use axum::{
     extract::Extension,
     handler::Handler,
-    http::{Request, Response, HeaderValue},
+    headers::ContentType,
+    http::{Request, Response},
     response::IntoResponse,
-    Router, headers::ContentType,
+    Router,
 };
-use hyper::{client::HttpConnector, Body, StatusCode, header::CONTENT_TYPE};
+use hyper::{client::HttpConnector, header::CONTENT_TYPE, Body, StatusCode};
 
 use hyper_rustls::HttpsConnector;
 use openid::User;
@@ -123,15 +124,19 @@ async fn handler(
                     Response::builder()
                         .status(500)
                         .header(CONTENT_TYPE, ContentType::json().to_string())
-                        .body(Body::from(format!(r#"{{"error": "unexpected error: {er}"}}"#)))
+                        .body(Body::from(format!(
+                            r#"{{"error": "unexpected error: {er}"}}"#
+                        )))
                         .unwrap()
                 }
             }
         }
         Err(e) => Response::builder()
-            .status(e.status.unwrap_or_else(||StatusCode::INTERNAL_SERVER_ERROR))
+            .status(e.status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
             .header(CONTENT_TYPE, ContentType::json().to_string())
-            .body(Body::from(format!(r#"{{"error": "unexpected error: {e}"}}"#)))
+            .body(Body::from(format!(
+                r#"{{"error": "unexpected error: {e}"}}"#
+            )))
             .unwrap(),
     }
 }

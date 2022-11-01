@@ -23,7 +23,7 @@ A first goal would be to replace java (almost) entirely, and keep only the relev
 
 ## Gateway
 
-- a replacement for spring cloud gateway
+- a replacement for spring cloud gateway, with authentication & (configurable) per route authorization based on groups and roles.
 
 
 ## Docker usage
@@ -32,5 +32,3 @@ A first goal would be to replace java (almost) entirely, and keep only the relev
 
 `docker run -v /tmp:/tmp -p 8080:8080 -e SERVICE_HOST=0.0.0.0 -e SERVICE_PORT=8080  -it sequeda/gateway`
 
-
-### WIP - OPENID

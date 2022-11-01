@@ -18,12 +18,9 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: root
     user: root
-    ports:
-      - 80:80
     networks:
       sequeda:
-        aliases:
-          - auth.somehost.org
+    command: start --optimized --http-port=80
     volumes:
         - ./config/keycloak-dev/export:/tmp/export
         - ./config/keycloak-dev/import:/tmp/import
@@ -37,9 +34,11 @@ services:
     image: caddy:2
     networks:
       sequeda:
-
+        aliases:
+          - auth.somehost.org
     ports:
       - "443:443"
+      - "80:80"
     environment:
       API_ADDRESS: "api.somehost.org"
       AUTH_ADDRESS: "auth.somehost.org"

@@ -41,3 +41,11 @@ routes:
         method: "POST"
         has_roles:
           - creep
+  # - id: keycloak
+  #   uri: http://keycloak:80
+  #   filters:
+  #     - !add_request_header
+  #       key: "X-Forwarded-Port"
+  #       value: "443"
+  #   predicates:
+  #     - !host auth.somehost.org

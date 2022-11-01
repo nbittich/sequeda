@@ -1,6 +1,9 @@
-{$AUTH_ADDRESS}:443 {
+https://{$AUTH_ADDRESS} {
   reverse_proxy keycloak:80
   tls internal
+}
+http://{$AUTH_ADDRESS} {
+  reverse_proxy keycloak:80
 }
 {$API_ADDRESS}:443 {
   reverse_proxy gateway:80

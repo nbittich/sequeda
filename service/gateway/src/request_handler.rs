@@ -160,7 +160,7 @@ impl RequestHandler {
                     Some(user) => user,
                     None => {
                         return Err(RequestHandlerError {
-                            status: Some(StatusCode::FORBIDDEN),
+                            status: Some(StatusCode::UNAUTHORIZED),
                             msg: "Could not retrieve user".to_string(),
                         });
                     }

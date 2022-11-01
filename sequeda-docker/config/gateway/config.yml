@@ -2,17 +2,50 @@ routes:
   - id: yahoo_finance_chart
     uri: https://query1.finance.yahoo.com
     predicates:
-    - !host api.somehost.org
-    - !path /proxy/yahoo-finance/chart/**
+      - !host api.somehost.org
+      - !path /proxy/yahoo-finance/chart/**
     filters:
-    - !rewrite_path
+      - !rewrite_path
         source: /proxy/yahoo-finance/chart/(?P<segment>.*)
         dest: /v8/finance/chart/${segment}
-  - id: auth
-    uri: http://auth.somehost.org:8080
+      - !remove_request_header Cookie
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+  - id: person_find_all
+    uri: http://person
     predicates:
-    - !host auth.somehost.org
+      - !path /person/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
     filters:
-    - !add_request_header
-        key: "X-Forwarded-Port"
-        value: "443"
+      - !rewrite_path
+        source: /person/find-all/**
+        dest: /find-all
+  - id: person_upsert
+    uri: http://person
+    filters:
+      - !rewrite_path
+        source: /person/**
+        dest: /
+    predicates:
+      - !path /person/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+  # - id: keycloak
+  #   uri: http://keycloak:80
+  #   filters:
+  #     - !add_request_header
+  #       key: "X-Forwarded-Port"
+  #       value: "443"
+  #   predicates:
+  #     - !host auth.somehost.org

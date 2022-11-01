@@ -3,7 +3,7 @@ pub mod tenant;
 
 pub use constants::{
     CORS_ALLOW_ORIGIN, SERVICE_APPLICATION_NAME, SERVICE_COLLECTION_NAME, SERVICE_CONFIG_VOLUME,
-    SERVICE_DATA_VOLUME, SERVICE_HOST, SERVICE_PORT,
+    SERVICE_DATA_VOLUME, SERVICE_HOST, SERVICE_PORT, X_TENANT_ID_HEADER,
 };
 use tracing::Level;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};

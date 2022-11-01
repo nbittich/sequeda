@@ -7,8 +7,17 @@ use serde::{Deserialize, Serialize};
 pub struct Route {
     pub id: String,
     pub uri: String,
-    pub predicates: Vec<Predicate>,
-    pub filters: Vec<Filter>,
+    pub predicates: Option<Vec<Predicate>>,
+    pub filters: Option<Vec<Filter>>,
+    pub authorizations: Option<Vec<Authorization>>,
+}
+
+#[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub struct Authorization {
+    pub method: String,
+    pub has_roles: Option<Vec<String>>,
+    pub has_groups: Option<Vec<String>>,
 }
 
 #[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
@@ -22,6 +31,7 @@ pub struct Config {
 pub enum Predicate {
     Host(String),
     Path(String),
+    Method(String),
 }
 #[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -95,26 +105,31 @@ mod test {
                     Route {
                         id: "yahoo_finance_chart".into(),
                         uri: "https://query1.finance.yahoo.com".into(),
-                        predicates: vec![Predicate::Path("/proxy/yahoo-finance/chart/**".into())],
-                        filters: vec![Filter::RewritePath {
+                        predicates: Some(vec![Predicate::Path(
+                            "/proxy/yahoo-finance/chart/**".into()
+                        )]),
+                        filters: Some(vec![Filter::RewritePath {
                             source: "/proxy/yahoo-finance/chart/(?P<segment>.*)".into(),
                             dest: "/v8/finance/chart/${segment}".into(),
-                        }],
+                        }]),
+                        authorizations: None,
                     },
                     Route {
                         id: "auth".into(),
                         uri: "http://auth.somehost.org:8080".into(),
-                        predicates: vec![Predicate::Host("auth.somehost.org".into())],
-                        filters: vec![Filter::AddRequestHeader {
+                        predicates: Some(vec![Predicate::Host("auth.somehost.org".into())]),
+                        filters: Some(vec![Filter::AddRequestHeader {
                             key: "X-Forwarded-Port".into(),
                             value: "443".into()
-                        }],
+                        }]),
+                        authorizations: None,
                     },
                     Route {
                         id: "auth2".into(),
                         uri: "http://auth2.somehost.org:8080".into(),
-                        predicates: vec![Predicate::Host("auth2.somehost.org".into())],
-                        filters: vec![Filter::RemoveRequestHeader("X-Forwarded-Port".into())],
+                        predicates: Some(vec![Predicate::Host("auth2.somehost.org".into())]),
+                        filters: Some(vec![Filter::RemoveRequestHeader("X-Forwarded-Port".into())]),
+                        authorizations: None,
                     }
                 ],
             }

@@ -7,6 +7,7 @@ pub struct Person {
     #[serde(rename = "_id")]
     pub id: String,
     pub first_name: String,
+    pub middle_name: String,
     pub last_name: String,
     pub date_of_birth: NaiveDate,
     pub creation_date: NaiveDateTime,
@@ -43,6 +44,7 @@ impl Default for Person {
             gender: Gender::Unknown,
             academic_title: Default::default(),
             contact_detail: Default::default(),
+            middle_name: Default::default(),
         }
     }
 }
@@ -54,6 +56,7 @@ pub struct ContactDetail {
     pub email_address_2: Option<String>,
     pub phone_number_1: String,
     pub phone_number_2: Option<String>,
+    pub website: Option<String>,
     pub address: Address,
 }
 

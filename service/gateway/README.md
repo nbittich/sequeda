@@ -21,6 +21,9 @@ routes:
         method: "GET"
         has_roles:
           - creep
+        has_groups:
+          - /yahoo
+          - /manager
   - id: person_find_all
     uri: http://person
     predicates:

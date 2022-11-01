@@ -2,7 +2,12 @@
 
 Simple api gateway with built-in openid connect authentication / authorization.
 
-Use a similar configuration strategy than spring cloud gateway, but with configurable authorizations, e.g:
+Use a similar configuration strategy than spring cloud gateway, but with configurable authorizations, (see below).
+
+In case of an authorized route, and if a scope `tenant` is present, it will be
+added automatically to the request as a `X-TENANT-ID` header.
+This is useful to select the right database depending on the logged user.
+
 
 ```yaml
 routes:
@@ -80,6 +85,7 @@ routes:
       SERVICE_HOST: 0.0.0.0
       SERVICE_PORT: 80
       OPENID_ENABLED: "true"
+      OPENID_SCOPES: "roles, tenant, groups, email, profile"
       APP_ROOT_URL: "https://api.somehost.org"
       OPENID_ISSUER_URL: "http://auth.somehost.org/realms/sequeda"
       OPENID_CLIENT_ID: "sequeda-auth"

@@ -8,9 +8,9 @@ use axum::{
     response::{IntoResponse, Redirect},
     routing::get,
     routing::Router,
-    Extension, TypedHeader,
+    Extension, TypedHeader, Json,
 };
-use hyper::{header::SET_COOKIE, HeaderMap};
+use hyper::{header::SET_COOKIE, HeaderMap, StatusCode};
 use openidconnect::Nonce;
 
 use super::{
@@ -52,7 +52,7 @@ async fn login(
     Extension(config): Extension<Config>,
 ) -> impl IntoResponse {
     if user.is_some() {
-        return Redirect::permanent("/logout").into_response();
+        return Redirect::permanent("/@me").into_response();
     }
     let nonce = Nonce::new_random();
     let redirect_url = format!("{}/{}", &config.redirect_url, nonce.secret());
@@ -83,10 +83,7 @@ async fn logout(
 }
 
 async fn user_info(user: User) -> impl IntoResponse {
-    format!(
-        "Welcome to the protected area :)\nHere's your info:\n{:?}",
-        user
-    )
+    (StatusCode::OK, Json(user))
 }
 
 async fn login_authorized(

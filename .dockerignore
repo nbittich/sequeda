@@ -3,3 +3,4 @@
 /*/.vscode/**
 .clocignore
 cloc.sh
+/backoffice/

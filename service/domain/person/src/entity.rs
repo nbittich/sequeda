@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Person {
     #[serde(rename = "_id")]
     pub id: String,
+    pub user_id: Option<String>,
     pub first_name: String,
     pub middle_name: String,
     pub last_name: String,
@@ -22,6 +23,7 @@ pub struct Person {
 #[serde(rename_all = "camelCase")]
 pub struct PersonUpsert {
     pub id: Option<String>,
+    pub user_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
     pub date_of_birth: NaiveDate,
@@ -35,6 +37,7 @@ impl Default for Person {
     fn default() -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
+            user_id: Default::default(),
             first_name: Default::default(),
             last_name: Default::default(),
             date_of_birth: Default::default(),

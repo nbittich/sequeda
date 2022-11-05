@@ -139,6 +139,15 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
         Ok(res)
     }
 
+    async fn find_one(&self, query: Option<Document>) -> Result<Option<T>, StoreError> {
+        let collection = self.get_collection();
+        let res = collection
+            .find_one(query, None)
+            .await
+            .map_err(|e| StoreError { msg: e.to_string() })?;
+        Ok(res)
+    }
+
     async fn delete_by_id(&self, id: &str) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection

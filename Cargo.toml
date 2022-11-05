@@ -45,6 +45,7 @@ async-session = "3.0.0"
 axum-sessions = "0.3.1"
 axum-extra = "0.3.7"
 rand = "0.8.5"
+base64 = "0.13.1"
 
 [workspace.package]
 version = "0.1.0"

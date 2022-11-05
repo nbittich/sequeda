@@ -27,6 +27,19 @@ routes:
       - !rewrite_path
         source: /person/find-all/**
         dest: /find-all
+  - id: person_current
+    uri: http://person
+    predicates:
+      - !path /person/current/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+    filters:
+      - !rewrite_path
+        source: /person/current/**
+        dest: /current
   - id: person_upsert
     uri: http://person
     filters:

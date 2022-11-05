@@ -26,7 +26,7 @@ services:
       - ./data/keycloak_postgresql:/var/lib/postgresql/data
   keycloak:
     restart: always
-    image: nbittich/keycloak:19.0.3
+    image: nbittich/keycloak:20.0.0
     networks:
       sequeda:
     environment:

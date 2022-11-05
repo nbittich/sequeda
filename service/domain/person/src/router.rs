@@ -58,16 +58,20 @@ async fn current(
             }))
         );
     };
+    tracing::debug!("tenant is {}", &tenant);
+
     let repository = get_repository(client, &collection.0, &tenant).await;
-    if let Ok(person) = repository
-        .find_one(Some(doc! {"user_id": &x_user_info.id}))
+    if let Ok(Some(person)) = repository
+        .find_one(Some(doc! {"userId": &x_user_info.id}))
         .await
     {
+        tracing::debug!("user was found, person {:?}", &person);
         (StatusCode::OK, Json(to_value(person)))
     } else {
         let person = Person {
             user_id: Some(x_user_info.id),
             first_name: x_user_info.given_name.unwrap_or_default(),
+            nick_name: x_user_info.username,
             last_name: x_user_info.family_name.unwrap_or_default(),
             middle_name: x_user_info.middle_name.unwrap_or_default(),
             contact_detail: ContactDetail {
@@ -227,10 +231,13 @@ async fn upsert(
     }
 }
 
-fn to_value<T: Serialize>(data: T) -> Value {
-    match serde_json::to_value(data) {
+fn to_value<T: Serialize + core::fmt::Debug>(data: T) -> Value {
+    match serde_json::to_value(&data) {
         Ok(value) => value,
-        Err(_) => json!({}),
+        Err(e) => {
+            tracing::error!("error serialing {:?}, error: {e}", &data);
+            json!({})
+        },
     }
 }
 

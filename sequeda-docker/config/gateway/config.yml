@@ -14,6 +14,15 @@ routes:
         method: "GET"
         has_roles:
           - creep
+  - id: api
+    uri: http://gateway
+    predicates:
+      - !path /api/**
+    filters:
+      - !rewrite_path
+        source: /api/(?P<segment>.*)
+        dest: /${segment}
+
   - id: person_find_all
     uri: http://person
     predicates:

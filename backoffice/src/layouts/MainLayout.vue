@@ -31,8 +31,8 @@
         <q-list padding class="menu-list">
           <q-item clickable v-ripple @click="alert('hello')">
             <q-item-section avatar>
-                <q-icon name="corporate_fare" />
-              </q-item-section>
+              <q-icon name="corporate_fare" />
+            </q-item-section>
             <q-item-section> Profile </q-item-section>
           </q-item>
         </q-list>
@@ -57,9 +57,11 @@
 
     <q-page-container>
       <q-page class="q-px-lg q-py-md">
-        <router-view />
+        <router-view v-on:startAjaxBar="onStartAjaxBar" v-on:stopAjaxBar="onStopAjaxBar"  />
+
       </q-page>
     </q-page-container>
+
   </q-layout>
 </template>
 
@@ -70,7 +72,6 @@ export default defineComponent({
   name: 'MainLayout',
 
   components: {},
-
   setup() {
     const miniState = ref(true);
 
@@ -89,9 +90,9 @@ export default defineComponent({
           e.stopPropagation();
         }
       },
-      alert(msg:string) {
+      alert(msg: string) {
         window.alert(msg);
-      }
+      },
     };
   },
 });

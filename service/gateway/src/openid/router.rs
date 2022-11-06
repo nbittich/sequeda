@@ -63,8 +63,13 @@ async fn login(
 async fn logout(
     Extension(client): Extension<OpenIdClient>,
     Extension(store): Extension<RedisSessionStore>,
-    TypedHeader(cookies): TypedHeader<headers::Cookie>,
+    optional_cookies: Option<TypedHeader<headers::Cookie>>,
 ) -> impl IntoResponse {
+    let cookies = if let Some(cookies) = optional_cookies {
+        cookies
+    } else {
+        return LoginPageRedirect;
+    };
     let cookie = cookies.get(COOKIE_NAME).unwrap();
     let session = match store.load_session(cookie.to_string()).await.unwrap() {
         Some(s) => s,
@@ -109,5 +114,5 @@ async fn login_authorized(
     // Set cookie
     let mut headers = HeaderMap::new();
     headers.insert(SET_COOKIE, cookie.parse().unwrap());
-    (headers, Redirect::to("/@me"))
+    (headers, Redirect::to("/@me")) // todo change this
 }

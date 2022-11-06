@@ -2,6 +2,7 @@
   <div v-if="current">
     <pre>{{current}}</pre>
   </div>
+
 </template>
 
 <script lang="ts">

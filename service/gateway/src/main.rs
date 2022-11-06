@@ -13,7 +13,11 @@ use axum::{
     response::IntoResponse,
     Router,
 };
-use hyper::{client::HttpConnector, header::CONTENT_TYPE, Body, StatusCode};
+use hyper::{
+    client::HttpConnector,
+    header::{CONTENT_TYPE, LOCATION},
+    Body, StatusCode,
+};
 
 use hyper_rustls::HttpsConnector;
 use openid::User;
@@ -113,11 +117,26 @@ async fn handler(
     mut req: Request<Body>,
 ) -> impl IntoResponse {
     tracing::debug!("req: {req:?}");
+    let handle_forbidden = |status: StatusCode| {
+        tracing::error!("unauthorized access: {:?}", &status);
+        Response::builder()
+            .status(StatusCode::PERMANENT_REDIRECT)
+            .header(LOCATION, "/logout")
+            .body(Default::default())
+            .unwrap()
+    };
     match request_handler.handle(&mut req, user).await {
         Ok(_) => {
             tracing::debug!("AFTER HANDLER req: {req:?}");
 
             match client.request(req).await {
+                Ok(response)
+                    if response.status() == StatusCode::UNAUTHORIZED
+                        || response.status() == StatusCode::FORBIDDEN =>
+                {
+                    handle_forbidden(response.status())
+                }
+
                 Ok(response) => response,
                 Err(er) => {
                     tracing::debug!("error in request {er}");
@@ -131,6 +150,13 @@ async fn handler(
                 }
             }
         }
+        Err(e)
+            if e.status == Some(StatusCode::FORBIDDEN)
+                || e.status == Some(StatusCode::UNAUTHORIZED) =>
+        {
+            handle_forbidden(e.status.unwrap())
+        }
+
         Err(e) => Response::builder()
             .status(e.status.unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
             .header(CONTENT_TYPE, ContentType::json().to_string())

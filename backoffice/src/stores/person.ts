@@ -7,7 +7,7 @@ export interface PersonState {
   firstName?: string,
   middleName?: string,
   lastName?: string,
-  dateOfBirth?: Date,
+  dateOfBirth?: string,
   creationDate?: Date,
   updatedDate?: Date,
   nickname?: string,

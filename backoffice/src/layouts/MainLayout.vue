@@ -57,11 +57,16 @@
 
     <q-page-container>
       <q-page class="q-px-lg q-py-md">
-        <router-view v-on:startAjaxBar="onStartAjaxBar" v-on:stopAjaxBar="onStopAjaxBar"  />
-
+        <Suspense>
+          <template #default>
+            <router-view />
+          </template>
+          <template #fallback>
+            <div>Loading...</div>
+          </template>
+        </Suspense>
       </q-page>
     </q-page-container>
-
   </q-layout>
 </template>
 

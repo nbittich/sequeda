@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
 import { ref } from 'vue';
-export interface PersonState {
+export interface Person {
   _id?: string,
   userId?: string,
   firstName?: string,
@@ -13,16 +13,16 @@ export interface PersonState {
   nickname?: string,
   gender?: string,
   academicTitle?: string,
-  contactDetail?: ContactDetail
+  contactDetail: ContactDetail
 }
 
 export interface ContactDetail {
   emailAddress1?: string,
-  elailAddress2?: string,
+  emailAddress2?: string,
   phoneNumber1?: string,
   phoneNumber2?: string
   website?: string
-  address?: Address
+  address: Address
 }
 
 export interface Address {
@@ -37,7 +37,7 @@ export interface Address {
 
 export const usePersonStore = defineStore('person', {
   state: () => ({
-    current: ref(null as unknown as PersonState)
+    current: ref(null as unknown as Person)
   }),
 
   getters: {
@@ -48,7 +48,7 @@ export const usePersonStore = defineStore('person', {
 
   actions: {
     async fetchCurrent() {
-      const data = await api.get<PersonState>('/person/current');
+      const data = await api.get<Person>('/person/current');
       this.current = data.data;
     },
   },

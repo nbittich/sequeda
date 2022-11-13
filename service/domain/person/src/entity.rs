@@ -22,6 +22,7 @@ pub struct Person {
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PersonUpsert {
+    #[serde(rename = "_id")]
     pub id: Option<String>,
     pub user_id: Option<String>,
     pub first_name: String,

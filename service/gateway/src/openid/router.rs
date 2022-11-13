@@ -65,15 +65,14 @@ async fn logout(
     Extension(store): Extension<RedisSessionStore>,
     optional_cookies: Option<TypedHeader<headers::Cookie>>,
 ) -> impl IntoResponse {
-    let cookies = if let Some(cookies) = optional_cookies {
+    let cookie = if let Some(cookies) = optional_cookies.and_then(|cookies| cookies.get(COOKIE_NAME).map(|cookie| cookie.to_string())) {
         cookies
     } else {
         return LoginPageRedirect;
     };
-    let cookie = cookies.get(COOKIE_NAME).unwrap();
-    let session = match store.load_session(cookie.to_string()).await.unwrap() {
-        Some(s) => s,
-        None => return LoginPageRedirect,
+    let session = match store.load_session(cookie).await {
+        Ok(Some(s)) => s,
+        Ok(None) | Err(_) => return LoginPageRedirect,
     };
     if let Some(id_token) = session.get::<OpenIdToken>("token") {
         match client.logout(&id_token).await {

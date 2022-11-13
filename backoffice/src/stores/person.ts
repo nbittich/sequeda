@@ -37,20 +37,23 @@ export interface Address {
 
 export const usePersonStore = defineStore('person', {
   state: () => ({
-    current: ref(null as unknown as Person)
+    current: null as unknown as Person
   }),
 
   getters: {
-    // doubleCount (state) {
-    //   return state.counter * 2;
-    // }
+
   },
 
   actions: {
     async fetchCurrent() {
-      const data = await api.get<Person>('/person/current');
-      this.current = data.data;
+      const response = await api.get<Person>('/person/current');
+      this.current = response.data;
     },
+    async update(person: Person) {
+      const response = await api.post<Person>('/person', person);
+      return response.data;
+    },
+
   },
 });
 export default usePersonStore;

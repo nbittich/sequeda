@@ -1,7 +1,7 @@
 <template>
   <div class="row">
     <div class="col-12">
-      <q-card>
+      <q-card v-if="current">
         <q-card-section>
           <div class="text-h6">Personal Information</div>
         </q-card-section>
@@ -44,7 +44,6 @@
                 class="q-mr-md-xs"
                 label="Birth date"
                 v-model="current.dateOfBirth"
-                mask="date"
                 :rules="['date']"
               >
                 <template v-slot:append>
@@ -55,7 +54,7 @@
                       transition-show="scale"
                       transition-hide="scale"
                     >
-                      <q-date v-model="current.dateOfBirth">
+                      <q-date mask="YYYY-MM-DD" v-model="current.dateOfBirth">
                         <div class="row items-center justify-end">
                           <q-btn
                             v-close-popup
@@ -75,8 +74,11 @@
                 dense
                 class="q-mr-md-xs"
                 outlined
-                v-model="current.academicTitle"
+                v-model="current.gender"
                 :options="gender"
+                option-label="label"
+                option-value="value"
+                emit-value
                 label="Gender"
               />
             </div>
@@ -87,6 +89,9 @@
                 v-model="current.academicTitle"
                 :options="academicTitle"
                 label="Title"
+                option-label="label"
+                option-value="value"
+                emit-value
               />
             </div>
           </div>
@@ -214,8 +219,8 @@
         <q-separator />
 
         <q-card-actions>
-          <q-btn flat>Save</q-btn>
-          <q-btn flat>Cancel</q-btn>
+          <q-btn flat @click="update">Save</q-btn>
+          <q-btn flat @click="reset">Cancel</q-btn>
         </q-card-actions>
       </q-card>
     </div>
@@ -224,17 +229,17 @@
 
 <script lang="ts">
 import usePersonStore from 'src/stores/person';
-import { defineComponent } from 'vue';
+
+import { defineComponent, ref } from 'vue';
+const personStore = usePersonStore();
+await personStore.fetchCurrent();
+
 export default defineComponent({
   name: 'PersonalInformation',
   components: {},
   computed: {
     gender: () => {
       return [
-        {
-          label: '-',
-          value: null,
-        },
         {
           label: 'Male',
           value: 'MALE',
@@ -267,10 +272,17 @@ export default defineComponent({
     },
   },
   async setup() {
-    const store = usePersonStore();
-    await store.fetchCurrent();
-    return { current: store.current };
+    const current = ref(personStore.current);
+    return { current };
   },
+  methods: {
+    async update() {
+      this.current = await personStore.update(this.current);
+    },
+    async reset(e: Event) {
+      e.preventDefault();
+    }
+  }
 });
 </script>
 <style lang="sass" scoped></style>

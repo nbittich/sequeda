@@ -72,7 +72,7 @@ impl PostalCode {
     fn find_by_postal_code<'a>(postal_codes: &'a [Self], code: &'a str) -> Option<&'a Self> {
         postal_codes.iter().find(|pc| pc.postal_code == code)
     }
-    fn find_by_country_code_and_postal_code_like<'a>(
+    fn find_by_country_code_and_query<'a>(
         postal_codes: &'a HashMap<&'static str, Vec<Self>>,
         country_code: &'a str,
         query: &'a str,
@@ -80,7 +80,13 @@ impl PostalCode {
         postal_codes
             .get(country_code)
             .map(|pc| pc.iter())
-            .map(|pc| pc.filter(|p| p.postal_code.starts_with(query)).collect())
+            .map(|pc| {
+                pc.filter(|p| {
+                    p.postal_code.starts_with(query)
+                        || p.name.to_lowercase().starts_with(&query.to_lowercase())
+                })
+                .collect()
+            })
     }
 }
 
@@ -97,7 +103,7 @@ async fn main() {
     tracing::info!("listening on {:?}", addr);
     let app = Router::new()
         .route("/find-by-country/:country_code", get(find_by_country))
-        .route("/find-by-post-code/:post_code", get(find_by_postal_code))
+        .route("/find-by-query/:country_code", get(find_by_query))
         .route("/get-countries", get(get_countries))
         .layer(Extension(postal_codes))
         .layer(Extension(countries));
@@ -120,23 +126,21 @@ async fn find_by_country(
 }
 
 async fn get_countries(Extension(countries): Extension<Arc<Vec<Country>>>) -> impl IntoResponse {
-    tracing::debug!("Find by country route entered!");
-    Json(to_json_string(&countries))
+    tracing::debug!("Get countries route entered!");
+    Json(to_json_string(&*countries))
 }
 
-async fn find_by_postal_code(
+async fn find_by_query(
     Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode>>>>,
     Path(country_code): Path<String>,
     Query(postal_code): Query<String>,
 ) -> impl IntoResponse {
-    tracing::debug!("Find by country route entered!");
-    Json(to_json_string(
-        PostalCode::find_by_country_code_and_postal_code_like(
-            &postal_codes,
-            &country_code,
-            &postal_code,
-        ),
-    ))
+    tracing::debug!("Find by query route entered!");
+    Json(to_json_string(PostalCode::find_by_country_code_and_query(
+        &postal_codes,
+        &country_code,
+        &postal_code,
+    )))
 }
 
 #[cfg(test)]
@@ -168,7 +172,7 @@ mod test {
         );
 
         assert_eq!(
-            PostalCode::find_by_country_code_and_postal_code_like(&postal_codes, "BE", "108"),
+            PostalCode::find_by_country_code_and_query(&postal_codes, "BE", "108"),
             Some(vec![
                 &PostalCode {
                     country_code: "BE",

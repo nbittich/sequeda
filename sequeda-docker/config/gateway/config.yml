@@ -63,6 +63,16 @@ routes:
         method: "POST"
         has_roles:
           - creep
+  - id: geo_entities
+    uri: http://geo-entities
+    filters:
+      - !rewrite_path
+        source: /geo/**
+        dest: /
+    predicates:
+      - !path /geo/**
+      - !method GET
+ 
   # - id: keycloak
   #   uri: http://keycloak:80
   #   filters:

@@ -1,12 +1,7 @@
 use std::{collections::HashMap, env::var, net::SocketAddr, str::FromStr, sync::Arc};
 
-use axum::{
-    extract::{Path, Query},
-    response::IntoResponse,
-    routing::get,
-    Extension, Json, Router,
-};
-use sequeda_service_common::{setup_tracing, to_json_string, SERVICE_HOST, SERVICE_PORT};
+use axum::{extract::Query, response::IntoResponse, routing::get, Extension, Json, Router};
+use sequeda_service_common::{setup_tracing, to_value, SERVICE_HOST, SERVICE_PORT};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
@@ -102,9 +97,9 @@ async fn main() {
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
     tracing::info!("listening on {:?}", addr);
     let app = Router::new()
-        .route("/find-by-country/:country_code", get(find_by_country))
-        .route("/find-by-query/:country_code", get(find_by_query))
-        .route("/get-countries", get(get_countries))
+        .route("/municipality/by-country", get(find_by_country))
+        .route("/municipality/by-query", get(find_by_query))
+        .route("/countries", get(get_countries))
         .layer(Extension(postal_codes))
         .layer(Extension(countries));
 
@@ -116,30 +111,29 @@ async fn main() {
 
 async fn find_by_country(
     Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode>>>>,
-    Path(country_code): Path<String>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by country route entered!");
-    Json(to_json_string(PostalCode::filter_by_country_code(
+    Json(to_value(PostalCode::filter_by_country_code(
         &postal_codes,
-        &country_code,
+        &params["country_code"],
     )))
 }
 
 async fn get_countries(Extension(countries): Extension<Arc<Vec<Country>>>) -> impl IntoResponse {
     tracing::debug!("Get countries route entered!");
-    Json(to_json_string(&*countries))
+    Json(to_value(&*countries))
 }
 
 async fn find_by_query(
     Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode>>>>,
-    Path(country_code): Path<String>,
-    Query(postal_code): Query<String>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by query route entered!");
-    Json(to_json_string(PostalCode::find_by_country_code_and_query(
+    Json(to_value(PostalCode::find_by_country_code_and_query(
         &postal_codes,
-        &country_code,
-        &postal_code,
+        &params["country_code"],
+        &params["query"],
     )))
 }
 

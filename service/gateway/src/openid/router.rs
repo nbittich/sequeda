@@ -65,7 +65,9 @@ async fn logout(
     Extension(store): Extension<RedisSessionStore>,
     optional_cookies: Option<TypedHeader<headers::Cookie>>,
 ) -> impl IntoResponse {
-    let cookie = if let Some(cookies) = optional_cookies.and_then(|cookies| cookies.get(COOKIE_NAME).map(|cookie| cookie.to_string())) {
+    let cookie = if let Some(cookies) = optional_cookies
+        .and_then(|cookies| cookies.get(COOKIE_NAME).map(|cookie| cookie.to_string()))
+    {
         cookies
     } else {
         return LoginPageRedirect;

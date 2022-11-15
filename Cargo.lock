@@ -1958,6 +1958,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "sequeda_geo_service"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "axum-extra",
+ "chrono",
+ "sequeda_service_common",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.2.1",
+]
+
+[[package]]
 name = "sequeda_message_broker"
 version = "0.1.0"
 dependencies = [

@@ -2,18 +2,17 @@ use std::env::var;
 
 use axum::{
     extract::{self, Path},
-    http::{HeaderValue, StatusCode},
+    http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
     Extension, Json, Router,
 };
 use chrono::Local;
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, CORS_ALLOW_ORIGIN, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    to_value, user_header::ExtractUserInfo, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
-use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::json;
 
 use crate::entity::{ContactDetail, Person, PersonUpsert};
 
@@ -21,8 +20,8 @@ use crate::entity::{ContactDetail, Person, PersonUpsert};
 struct Collection(String);
 
 pub fn get_router(client: StoreClient) -> Router {
-    let allow_origin = var(CORS_ALLOW_ORIGIN).unwrap_or_else(|_| String::from("*"));
-    let _allow_origin_header = allow_origin.parse::<HeaderValue>().unwrap();
+    //let allow_origin = var(CORS_ALLOW_ORIGIN).unwrap_or_else(|_| String::from("*"));
+    //let _allow_origin_header = allow_origin.parse::<HeaderValue>().unwrap();
     let collection_name: String =
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("person"));
 
@@ -228,16 +227,6 @@ async fn upsert(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": e.to_string() })),
         ),
-    }
-}
-
-fn to_value<T: Serialize + core::fmt::Debug>(data: T) -> Value {
-    match serde_json::to_value(&data) {
-        Ok(value) => value,
-        Err(e) => {
-            tracing::error!("error serialing {:?}, error: {e}", &data);
-            json!({})
-        },
     }
 }
 

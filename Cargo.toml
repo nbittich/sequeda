@@ -4,6 +4,7 @@ members = [
     "service/domain/person",
     "service/service_common",
     "service/message_broker",
+    "service/geo_service",
     "service/gateway",
     "libraries/common",
     "libraries/store",

@@ -7,7 +7,7 @@ use axum::{
     headers,
     response::{IntoResponse, Redirect},
     routing::get,
-    routing::Router,
+    routing::{Router},
     Extension, Json, TypedHeader,
 };
 use hyper::{header::SET_COOKIE, HeaderMap, StatusCode};
@@ -35,6 +35,7 @@ pub async fn open_id_router(
 ) -> Router {
     Router::new()
         .route("/login", get(login))
+        // .route("/login-credentials", post(login_credentials))
         .route(auth_redirect, get(login_authorized))
         .route("/logout", get(logout))
         .route("/@me", get(user_info))
@@ -91,6 +92,34 @@ async fn logout(
 async fn user_info(user: User) -> impl IntoResponse {
     (StatusCode::OK, Json(user))
 }
+
+// async fn login_credentials(
+//     user: Option<User>,
+//     Query(params): Query<HashMap<String, String>>,
+//     Extension(client): Extension<OpenIdClient>,
+//     Extension(store): Extension<RedisSessionStore>,
+// ) -> impl IntoResponse {
+//     if user.is_some() {
+//         return Redirect::permanent("/@me").into_response();
+//     }
+//     let token = client
+//         .exchange_credentials(params["username"].clone(), params["password"].clone())
+//         .await
+//         .unwrap();
+//     let mut session = Session::new();
+//     session.insert("token", token).unwrap();
+
+//     // Store session and get corresponding cookie
+//     let cookie = store.store_session(session).await.unwrap().unwrap();
+
+//     // Build the cookie
+//     let cookie = format!("{}={}; SameSite=Lax; Path=/", COOKIE_NAME, cookie);
+
+//     // Set cookie
+//     let mut headers = HeaderMap::new();
+//     headers.insert(SET_COOKIE, cookie.parse().unwrap());
+//     (headers, Redirect::to("/@me")).into_response() // todo change this
+// }
 
 async fn login_authorized(
     Query(query): Query<AuthRequest>,

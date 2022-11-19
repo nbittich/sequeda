@@ -151,7 +151,7 @@ impl User {
         };
 
         let user = match &id_token.claims.as_ref() {
-            Some(claims) => User::from_claims(&claims),
+            Some(claims) => User::from_claims(claims),
             None => match client.exchange_access_token(&id_token, None).await {
                 Ok(user_info) => User::from_user_info(&user_info),
                 Err(e) => {

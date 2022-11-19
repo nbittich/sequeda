@@ -9,15 +9,12 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    to_value, user_header::ExtractUserInfo, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
 use serde_json::json;
 
 use crate::entity::{ContactDetail, Person, PersonUpsert};
-
-#[derive(Debug, Clone)]
-struct Collection(String);
 
 pub fn get_router(client: StoreClient) -> Router {
     //let allow_origin = var(CORS_ALLOW_ORIGIN).unwrap_or_else(|_| String::from("*"));
@@ -37,7 +34,7 @@ pub fn get_router(client: StoreClient) -> Router {
         //         .allow_methods(vec![Method::GET, Method::POST, Method::DELETE]),
         // )
         .layer(Extension(client))
-        .layer(Extension(Collection(collection_name)))
+        .layer(Extension(StoreCollection(collection_name)))
 }
 
 /// routes
@@ -46,7 +43,7 @@ pub fn get_router(client: StoreClient) -> Router {
 async fn current(
     Extension(client): Extension<StoreClient>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
-    Extension(collection): Extension<Collection>,
+    Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("Person get current route entered!");
     let Some(tenant) = x_user_info.tenant else {
@@ -59,7 +56,8 @@ async fn current(
     };
     tracing::debug!("tenant is {}", &tenant);
 
-    let repository = get_repository(client, &collection.0, &tenant).await;
+    let repository: StoreRepository<Person> =
+        StoreRepository::get_repository(client, &collection.0, &tenant).await;
     if let Ok(Some(person)) = repository
         .find_one(Some(doc! {"userId": &x_user_info.id}))
         .await
@@ -93,10 +91,10 @@ async fn current(
 async fn find_all(
     Extension(client): Extension<StoreClient>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
-    Extension(collection): Extension<Collection>,
+    Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("Person list route entered!");
-    let repository = get_repository(
+    let repository: StoreRepository<Person> = StoreRepository::get_repository(
         client,
         &collection.0,
         &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
@@ -112,12 +110,12 @@ async fn find_all(
 }
 async fn find_one(
     Extension(client): Extension<StoreClient>,
-    Extension(collection): Extension<Collection>,
+    Extension(collection): Extension<StoreCollection>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
     Path(person_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("Person find one route entered!");
-    let repository = get_repository(
+    let repository: StoreRepository<Person> = StoreRepository::get_repository(
         client,
         &collection.0,
         &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
@@ -135,7 +133,7 @@ async fn find_one(
 
 async fn delete_by_id(
     Extension(client): Extension<StoreClient>,
-    Extension(collection): Extension<Collection>,
+    Extension(collection): Extension<StoreCollection>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
     Path(person_id): Path<String>,
 ) -> impl IntoResponse {
@@ -148,7 +146,9 @@ async fn delete_by_id(
             }))
         );
     };
-    let repository = get_repository(client, &collection.0, &tenant).await;
+    let repository: StoreRepository<Person> =
+        StoreRepository::get_repository(client, &collection.0, &tenant).await;
+
     match repository.delete_by_id(&person_id).await {
         Ok(Some(person)) => (
             StatusCode::OK,
@@ -171,7 +171,7 @@ async fn delete_by_id(
 
 async fn upsert(
     Extension(client): Extension<StoreClient>,
-    Extension(collection): Extension<Collection>,
+    Extension(collection): Extension<StoreCollection>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
     extract::Json(payload): extract::Json<PersonUpsert>,
 ) -> impl IntoResponse {
@@ -184,7 +184,8 @@ async fn upsert(
             }))
         );
     };
-    let repository = get_repository(client, &collection.0, &tenant).await;
+    let repository: StoreRepository<Person> =
+        StoreRepository::get_repository(client, &collection.0, &tenant).await;
     let person = async {
         if let Some(id) = &payload.id {
             let p = repository.find_by_id(id).await;
@@ -230,12 +231,4 @@ async fn upsert(
             Json(json!({ "error": e.to_string() })),
         ),
     }
-}
-
-async fn get_repository(
-    client: StoreClient,
-    collection_name: &str,
-    tenant_id: &str,
-) -> StoreRepository<Person> {
-    StoreRepository::from_collection_name(&client, tenant_id, collection_name).await
 }

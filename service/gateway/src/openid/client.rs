@@ -9,8 +9,7 @@ use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,
-    RevocationUrl, Scope, SubjectIdentifier,
-    UserInfoClaims, 
+    RevocationUrl, Scope, SubjectIdentifier, UserInfoClaims,
 };
 use openidconnect::{ClientId, ClientSecret, IssuerUrl};
 use serde::{Deserialize, Serialize};
@@ -180,7 +179,7 @@ impl OpenIdClient {
     //         .map_err(|e| handle_error(&e, "exchange_credentials"))?;
     //     tracing::debug!("{token_response:?}");
     //     tracing::debug!("access_token {}", token_response.access_token().secret());
-        
+
     //     Ok(OpenIdToken {
     //         claims: None,
     //         token: token_response,

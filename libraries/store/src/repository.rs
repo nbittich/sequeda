@@ -27,6 +27,14 @@ impl<T> StoreRepository<T>
 where
     T: Serialize + DeserializeOwned + Unpin + Send + Sync,
 {
+    pub async fn get_repository(
+        client: StoreClient,
+        collection_name: &str,
+        tenant_id: &str,
+    ) -> Self {
+        StoreRepository::from_collection_name(&client, tenant_id, collection_name).await
+    }
+
     pub async fn from_collection_name(
         client: &StoreClient,
         db_name: &str,

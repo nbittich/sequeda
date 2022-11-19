@@ -102,7 +102,7 @@ pub enum MaritalStatus {
     Divorced,
     Separated,
     CivilPartnership,
-    Widowed
+    Widowed,
 }
 
 #[cfg(test)]

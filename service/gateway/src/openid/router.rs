@@ -7,7 +7,7 @@ use axum::{
     headers,
     response::{IntoResponse, Redirect},
     routing::get,
-    routing::{Router},
+    routing::Router,
     Extension, Json, TypedHeader,
 };
 use hyper::{header::SET_COOKIE, HeaderMap, StatusCode};

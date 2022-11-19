@@ -2,8 +2,9 @@ mod constants;
 pub mod user_header;
 
 pub use constants::{
-    CORS_ALLOW_ORIGIN, PUBLIC_TENANT, SERVICE_APPLICATION_NAME, SERVICE_COLLECTION_NAME,
-    SERVICE_CONFIG_VOLUME, SERVICE_DATA_VOLUME, SERVICE_HOST, SERVICE_PORT, X_USER_INFO_HEADER,
+    BODY_SIZE_LIMIT, CORS_ALLOW_ORIGIN, PUBLIC_TENANT, SERVICE_APPLICATION_NAME,
+    SERVICE_COLLECTION_NAME, SERVICE_CONFIG_VOLUME, SERVICE_DATA_VOLUME, SERVICE_HOST,
+    SERVICE_PORT, X_USER_INFO_HEADER,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -37,3 +38,6 @@ pub fn to_json_string<T: Serialize + core::fmt::Debug>(data: T) -> String {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct StoreCollection(pub String);

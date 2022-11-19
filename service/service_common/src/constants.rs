@@ -1,4 +1,5 @@
 pub const CORS_ALLOW_ORIGIN: &str = "CORS_ALLOW_ORIGIN";
+pub const BODY_SIZE_LIMIT: &str = "BODY_SIZE_LIMIT";
 pub const SERVICE_HOST: &str = "SERVICE_HOST";
 pub const SERVICE_PORT: &str = "SERVICE_PORT";
 pub const SERVICE_CONFIG_VOLUME: &str = "SERVICE_CONFIG_VOLUME";

@@ -11,7 +11,7 @@
             <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-md-none">
               <q-input
                 :autofocus="true"
-                class="q-mr-md-xs"
+                class="q-mr-sm-xs"
                 dense
                 outlined
                 v-model="current.firstName"
@@ -146,7 +146,7 @@
           <div class="col-12 q-mb-xs-sm q-mb-md-none">
             <q-input
               type="url"
-              class="q-mr-xs q-mr-none"
+              class="q-mr-md-xs"
               dense
               outlined
               v-model="current.contactDetail.website"
@@ -217,9 +217,11 @@
                 class="q-mr-md-xs"
                 dense
                 outlined
-                :model-value="current.contactDetail.address.postCode"
+                v-model="selectedPostalCode"
                 use-input
                 :option-label="municipalityLabel"
+                map-options
+                emit-value
                 hide-selected
                 fill-input
                 input-debounce="0"
@@ -262,7 +264,7 @@
 
 <script lang="ts">
 import usePersonStore from 'src/stores/person';
-import useGeoStore, {  PostalCode } from 'src/stores/geoentities';
+import useGeoStore, { PostalCode } from 'src/stores/geoentities';
 import { defineComponent, ref } from 'vue';
 const personStore = usePersonStore();
 const geoStore = useGeoStore();
@@ -328,10 +330,12 @@ export default defineComponent({
       postalCodesOptions,
       selectedPostalCode,
       municipalityLabel(opt: PostalCode | string) {
-        if(typeof opt ==="string" ) {
-            return opt;
+        if (typeof opt === 'string') {
+          return opt;
         }
-        return `${opt.postalCode} ${opt.name}`;
+        return selectedPostalCode.value === opt
+          ? opt.postalCode
+          : `${opt.postalCode} ${opt.name}`;
       },
       filterCountry(
         val: string,
@@ -350,19 +354,24 @@ export default defineComponent({
         update: (arg0: () => void) => void,
         abort: any
       ) {
-        let postCodes:PostalCode[] = [];
+        let postCodes: PostalCode[] = [];
         if (selectedCountry.value) {
           postCodes = await geoStore.postCodesByQuery(
             selectedCountry.value,
             val.trim()
           );
         }
-        update(() => {postalCodesOptions.value = postCodes});
+        update(() => {
+          postalCodesOptions.value = postCodes;
+        });
       },
       setCountry(val: string) {
         if (val) {
           selectedCountry.value = countries.find((c) => c.label === val);
-          if(selectedPostalCode.value && selectedPostalCode.value.countryCode !== selectedCountry.value?.code) {
+          if (
+            selectedPostalCode.value &&
+            selectedPostalCode.value.countryCode !== selectedCountry.value?.code
+          ) {
             selectedPostalCode.value = null as unknown as PostalCode;
             current.value.contactDetail.address.postCode = '';
             current.value.contactDetail.address.municipality = '';
@@ -370,12 +379,11 @@ export default defineComponent({
         }
       },
       setPostalCode(val: string) {
-        console.log(val)
-        const option = postalCodesOptions.value?.find(p=>  `${p.postalCode} ${p.name}` === val || p.postalCode === val);
-        if (val && option) {
-          selectedPostalCode.value = option;
-          current.value.contactDetail.address.municipality = option.name;
-          current.value.contactDetail.address.postCode = option.postalCode;
+        if (val && selectedPostalCode.value) {
+          current.value.contactDetail.address.municipality =
+            selectedPostalCode.value.name;
+          current.value.contactDetail.address.postCode =
+            selectedPostalCode.value.postalCode;
         }
       },
     };

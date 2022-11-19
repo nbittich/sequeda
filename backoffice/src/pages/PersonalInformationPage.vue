@@ -8,7 +8,7 @@
 
         <q-card-section class="q-mb-none q-pb-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 :autofocus="true"
                 class="q-mr-sm-xs"
@@ -18,7 +18,7 @@
                 label="First name"
               />
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -27,7 +27,7 @@
                 label="Last name"
               />
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 dense
                 outlined
@@ -69,7 +69,7 @@
                 </template>
               </q-input>
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
                 dense
                 class="q-mr-md-xs"
@@ -83,7 +83,7 @@
                 label="Gender"
               />
             </div>
-            <div class="col-lg-4 col-12">
+            <div class="col-lg-4 col-12 ">
               <q-select
                 dense
                 outlined
@@ -101,7 +101,7 @@
 
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 type="email"
                 class="q-mr-md-xs"
@@ -111,10 +111,9 @@
                 label="Email #1"
               />
             </div>
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 type="email"
-                class="q-mr-md-xs"
                 dense
                 outlined
                 v-model="current.contactDetail.emailAddress2"
@@ -123,7 +122,7 @@
             </div>
           </div>
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -132,9 +131,8 @@
                 label="Gsm"
               />
             </div>
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
-                class="q-mr-md-xs"
                 dense
                 outlined
                 v-model="current.contactDetail.phoneNumber2"
@@ -143,10 +141,9 @@
             </div>
           </div>
 
-          <div class="col-12 q-mb-xs-sm q-mb-md-none">
+          <div class="col-12 q-mb-xs-sm q-mb-lg-none">
             <q-input
               type="url"
-              class="q-mr-md-xs"
               dense
               outlined
               v-model="current.contactDetail.website"
@@ -156,7 +153,7 @@
         </q-card-section>
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -165,7 +162,7 @@
                 label="Street"
               />
             </div>
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -175,7 +172,7 @@
               />
             </div>
 
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -184,7 +181,7 @@
                 label="Box"
               />
             </div>
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
                 class="q-mr-md-xs"
                 dense
@@ -212,7 +209,7 @@
                 </template>
               </q-select>
             </div>
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
                 class="q-mr-md-xs"
                 dense
@@ -239,9 +236,8 @@
                 </template>
               </q-select>
             </div>
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-md-none">
+            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
-                class="q-mr-md-xs"
                 :disable="true"
                 dense
                 outlined
@@ -329,7 +325,10 @@ export default defineComponent({
       selectedCountry,
       postalCodesOptions,
       selectedPostalCode,
-      municipalityLabel(opt: PostalCode | string) {
+      municipalityLabel(opt?: PostalCode | string) {
+        if (!opt ){
+          return '';
+        }
         if (typeof opt === 'string') {
           return opt;
         }
@@ -390,7 +389,6 @@ export default defineComponent({
   },
   methods: {
     async update() {
-      console.log(JSON.stringify(this.current));
       this.current = await personStore.update(this.current);
     },
     async reset(e: Event) {

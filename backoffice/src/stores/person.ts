@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { ref } from 'vue';
 export interface Person {
   _id?: string,
   userId?: string,
@@ -12,6 +11,7 @@ export interface Person {
   updatedDate?: Date,
   nickname?: string,
   gender?: string,
+  maritalStatus?: string,
   academicTitle?: string,
   contactDetail: ContactDetail
 }

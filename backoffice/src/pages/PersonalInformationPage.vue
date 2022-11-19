@@ -83,7 +83,7 @@
                 label="Gender"
               />
             </div>
-            <div class="col-lg-4 col-12 ">
+            <div class="col-lg-4 col-12">
               <q-select
                 dense
                 outlined
@@ -99,6 +99,34 @@
           </div>
         </q-card-section>
 
+        <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
+
+          <div class="row q-mb-xs-none q-mb-md-xs">
+            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+              <q-select
+                class="q-mr-md-xs"
+                dense
+                outlined
+                v-model="current.maritalStatus"
+                :options="maritalStatuses"
+                label="Status"
+                option-label="label"
+                option-value="value"
+                emit-value
+                map-options
+              />
+            </div>
+            <div class="col-lg-8 col-12 q-mb-xs-sm q-mb-lg-none">
+              <q-input
+                type="url"
+                dense
+                outlined
+                v-model="current.contactDetail.website"
+                label="Website"
+              />
+            </div>
+          </div>
+          </q-card-section>
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
@@ -141,15 +169,6 @@
             </div>
           </div>
 
-          <div class="col-12 q-mb-xs-sm q-mb-lg-none">
-            <q-input
-              type="url"
-              dense
-              outlined
-              v-model="current.contactDetail.website"
-              label="Website"
-            />
-          </div>
         </q-card-section>
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
@@ -287,6 +306,38 @@ export default defineComponent({
         },
       ];
     },
+    maritalStatuses: () => {
+      return [
+        {
+          label: '-',
+          value: null,
+        },
+        {
+          label: 'Single',
+          value: 'SINGLE',
+        },
+        {
+          label: 'Married',
+          value: 'MARRIED',
+        },
+        {
+          label: 'Divorced',
+          value: 'DIVORCED',
+        },
+        {
+          label: 'Separated',
+          value: 'SEPARATED',
+        },
+        {
+          label: 'Civil Partnership',
+          value: 'CIVIL_PARTNERSHIP',
+        },
+        {
+          label: 'Widowed',
+          value: 'WIDOWED',
+        },
+      ];
+    },
     academicTitle: () => {
       return [
         {
@@ -326,7 +377,7 @@ export default defineComponent({
       postalCodesOptions,
       selectedPostalCode,
       municipalityLabel(opt?: PostalCode | string) {
-        if (!opt ){
+        if (!opt) {
           return '';
         }
         if (typeof opt === 'string') {

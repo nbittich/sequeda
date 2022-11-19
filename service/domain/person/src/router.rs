@@ -206,6 +206,7 @@ async fn upsert(
         gender,
         academic_title,
         contact_detail,
+        marital_status,
     } = payload;
 
     let person = Person {
@@ -216,6 +217,7 @@ async fn upsert(
         nick_name,
         gender,
         academic_title,
+        marital_status,
         contact_detail,
         ..person
     };

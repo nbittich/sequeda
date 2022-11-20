@@ -20,3 +20,4 @@ sequeda_store = {path = "../../../libraries/store"}
 sequeda_service_common = {path = "../../service_common"}
 axum-extra ={workspace=true}
 mime_guess ={workspace=true}
+futures ={workspace=true}

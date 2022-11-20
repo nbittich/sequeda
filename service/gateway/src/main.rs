@@ -126,30 +126,26 @@ async fn handler(
             .unwrap()
     };
     match request_handler.handle(&mut req, user).await {
-        Ok(_) => {
-            tracing::debug!("AFTER HANDLER req: {req:?}");
-
-            match client.request(req).await {
-                Ok(response)
-                    if response.status() == StatusCode::UNAUTHORIZED
-                        || response.status() == StatusCode::FORBIDDEN =>
-                {
-                    handle_forbidden(response.status())
-                }
-
-                Ok(response) => response,
-                Err(er) => {
-                    tracing::debug!("error in request {er}");
-                    Response::builder()
-                        .status(500)
-                        .header(CONTENT_TYPE, ContentType::json().to_string())
-                        .body(Body::from(format!(
-                            r#"{{"error": "unexpected error: {er}"}}"#
-                        )))
-                        .unwrap()
-                }
+        Ok(_) => match client.request(req).await {
+            Ok(response)
+                if response.status() == StatusCode::UNAUTHORIZED
+                    || response.status() == StatusCode::FORBIDDEN =>
+            {
+                handle_forbidden(response.status())
             }
-        }
+
+            Ok(response) => response,
+            Err(er) => {
+                tracing::debug!("error in request {er}");
+                Response::builder()
+                    .status(500)
+                    .header(CONTENT_TYPE, ContentType::json().to_string())
+                    .body(Body::from(format!(
+                        r#"{{"error": "unexpected error: {er}"}}"#
+                    )))
+                    .unwrap()
+            }
+        },
         Err(e)
             if e.status == Some(StatusCode::FORBIDDEN)
                 || e.status == Some(StatusCode::UNAUTHORIZED) =>

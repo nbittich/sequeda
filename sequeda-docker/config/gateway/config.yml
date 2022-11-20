@@ -72,7 +72,21 @@ routes:
     predicates:
       - !path /geo/**
       - !method GET
- 
+  - id: upload_service
+    uri: http://uploads
+    filters:
+      - !rewrite_path
+        source: /uploads/(?P<segment>.*)
+        dest: /${segment}
+    predicates:
+      - !path /uploads/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+
+
   # - id: keycloak
   #   uri: http://keycloak:80
   #   filters:

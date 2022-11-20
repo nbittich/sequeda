@@ -4,13 +4,14 @@ use std::{env::var, net::SocketAddr, str::FromStr};
 
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use axum::Json;
 use axum::{routing::post, Extension, Router};
 
 use axum::extract::{Multipart, Query};
 use sequeda_service_common::user_header::ExtractUserInfo;
 use sequeda_service_common::{
-    setup_tracing, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
-    SERVICE_HOST, SERVICE_PORT,
+    setup_tracing, to_value, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT,
+    SERVICE_COLLECTION_NAME, SERVICE_HOST, SERVICE_PORT,
 };
 use sequeda_store::{StoreClient, StoreRepository};
 use tower_http::limit::RequestBodyLimitLayer;
@@ -56,16 +57,12 @@ async fn upload(
     ExtractUserInfo(x_user_info): ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
     mut multipart: Multipart,
-    Query(query): Query<HashMap<String, String>>,
+    Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Person list route entered!");
-    let repository: StoreRepository<FileUpload> = StoreRepository::get_repository(
-        client,
-        &collection.0,
-        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
-    )
-    .await;
+
     let mut uploads = HashMap::new();
+    
     while let Some(field) = multipart.next_field().await.unwrap() {
         let file_name = field.name().unwrap().to_string();
 
@@ -94,8 +91,8 @@ async fn upload(
     if uploads.len() == 1 {
         let Some((_, (mut upl, data))) =  uploads.into_iter().last() else {unreachable!("should never happen")};
 
-        if let Some(id) = query.get("id") {
-            upl.id = id.clone();
+        if let Some(id) = query.remove("id") {
+            upl.id = id;
         }
 
         upl.public_resource = query
@@ -103,12 +100,25 @@ async fn upload(
             .and_then(|s| s.parse::<bool>().ok())
             .unwrap_or(false);
 
+        let tenant = if upl.public_resource {
+            PUBLIC_TENANT.into()
+        } else {
+            x_user_info.tenant.unwrap()
+        };
+
+        let repository: StoreRepository<FileUpload> =
+            StoreRepository::get_repository(client, &collection.0, &tenant).await;
         upl.upload(Some(&data), &repository).await.unwrap();
+        (StatusCode::OK, Json(to_value(upl)))
     } else {
+        let mut uploads_resp = Vec::with_capacity(uploads.len());
+        let tenant = &x_user_info.tenant.unwrap();
+        let repository: StoreRepository<FileUpload> =
+            StoreRepository::get_repository(client, &collection.0, tenant).await;
         for (_, (mut upl, data)) in uploads {
             upl.upload(Some(&data), &repository).await.unwrap();
+            uploads_resp.push(upl);
         }
+        (StatusCode::OK, Json(to_value(uploads_resp)))
     }
-
-    (StatusCode::OK, ())
 }

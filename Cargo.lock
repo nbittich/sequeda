@@ -1968,6 +1968,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "chrono",
+ "futures",
  "mime_guess",
  "sequeda_service_common",
  "sequeda_store",

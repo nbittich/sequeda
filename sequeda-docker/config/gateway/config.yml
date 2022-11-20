@@ -14,6 +14,15 @@ routes:
         method: "GET"
         has_roles:
           - creep
+  - id: api
+    uri: http://gateway
+    predicates:
+      - !path /api/**
+    filters:
+      - !rewrite_path
+        source: /api/(?P<segment>.*)
+        dest: /${segment}
+
   - id: person_find_all
     uri: http://person
     predicates:
@@ -27,6 +36,19 @@ routes:
       - !rewrite_path
         source: /person/find-all/**
         dest: /find-all
+  - id: person_current
+    uri: http://person
+    predicates:
+      - !path /person/current/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+    filters:
+      - !rewrite_path
+        source: /person/current/**
+        dest: /current
   - id: person_upsert
     uri: http://person
     filters:
@@ -41,6 +63,30 @@ routes:
         method: "POST"
         has_roles:
           - creep
+  - id: geo_entities
+    uri: http://geo-entities
+    filters:
+      - !rewrite_path
+        source: /geo/**
+        dest: /
+    predicates:
+      - !path /geo/**
+      - !method GET
+  - id: upload_service
+    uri: http://uploads
+    filters:
+      - !rewrite_path
+        source: /uploads/(?P<segment>.*)
+        dest: /${segment}
+    predicates:
+      - !path /uploads/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+
+
   # - id: keycloak
   #   uri: http://keycloak:80
   #   filters:

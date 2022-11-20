@@ -4,3 +4,4 @@
 .clocignore
 cloc.sh
 /backoffice/
+/scripts/

@@ -142,10 +142,6 @@ impl User {
 
         let id_token: OpenIdToken = session.get("token").ok_or(LoginPageRedirect)?;
 
-        let user = User::from_claims(&id_token.claims);
-
-        tracing::debug!("user {user:?}");
-
         let id_token = match client.refresh_token(id_token).await {
             Ok(id) => id,
             Err(e) => {
@@ -154,22 +150,20 @@ impl User {
             }
         };
 
-        let user = match client.exchange_access_token(&id_token, &user.id).await {
-            Ok(user) => Self::from_user_info(&user),
-            Err(e) => {
-                tracing::error!("{e}");
-                return Err(destroy_session(&store, session).await);
-            }
-        };
-        let user_info = match client.exchange_access_token(&id_token, &user.id).await {
-            Ok(user_info) => user_info,
-            Err(e) => {
-                tracing::error!("{e}");
-                return Err(destroy_session(&store, session).await);
-            }
+        let user = match &id_token.claims.as_ref() {
+            Some(claims) => User::from_claims(claims),
+            None => match client.exchange_access_token(&id_token, None).await {
+                Ok(user_info) => User::from_user_info(&user_info),
+                Err(e) => {
+                    tracing::error!("{e}");
+                    return Err(destroy_session(&store, session).await);
+                }
+            },
         };
 
-        Ok(User::from_user_info(&user_info))
+        tracing::debug!("user {user:?}");
+
+        Ok(user)
     }
 }
 

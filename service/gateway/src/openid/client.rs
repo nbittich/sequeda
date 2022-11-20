@@ -26,7 +26,7 @@ pub struct OpenIdClient {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenIdToken {
-    pub claims: CustomIdTokenClaims,
+    pub claims: Option<CustomIdTokenClaims>,
     pub token: CustomTokenResponse,
 }
 
@@ -108,7 +108,7 @@ impl OpenIdClient {
     pub async fn exchange_access_token(
         &self,
         id_token: &OpenIdToken,
-        user_id: &str,
+        user_id: Option<&str>,
     ) -> Result<UserInfoClaims<AllOtherClaims, CoreGenderClaim>, ClientError> {
         let token_response = &id_token.token;
         let access_token = token_response.access_token().clone();
@@ -116,7 +116,7 @@ impl OpenIdClient {
             .client
             .user_info(
                 access_token,
-                Some(SubjectIdentifier::new(user_id.to_string())),
+                user_id.map(|u| SubjectIdentifier::new(u.to_string())),
             )
             .map_err(|err| handle_error(&err, "exchange_access_token"))?;
         request
@@ -127,8 +127,12 @@ impl OpenIdClient {
 
     pub async fn refresh_token(&self, id_token: OpenIdToken) -> Result<OpenIdToken, ClientError> {
         let claims = &id_token.claims;
+        let diff = claims
+            .as_ref()
+            .map(|claim| (Utc::now() - claim.expiration()).num_seconds())
+            .unwrap_or_else(|| 1);
         let token_response = &id_token.token;
-        let diff = (Utc::now() - claims.expiration()).num_seconds();
+
         tracing::debug!("token diff {diff:?}");
         tracing::debug!("token expires_in {:?}", &token_response.expires_in());
 
@@ -151,6 +155,37 @@ impl OpenIdClient {
         }
     }
 
+    //dev only todo add cfg dev todo doesn't work with keycloak.
+    // pub async fn exchange_credentials(
+    //     &self,
+    //     username: String,
+    //     password: String,
+    // ) -> Result<OpenIdToken, ClientError> {
+    //     let username = ResourceOwnerUsername::new(username);
+    //     let password = ResourceOwnerPassword::new(password);
+    //     let request = self
+    //     .client
+    //     .exchange_password(
+    //         &username,
+    //         &password,
+    //     )
+    //     .add_scopes(Self::get_scopes())
+    //     ;
+    //     tracing::debug!("{request:?}");
+
+    //     let token_response = request
+    //         .request_async(async_http_client)
+    //         .await
+    //         .map_err(|e| handle_error(&e, "exchange_credentials"))?;
+    //     tracing::debug!("{token_response:?}");
+    //     tracing::debug!("access_token {}", token_response.access_token().secret());
+
+    //     Ok(OpenIdToken {
+    //         claims: None,
+    //         token: token_response,
+    //     })
+    // }
+
     pub async fn exchange_token(
         &self,
         auth_request: super::auth_request::AuthRequest,
@@ -171,10 +206,10 @@ impl OpenIdClient {
             .id_token()
             .ok_or_else(|| ClientError("id token missing".into()))?
             .claims(&id_token_verifier, &nonce)
-            .unwrap();
+            .map_err(|err| handle_error(&err, "exchange_token"))?;
 
         Ok(OpenIdToken {
-            claims: claims.clone(),
+            claims: Some(claims.clone()),
             token: token_response,
         })
     }

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Person {
     #[serde(rename = "_id")]
     pub id: String,
+    pub user_id: Option<String>,
     pub first_name: String,
     pub middle_name: String,
     pub last_name: String,
@@ -14,6 +15,7 @@ pub struct Person {
     pub updated_date: Option<NaiveDateTime>,
     pub nick_name: Option<String>,
     pub gender: Gender,
+    pub marital_status: Option<MaritalStatus>,
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
 }
@@ -21,11 +23,14 @@ pub struct Person {
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PersonUpsert {
+    #[serde(rename = "_id")]
     pub id: Option<String>,
+    pub user_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
     pub date_of_birth: NaiveDate,
     pub nick_name: Option<String>,
+    pub marital_status: Option<MaritalStatus>,
     pub gender: Gender,
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
@@ -35,11 +40,13 @@ impl Default for Person {
     fn default() -> Self {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
+            user_id: Default::default(),
             first_name: Default::default(),
             last_name: Default::default(),
             date_of_birth: Default::default(),
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
+            marital_status: Default::default(),
             nick_name: Default::default(),
             gender: Gender::Unknown,
             academic_title: Default::default(),
@@ -85,6 +92,17 @@ pub enum Gender {
 pub enum AcademicTitle {
     Dr,
     Professor,
+}
+
+#[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum MaritalStatus {
+    Single,
+    Married,
+    Divorced,
+    Separated,
+    CivilPartnership,
+    Widowed,
 }
 
 #[cfg(test)]

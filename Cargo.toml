@@ -2,8 +2,10 @@
 
 members = [
     "service/domain/person",
+    "service/domain/file_upload",
     "service/service_common",
     "service/message_broker",
+    "service/geo_service",
     "service/gateway",
     "libraries/common",
     "libraries/store",
@@ -45,6 +47,10 @@ async-session = "3.0.0"
 axum-sessions = "0.3.1"
 axum-extra = "0.3.7"
 rand = "0.8.5"
+base64 = "0.13.1"
+jsonwebtoken = "8.1.1"
+mime_guess = "2.0.4"
+multipart = "0.18.0"
 
 [workspace.package]
 version = "0.1.0"

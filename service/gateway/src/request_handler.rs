@@ -3,7 +3,7 @@ use std::{error::Error, fmt::Display, str::FromStr};
 use axum::{headers::HeaderName, http::HeaderValue, http::Request};
 use hyper::{header::HOST, Body, StatusCode, Uri};
 use regex::Regex;
-use sequeda_service_common::X_TENANT_ID_HEADER;
+use sequeda_service_common::X_USER_INFO_HEADER;
 
 use crate::{
     config::{Authorization, Config, Route},
@@ -174,10 +174,10 @@ impl RequestHandler {
                         });
                     }
                 }
-                if let Some(tenant) = user.tenant {
+                if let Some(user_encoded) = serde_json::to_string(&user).ok().map(base64::encode) {
                     req.headers_mut().insert(
-                        X_TENANT_ID_HEADER,
-                        HeaderValue::from_str(&tenant).map_err(|e| RequestHandlerError {
+                        X_USER_INFO_HEADER,
+                        HeaderValue::from_str(&user_encoded).map_err(|e| RequestHandlerError {
                             msg: e.to_string(),
                             status: None,
                         })?,

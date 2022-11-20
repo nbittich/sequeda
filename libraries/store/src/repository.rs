@@ -27,6 +27,14 @@ impl<T> StoreRepository<T>
 where
     T: Serialize + DeserializeOwned + Unpin + Send + Sync,
 {
+    pub async fn get_repository(
+        client: StoreClient,
+        collection_name: &str,
+        tenant_id: &str,
+    ) -> Self {
+        StoreRepository::from_collection_name(&client, tenant_id, collection_name).await
+    }
+
     pub async fn from_collection_name(
         client: &StoreClient,
         db_name: &str,
@@ -134,6 +142,15 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
         let collection = self.get_collection();
         let res = collection
             .find_one(doc! {"_id": id}, None)
+            .await
+            .map_err(|e| StoreError { msg: e.to_string() })?;
+        Ok(res)
+    }
+
+    async fn find_one(&self, query: Option<Document>) -> Result<Option<T>, StoreError> {
+        let collection = self.get_collection();
+        let res = collection
+            .find_one(query, None)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)

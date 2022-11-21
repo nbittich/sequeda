@@ -3,6 +3,7 @@ use std::{error::Error, fmt::Display, path::PathBuf};
 use chrono::{Local, NaiveDateTime};
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
+use tokio::fs::File;
 
 pub const SHARE_DRIVE_PATH: &str = "SHARE_DRIVE_PATH";
 
@@ -42,11 +43,10 @@ impl Default for FileUpload {
 impl FileUpload {
     pub async fn upload(
         &mut self,
+        share_drive_path: &str,
         file_handle: Option<&[u8]>,
         store: &StoreRepository<FileUpload>,
     ) -> Result<(), ServiceError> {
-        let share_drive_path: String =
-            std::env::var(SHARE_DRIVE_PATH).map_err(|e| ServiceError::from(&e))?;
         let upload = store
             .find_by_id(&self.id)
             .await
@@ -97,6 +97,12 @@ impl FileUpload {
         }
 
         Ok(())
+    }
+
+    pub async fn download(&self, share_drive_path: &str) -> Result<File, ServiceError> {
+        tokio::fs::File::open(PathBuf::from(share_drive_path).join(&self.internal_name))
+            .await
+            .map_err(|e| ServiceError::from(&e))
     }
 }
 

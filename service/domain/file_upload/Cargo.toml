@@ -21,3 +21,4 @@ sequeda_service_common = {path = "../../service_common"}
 axum-extra ={workspace=true}
 mime_guess ={workspace=true}
 futures ={workspace=true}
+tokio-util = {workspace=true}

@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use axum::http::StatusCode;
 use axum::Json;
 use axum::{
@@ -10,6 +12,14 @@ use serde_json::json;
 use crate::constants::X_USER_INFO_HEADER;
 
 pub struct ExtractUserInfo(pub UserInfo);
+
+impl Deref for ExtractUserInfo {
+    type Target = UserInfo;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfo {

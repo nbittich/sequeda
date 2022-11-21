@@ -73,25 +73,30 @@ async fn download(
         id: &str,
         repository: StoreRepository<FileUpload>,
     ) -> Option<impl IntoResponse> {
-        if let Ok(Some(file)) = repository.find_by_id(id).await {
-            let file_handle = file.download(share_drive_path).await.unwrap();
-            let ct = file
-                .content_type
-                .unwrap_or_else(|| APPLICATION_OCTET_STREAM.to_string());
-            let stream = ReaderStream::new(file_handle);
-            let body = StreamBody::new(stream);
-            let content_type = (header::CONTENT_TYPE, ct);
-            let content_disposition = (
-                header::CONTENT_TYPE,
-                format!(r#"attachment; filename="{}"#, &file.original_filename),
-            );
-            let headers = AppendHeaders([content_type, content_disposition]);
-            Some((headers, body))
-        } else {
-            None
+        match repository.find_by_id(id).await {
+            Ok(Some(file)) => {
+                let file_handle = file.download(share_drive_path).await.unwrap();
+                let ct = file
+                    .content_type
+                    .unwrap_or_else(|| APPLICATION_OCTET_STREAM.to_string());
+                let stream = ReaderStream::new(file_handle);
+                let body = StreamBody::new(stream);
+                let content_type = (header::CONTENT_TYPE, ct);
+                let content_disposition = (
+                    header::CONTENT_DISPOSITION,
+                    format!(r#"attachment; filename="{}""#, &file.original_filename),
+                );
+                let headers = AppendHeaders([content_type, content_disposition]);
+                Some((headers, body))
+            }
+            Ok(None) => None,
+            Err(e) => {
+                tracing::error!("db error {e}");
+                None
+            }
         }
     }
-
+    tracing::debug!("trying to fetch document with id {id}");
     let public_repository: StoreRepository<FileUpload> =
         StoreRepository::get_repository(client.clone(), &collection.0, PUBLIC_TENANT).await;
 

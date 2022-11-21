@@ -155,18 +155,14 @@ impl RequestHandler {
                     }
                 }
             }
-            if !&handler.authorizations.is_empty() {
-                let user = match user {
-                    Some(user) => user,
-                    None => {
-                        return Err(RequestHandlerError {
-                            status: Some(StatusCode::UNAUTHORIZED),
-                            msg: "Could not retrieve user".to_string(),
-                        });
-                    }
-                };
+            let autorizations: Vec<&CompiledAuthorization> = handler
+                .authorizations
+                .iter()
+                .filter(|auth| auth.method.eq_ignore_ascii_case(req.method().as_str()))
+                .collect();
 
-                for authorization in &handler.authorizations {
+            if let Some(user) = user {
+                for authorization in autorizations {
                     if !authorization.check_auth(req.method().as_str(), &user) {
                         return Err(RequestHandlerError {
                             status: Some(StatusCode::FORBIDDEN),
@@ -183,6 +179,11 @@ impl RequestHandler {
                         })?,
                     );
                 }
+            } else if !autorizations.is_empty() {
+                return Err(RequestHandlerError {
+                    status: Some(StatusCode::UNAUTHORIZED),
+                    msg: "Could not retrieve user".to_string(),
+                });
             }
 
             let uri = &handler.uri;

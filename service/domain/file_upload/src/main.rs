@@ -76,17 +76,25 @@ async fn download(
         match repository.find_by_id(id).await {
             Ok(Some(file)) => {
                 let file_handle = file.download(share_drive_path).await.unwrap();
+                let stream = ReaderStream::new(file_handle);
+                let body = StreamBody::new(stream);
+
+                let content_header = if file.is_image() {
+                    (header::CONTENT_LENGTH, format!("{}", &file.size))
+                } else {
+                    (
+                        header::CONTENT_DISPOSITION,
+                        format!(r#"attachment; filename="{}""#, &file.original_filename),
+                    )
+                };
+
                 let ct = file
                     .content_type
                     .unwrap_or_else(|| APPLICATION_OCTET_STREAM.to_string());
-                let stream = ReaderStream::new(file_handle);
-                let body = StreamBody::new(stream);
+
                 let content_type = (header::CONTENT_TYPE, ct);
-                let content_disposition = (
-                    header::CONTENT_DISPOSITION,
-                    format!(r#"attachment; filename="{}""#, &file.original_filename),
-                );
-                let headers = AppendHeaders([content_type, content_disposition]);
+
+                let headers = AppendHeaders([content_type, content_header]);
                 Some((headers, body))
             }
             Ok(None) => None,

@@ -22,3 +22,4 @@ axum-extra ={workspace=true}
 mime_guess ={workspace=true}
 futures ={workspace=true}
 tokio-util = {workspace=true}
+image ={workspace=true}

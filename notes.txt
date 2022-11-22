@@ -2,7 +2,7 @@
 
 ```
 upload:
-curl --insecure --location --request POST 'https://api.somehost.org/uploads/upload?public=true' --header 'Cookie: SEQUEDA_SESSION=J+TAFiouGdbQplSlyZBrwci8kJSQLnm1Awg3GZQGrrTTVBI5U0iQtQPfX0df/wgd3yOjH6FN8mZUFkwbHqEAzw==' --form 'test.pdf=@"test.pdf"'
+curl --insecure --location --request POST 'https://api.somehost.org/uploads/upload?public=true' --header 'Cookie: SEQUEDA_SESSION=L9jt4WrA6tBuRKYEKVU2dIiA0w9UEKsol+AhLYl2vcR+llMwyeUBpYogICrCfHZoUkm0j055P/0JqwYE5Acbyg==' --form 'test.png=@"test.png"'
 
 download:
 https://api.somehost.org/uploads/download/38c07697-5a27-4aac-bebc-95c9cd965a71

@@ -143,7 +143,7 @@ impl FileUpload {
                 return Err(ServiceError("No Content type! Should not happen".into()))
             };
 
-            let Some(image_format) = ImageFormat::from_mime_type(&ct) else {
+            let Some(image_format) = ImageFormat::from_mime_type(ct) else {
                 return Err(ServiceError("Format cannot be transformed to thumbnail".into()))
             };
 

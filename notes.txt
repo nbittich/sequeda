@@ -2,8 +2,11 @@
 
 ```
 upload:
-curl --insecure --location --request POST 'https://api.somehost.org/uploads/upload?public=true' --header 'Cookie: SEQUEDA_SESSION=L9jt4WrA6tBuRKYEKVU2dIiA0w9UEKsol+AhLYl2vcR+llMwyeUBpYogICrCfHZoUkm0j055P/0JqwYE5Acbyg==' --form 'test.png=@"test.png"'
+curl --insecure --location --request POST 'https://api.somehost.org/uploads/upload?public=true&id=dc9f9d5f-65da-4971-9969-2395bd40e9e7' --header 'Cookie: SEQUEDA_SESSION=Qhzp7/9ACEK/Z2P4mMARpwlehIrkQM/dR/PPXJCcJ2MiHDLyLwUnCd3JzcWb/qXWm6CPOEk41wt1H3cee+Dr5A==' --form 'test.png=@"test.png"'
 
 download:
 https://api.somehost.org/uploads/download/38c07697-5a27-4aac-bebc-95c9cd965a71
+
+
+
 ```

@@ -67,6 +67,7 @@ services:
       OPENID_CLIENT_ID: "sequeda-auth"
       OPENID_CLIENT_SECRET: "X9quJGCCpBISQt6uNs62gkPeYd4g2gsp"
       SESSION_REDIS_URL: "redis://redis"
+      DEMO_ACCOUNT: "true" # todo this doesn't go to production
     restart: "always"
     networks:
       sequeda:

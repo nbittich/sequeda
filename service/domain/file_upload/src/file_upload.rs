@@ -75,20 +75,8 @@ impl FileUpload {
                 self.id,
                 extension.as_ref().cloned().unwrap_or_else(|| "".into())
             );
-            tokio::fs::write(
-                PathBuf::from(&share_drive_path).join(&internal_name),
-                file_handle,
-            )
-            .await
-            .map_err(|e| ServiceError::from(&e))?;
 
             let old_thumbnail_id = &self.thumbnail_id.clone();
-
-            self.thumbnail_id = self
-                .make_thumbnail(&internal_name, file_handle, store, share_drive_path)
-                .await?;
-
-            self.internal_name = internal_name;
 
             if let Some(old_internal_name) = old_internal_name {
                 self.updated_date = Some(Local::now().naive_local());
@@ -111,6 +99,19 @@ impl FileUpload {
                     .map_err(|e| ServiceError::from(&e))?;
                 }
             }
+
+            tokio::fs::write(
+                PathBuf::from(&share_drive_path).join(&internal_name),
+                file_handle,
+            )
+            .await
+            .map_err(|e| ServiceError::from(&e))?;
+
+            self.thumbnail_id = self
+                .make_thumbnail(&internal_name, file_handle, store, share_drive_path)
+                .await?;
+
+            self.internal_name = internal_name;
 
             store
                 .update(&self.id, self)

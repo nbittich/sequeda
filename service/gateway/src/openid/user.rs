@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use super::{
     auth_redirect::LoginPageRedirect,
     client::{OpenIdClient, OpenIdToken},
-    AllOtherClaims, CustomIdTokenClaims,
+    AllOtherClaims, AuthConfig, CustomIdTokenClaims,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -179,20 +179,40 @@ where
         let Extension(store) = Extension::<RedisSessionStore>::from_request(req)
             .await
             .expect("`RedisSessionStore` extension is missing");
+
+        let Extension(config) = Extension::<AuthConfig>::from_request(req)
+            .await
+            .expect("`Auth config` extension is missing");
+
         let Extension(client) = Extension::<OpenIdClient>::from_request(req)
             .await
             .expect("`OpenIdClient` extension is missing");
 
-        let cookies = TypedHeader::<headers::Cookie>::from_request(req)
-            .await
-            .map_err(|e| match *e.name() {
-                header::COOKIE => match e.reason() {
-                    TypedHeaderRejectionReason::Missing => LoginPageRedirect,
-                    _ => panic!("unexpected error getting Cookie header(s): {}", e),
-                },
-                _ => panic!("unexpected error getting cookies: {}", e),
-            })?;
+        if config.demo_account {
+            Ok(User {
+                id: "demo-16ba6cdd-59cd-4bcc-b7ef-240af07153fd".into(),
+                full_name: Some("Account Demo".into()),
+                given_name: Some("Account".into()),
+                family_name: Some("Demo".into()),
+                middle_name: Some("AD".into()),
+                username: Some("demo".into()),
+                email: Some("demo@random.corp".into()),
+                roles: vec!["demo".into()], // todo should be configurable
+                groups: vec!["demogroup".into()],
+                tenant: Some("demo".into()),
+            })
+        } else {
+            let cookies = TypedHeader::<headers::Cookie>::from_request(req)
+                .await
+                .map_err(|e| match *e.name() {
+                    header::COOKIE => match e.reason() {
+                        TypedHeaderRejectionReason::Missing => LoginPageRedirect,
+                        _ => panic!("unexpected error getting Cookie header(s): {}", e),
+                    },
+                    _ => panic!("unexpected error getting cookies: {}", e),
+                })?;
 
-        User::from_cookie(store, client, cookies.0).await
+            User::from_cookie(store, client, cookies.0).await
+        }
     }
 }

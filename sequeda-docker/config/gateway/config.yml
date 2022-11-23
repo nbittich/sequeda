@@ -14,6 +14,7 @@ routes:
         method: "GET"
         has_roles:
           - creep
+          - demo
   - id: api
     uri: http://gateway
     predicates:
@@ -32,6 +33,7 @@ routes:
         method: "GET"
         has_roles:
           - creep
+          - demo
     filters:
       - !rewrite_path
         source: /person/find-all/**
@@ -45,6 +47,7 @@ routes:
         method: "GET"
         has_roles:
           - creep
+          - demo
     filters:
       - !rewrite_path
         source: /person/current/**
@@ -63,6 +66,7 @@ routes:
         method: "POST"
         has_roles:
           - creep
+          - demo
   - id: geo_entities
     uri: http://geo-entities
     filters:
@@ -85,7 +89,7 @@ routes:
         method: "POST"
         has_roles:
           - creep
-
+          - demo
 
   # - id: keycloak
   #   uri: http://keycloak:80

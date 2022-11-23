@@ -33,17 +33,21 @@ use std::{
 use crate::{
     config::Config,
     constant::{APP_ROOT_URL, AUTH_REDIRECT_PATH, REDIS_URL},
-    openid::{open_id_router, OpenIdClient},
+    openid::{open_id_router, AuthConfig, OpenIdClient},
     request_handler::RequestHandler,
 };
 
 type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
 const CONFIG_FILE_NAME: &str = "CONFIG_FILE_NAME";
+const DEMO_ACCOUNT: &str = "DEMO_ACCOUNT";
 
 #[tokio::main]
 async fn main() {
     setup_tracing();
+    let demo_account = var(DEMO_ACCOUNT)
+        .map(|s| s.parse::<bool>().unwrap_or(false))
+        .unwrap_or(false);
     let host = var(SERVICE_HOST).unwrap_or_else(|_| String::from("127.0.0.1"));
     let port = var(SERVICE_PORT).unwrap_or_else(|_| String::from("0"));
     let openid_enabled = var(OPENID_ENABLED)
@@ -87,18 +91,19 @@ async fn main() {
         let store = RedisSessionStore::new(redis_url).unwrap();
         let openid_client = OpenIdClient::new().await;
         let auth_redirect = format!("{AUTH_REDIRECT_PATH}/:nonce");
-        let openid_router = open_id_router(
-            &auth_redirect,
-            store.clone(),
-            openid_client.clone(),
-            &redirect_url,
-            &root_url,
-        )
-        .await;
+        let auth_config = AuthConfig {
+            auth_redirect,
+            redirect_url: redirect_url.to_string(),
+            root_url: root_url.to_string(),
+            demo_account,
+        };
+        let openid_router =
+            open_id_router(auth_config.clone(), store.clone(), openid_client.clone()).await;
         app = openid_router
             .merge(app)
             .layer(Extension(store))
-            .layer(Extension(openid_client));
+            .layer(Extension(openid_client))
+            .layer(Extension(auth_config));
     }
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 

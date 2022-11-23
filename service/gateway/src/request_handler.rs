@@ -244,12 +244,12 @@ impl CompiledAuthorization {
             true
         } else {
             let has_roles = if let Some(roles) = &self.has_roles {
-                roles.iter().all(|a| user.roles.contains(a))
+                roles.iter().any(|a| user.roles.contains(a)) // or
             } else {
                 true
             };
             let has_groups = if let Some(groups) = &self.has_groups {
-                groups.iter().all(|a| user.groups.contains(a))
+                groups.iter().all(|a| user.groups.contains(a)) // and
             } else {
                 true
             };

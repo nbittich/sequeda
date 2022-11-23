@@ -17,40 +17,29 @@ use super::{
     auth_redirect::LoginPageRedirect,
     auth_request::AuthRequest,
     client::{OpenIdClient, OpenIdToken},
-    destroy_session,
+    destroy_session, AuthConfig,
 };
-#[derive(Clone)]
-#[allow(unused)]
-struct Config {
-    redirect_url: String,
-    root_url: String,
-}
 
 pub async fn open_id_router(
-    auth_redirect: &str,
+    auth_config: AuthConfig,
     store: RedisSessionStore,
     openid_client: OpenIdClient,
-    redirect_url: &str,
-    root_url: &str,
 ) -> Router {
     Router::new()
         .route("/login", get(login))
         // .route("/login-credentials", post(login_credentials))
-        .route(auth_redirect, get(login_authorized))
+        .route(&auth_config.auth_redirect, get(login_authorized))
         .route("/logout", get(logout))
         .route("/@me", get(user_info))
         .layer(Extension(store))
         .layer(Extension(openid_client))
-        .layer(Extension(Config {
-            redirect_url: redirect_url.to_string(),
-            root_url: root_url.to_string(),
-        }))
+        .layer(Extension(auth_config))
 }
 
 async fn login(
     user: Option<User>,
     Extension(client): Extension<OpenIdClient>,
-    Extension(config): Extension<Config>,
+    Extension(config): Extension<AuthConfig>,
 ) -> impl IntoResponse {
     if user.is_some() {
         return Redirect::permanent("/@me").into_response();
@@ -124,7 +113,7 @@ async fn user_info(user: User) -> impl IntoResponse {
 async fn login_authorized(
     Query(query): Query<AuthRequest>,
     Path(nonce): Path<Nonce>,
-    Extension(config): Extension<Config>,
+    Extension(config): Extension<AuthConfig>,
     Extension(client): Extension<OpenIdClient>,
     Extension(store): Extension<RedisSessionStore>,
 ) -> impl IntoResponse {

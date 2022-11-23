@@ -97,3 +97,12 @@ pub async fn destroy_session(store: &RedisSessionStore, session: Session) -> Log
     }
     LoginPageRedirect
 }
+
+#[derive(Clone)]
+#[allow(unused)]
+pub struct AuthConfig {
+    pub auth_redirect: String,
+    pub redirect_url: String,
+    pub root_url: String,
+    pub demo_account: bool,
+}

@@ -48,6 +48,7 @@ async fn main() {
     let app = Router::new()
         .route("/upload", post(upload))
         .route("/download/:id", get(download))
+        .route("/metadata/:id", get(metadata))
         .layer(RequestBodyLimitLayer::new(body_size_limit))
         .layer(Extension(client))
         .layer(Extension(ShareDrive(share_drive_path)))
@@ -60,6 +61,53 @@ async fn main() {
         .await
         .unwrap();
 }
+async fn metadata(
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    x_user_info: Option<ExtractUserInfo>,
+    axum::extract::Path(id): axum::extract::Path<String>,
+) -> impl IntoResponse {
+    match get_file_upload(&id, &x_user_info, &client, &collection).await {
+        Some(upl) => Json(to_value(upl)).into_response(),
+        None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
+    }
+}
+// region: helper method
+async fn get_file_upload(
+    id: &str,
+    x_user_info: &Option<ExtractUserInfo>,
+    client: &StoreClient,
+    collection: &StoreCollection,
+) -> Option<FileUpload> {
+    async fn get_upload(repository: &StoreRepository<FileUpload>, id: &str) -> Option<FileUpload> {
+        match repository.find_by_id(id).await {
+            Ok(Some(response)) => Some(response),
+            Ok(None) => None,
+            Err(e) => {
+                tracing::error!("db error {e}");
+                None
+            }
+        }
+    }
+
+    let public_repository: StoreRepository<FileUpload> =
+        StoreRepository::get_repository(client.clone(), &collection.0, PUBLIC_TENANT).await;
+
+    if let Some(fu) = get_upload(&public_repository, id).await {
+        Some(fu)
+    } else if let Some(tenant) = x_user_info
+        .as_ref()
+        .map(|u| &u.0)
+        .and_then(|u| u.tenant.clone())
+    {
+        let private_repository: StoreRepository<FileUpload> =
+            StoreRepository::get_repository(client.clone(), &collection.0, &tenant).await;
+        get_upload(&private_repository, id).await
+    } else {
+        None
+    }
+}
+// endregion
 
 async fn download(
     Extension(client): Extension<StoreClient>,
@@ -68,59 +116,34 @@ async fn download(
     x_user_info: Option<ExtractUserInfo>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> impl IntoResponse {
-    async fn make_download_response(
-        share_drive_path: &str,
-        id: &str,
-        repository: StoreRepository<FileUpload>,
-    ) -> Option<impl IntoResponse> {
-        match repository.find_by_id(id).await {
-            Ok(Some(file)) => {
-                let file_handle = file.download(share_drive_path).await.unwrap();
-                let stream = ReaderStream::new(file_handle);
-                let body = StreamBody::new(stream);
-
-                let content_header = if file.is_image() {
-                    (header::CONTENT_LENGTH, format!("{}", &file.size))
-                } else {
-                    (
-                        header::CONTENT_DISPOSITION,
-                        format!(r#"attachment; filename="{}""#, &file.original_filename),
-                    )
-                };
-
-                let ct = file
-                    .content_type
-                    .unwrap_or_else(|| APPLICATION_OCTET_STREAM.to_string());
-
-                let content_type = (header::CONTENT_TYPE, ct);
-
-                let headers = AppendHeaders([content_type, content_header]);
-                Some((headers, body))
-            }
-            Ok(None) => None,
-            Err(e) => {
-                tracing::error!("db error {e}");
-                None
-            }
-        }
-    }
     tracing::debug!("trying to fetch document with id {id}");
-    let public_repository: StoreRepository<FileUpload> =
-        StoreRepository::get_repository(client.clone(), &collection.0, PUBLIC_TENANT).await;
 
-    if let Some(response) = make_download_response(&share_drive_path, &id, public_repository).await
-    {
-        return response.into_response();
-    } else if let Some(tenant) = x_user_info.map(|u| u.0).and_then(|u| u.tenant) {
-        let private_repository: StoreRepository<FileUpload> =
-            StoreRepository::get_repository(client, &collection.0, &tenant).await;
-        if let Some(response) =
-            make_download_response(&share_drive_path, &id, private_repository).await
-        {
-            return response.into_response();
+    match get_file_upload(&id, &x_user_info, &client, &collection).await {
+        Some(file) => {
+            let file_handle = file.download(&share_drive_path).await.unwrap();
+            let stream = ReaderStream::new(file_handle);
+            let body = StreamBody::new(stream);
+
+            let content_header = if file.is_image() {
+                (header::CONTENT_LENGTH, format!("{}", &file.size))
+            } else {
+                (
+                    header::CONTENT_DISPOSITION,
+                    format!(r#"attachment; filename="{}""#, &file.original_filename),
+                )
+            };
+
+            let ct = file
+                .content_type
+                .unwrap_or_else(|| APPLICATION_OCTET_STREAM.to_string());
+
+            let content_type = (header::CONTENT_TYPE, ct);
+
+            let headers = AppendHeaders([content_type, content_header]);
+            (headers, body).into_response()
         }
+        None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
     }
-    (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response()
 }
 
 async fn upload(

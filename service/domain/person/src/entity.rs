@@ -8,6 +8,7 @@ pub struct Person {
     pub id: String,
     pub user_id: Option<String>,
     pub first_name: String,
+    pub profile_picture_id: Option<String>,
     pub middle_name: String,
     pub last_name: String,
     pub date_of_birth: NaiveDate,
@@ -26,6 +27,7 @@ pub struct PersonUpsert {
     #[serde(rename = "_id")]
     pub id: Option<String>,
     pub user_id: Option<String>,
+    pub profile_picture_id: Option<String>,
     pub first_name: String,
     pub last_name: String,
     pub date_of_birth: NaiveDate,
@@ -43,6 +45,7 @@ impl Default for Person {
             user_id: Default::default(),
             first_name: Default::default(),
             last_name: Default::default(),
+            profile_picture_id: Default::default(),
             date_of_birth: Default::default(),
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),

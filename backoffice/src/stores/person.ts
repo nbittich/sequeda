@@ -6,6 +6,7 @@ export interface Person {
   firstName?: string,
   middleName?: string,
   lastName?: string,
+  profile_picture_id?: string,
   dateOfBirth?: string,
   creationDate?: Date,
   updatedDate?: Date,
@@ -35,7 +36,7 @@ export interface Address {
   country?: string,
 }
 
-export const usePersonStore = defineStore('person', {
+const usePersonStore = defineStore('person', {
   state: () => ({
     current: null as unknown as Person
   }),

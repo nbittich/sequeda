@@ -5,7 +5,13 @@
         <q-card-section>
           <div class="text-h6">Personal Information</div>
         </q-card-section>
-
+        <q-card-section class="q-mb-none q-pb-none column items-center">
+          <q-img
+            :src="profilePictureUrl"
+            spinner-color="white"
+            style="height: 140px; max-width: 150px"
+          />
+        </q-card-section>
         <q-card-section class="q-mb-none q-pb-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
@@ -100,7 +106,6 @@
         </q-card-section>
 
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
-
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
@@ -126,7 +131,7 @@
               />
             </div>
           </div>
-          </q-card-section>
+        </q-card-section>
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
@@ -168,7 +173,6 @@
               />
             </div>
           </div>
-
         </q-card-section>
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
@@ -281,8 +285,10 @@
 import usePersonStore from 'src/stores/person';
 import useGeoStore, { PostalCode } from 'src/stores/geoentities';
 import { defineComponent, ref } from 'vue';
+import useUploadStore from 'src/stores/uploads';
 const personStore = usePersonStore();
 const geoStore = useGeoStore();
+const uploadStore = useUploadStore();
 await personStore.fetchCurrent();
 await geoStore.fetchCountries();
 
@@ -370,8 +376,10 @@ export default defineComponent({
       name: municipality || '',
     } as PostalCode);
     const postalCodesOptions = ref(null as unknown as PostalCode[]);
+    const profilePictureUrl = personStore.current.profile_picture_id || 'images/unknown.png';
     return {
       current,
+      profilePictureUrl,
       countriesOptions,
       selectedCountry,
       postalCodesOptions,

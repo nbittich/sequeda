@@ -12,7 +12,7 @@ export interface PostalCode {
 }
 
 
-export const useGeoStore = defineStore('geo', {
+const useGeoStore = defineStore('geo', {
   state: () => ({
     countries: [] as Country[]
   }),

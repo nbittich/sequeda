@@ -206,6 +206,7 @@ async fn upsert(
         nick_name,
         gender,
         academic_title,
+        profile_picture_id,
         contact_detail,
         marital_status,
     } = payload;
@@ -216,6 +217,7 @@ async fn upsert(
         last_name,
         date_of_birth,
         nick_name,
+        profile_picture_id,
         gender,
         academic_title,
         marital_status,

@@ -159,7 +159,7 @@ async fn upload(
     let mut uploads = HashMap::new();
 
     while let Some(field) = multipart.next_field().await.unwrap() {
-        let file_name = field.name().unwrap().to_string();
+        let file_name = field.file_name().unwrap().to_string();
 
         let mut file_upload = FileUpload {
             content_type: field.content_type().map(|ct| ct.into()).or_else(|| {
@@ -167,6 +167,7 @@ async fn upload(
                     .first_raw()
                     .map(|ct| ct.into())
             }),
+            correlation_id: query.get("correlation_id").cloned(),
             extension: Path::new(&file_name)
                 .extension()
                 .map(|s| s.to_string_lossy().to_string()),

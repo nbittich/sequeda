@@ -188,7 +188,7 @@ where
             .await
             .expect("`OpenIdClient` extension is missing");
 
-        if config.demo_account {
+        let fallback_user_demo = || {
             Ok(User {
                 id: "demo-16ba6cdd-59cd-4bcc-b7ef-240af07153fd".into(),
                 full_name: Some("Account Demo".into()),
@@ -201,18 +201,30 @@ where
                 groups: vec!["demogroup".into()],
                 tenant: Some("demo".into()),
             })
-        } else {
-            let cookies = TypedHeader::<headers::Cookie>::from_request(req)
-                .await
-                .map_err(|e| match *e.name() {
-                    header::COOKIE => match e.reason() {
-                        TypedHeaderRejectionReason::Missing => LoginPageRedirect,
-                        _ => panic!("unexpected error getting Cookie header(s): {}", e),
-                    },
-                    _ => panic!("unexpected error getting cookies: {}", e),
-                })?;
+        };
 
-            User::from_cookie(store, client, cookies.0).await
+        match TypedHeader::<headers::Cookie>::from_request(req)
+            .await
+            .map_err(|e| match *e.name() {
+                header::COOKIE => match e.reason() {
+                    TypedHeaderRejectionReason::Missing => LoginPageRedirect,
+                    _ => {
+                        tracing::error!("unexpected error getting Cookie header(s): {}", e);
+                        LoginPageRedirect
+                    }
+                },
+                _ => {
+                    tracing::error!("unexpected error getting cookies: {}", e);
+                    LoginPageRedirect
+                }
+            }) {
+            Ok(TypedHeader(cookies)) => match User::from_cookie(store, client, cookies).await {
+                user @ Ok(_) => user,
+                Err(_) if config.demo_account => fallback_user_demo(),
+                err @ Err(_) => err,
+            },
+            Err(_) if config.demo_account => fallback_user_demo(),
+            Err(e) => Err(e),
         }
     }
 }

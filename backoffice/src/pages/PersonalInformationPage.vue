@@ -11,6 +11,18 @@
             spinner-color="white"
             style="height: 140px; max-width: 150px"
           />
+          <div class="q-pa-md">
+            <q-file
+              dense
+              outlined
+              v-model="profilePictureFile"
+              accept="image/*"
+            >
+              <template v-slot:prepend>
+                <q-icon name="attach_file" />
+              </template>
+            </q-file>
+          </div>
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
@@ -362,6 +374,7 @@ export default defineComponent({
     },
   },
   async setup() {
+    const profilePictureFile = ref(null as unknown as File);
     const current = ref(personStore.current);
     const countries = geoStore.countries;
     const countriesOptions = ref(geoStore.countries);
@@ -376,9 +389,12 @@ export default defineComponent({
       name: municipality || '',
     } as PostalCode);
     const postalCodesOptions = ref(null as unknown as PostalCode[]);
-    const profilePictureUrl = personStore.current.profile_picture_id || 'images/unknown.png';
+    const profilePictureUrl = personStore.current.profilePictureId
+      ? uploadStore.getDownloadUrl(personStore.current.profilePictureId)
+      : 'images/unknown.png';
     return {
       current,
+      profilePictureFile,
       profilePictureUrl,
       countriesOptions,
       selectedCountry,
@@ -398,7 +414,7 @@ export default defineComponent({
       filterCountry(
         val: string,
         update: (arg0: () => void) => void,
-        abort: any
+        _abort: any
       ) {
         update(() => {
           const needle = val.toLocaleLowerCase();
@@ -410,7 +426,7 @@ export default defineComponent({
       async filterPostalCodes(
         val: string,
         update: (arg0: () => void) => void,
-        abort: any
+        _abort: any
       ) {
         let postCodes: PostalCode[] = [];
         if (selectedCountry.value) {
@@ -448,6 +464,14 @@ export default defineComponent({
   },
   methods: {
     async update() {
+      if (this.profilePictureFile) {
+        const upload = await uploadStore.uploadFile(
+          this.profilePictureFile,
+          this.current.profilePictureId,
+          this.current._id
+        );
+        this.current.profilePictureId = upload._id;
+      }
       this.current = await personStore.update(this.current);
     },
     async reset(e: Event) {

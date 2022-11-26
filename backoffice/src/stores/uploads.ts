@@ -22,8 +22,33 @@ const useUploadStore = defineStore('upload', {
   getters: {},
 
   actions: {
-     getDownloadUrl(id: string) {
-      return api.get<FileUpload>(`/uploads/downloads/${id}`);
+    async uploadFile(
+      file: File,
+      id?: string,
+      correlationId?: string,
+      publicResource = false
+    ): Promise<FileUpload> {
+      const multipart = new FormData();
+      multipart.append('file', file);
+      const urlParams = new URLSearchParams();
+      if (id?.length) {
+        urlParams.append('id', id);
+      }
+      if (correlationId?.length) {
+        urlParams.append('correlation_id', correlationId);
+      }
+      if (publicResource) {
+        urlParams.append('public', 'true');
+      }
+
+      const response = await api.post<FileUpload>(
+        `/uploads/upload?${urlParams.toString()}`,
+        multipart
+      );
+      return response.data;
+    },
+    getDownloadUrl(id: string) {
+      return `/api/uploads/download/${id}`;
     },
   },
 });

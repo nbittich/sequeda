@@ -53,30 +53,22 @@ impl FileUpload {
         file_handle: Option<&[u8]>,
         store: &StoreRepository<FileUpload>,
     ) -> Result<(), ServiceError> {
-        let upload = store
-            .find_by_id(&self.id)
-            .await
-            .map_err(|e| ServiceError::from(&e))?;
-
-        let old_internal_name = if let Some(upload) = upload {
-            if file_handle.is_some() {
-                Some(upload.internal_name)
-            } else {
-                None
-            }
-        } else {
-            None
-        };
-
         if let Some(file_handle) = file_handle {
+            let upload = store
+                .find_by_id(&self.id)
+                .await
+                .map_err(|e| ServiceError::from(&e))?;
+            let (old_internal_name, old_thumbnail_id) = if let Some(upload) = upload {
+                (Some(upload.internal_name), upload.thumbnail_id)
+            } else {
+                (None, None)
+            };
             let extension = &self.extension;
             let internal_name = format!(
                 "{}.{}",
                 self.id,
                 extension.as_ref().cloned().unwrap_or_else(|| "".into())
             );
-
-            let old_thumbnail_id = &self.thumbnail_id.clone();
 
             if let Some(old_internal_name) = old_internal_name {
                 self.updated_date = Some(Local::now().naive_local());
@@ -87,7 +79,7 @@ impl FileUpload {
                     .map_err(|e| ServiceError::from(&e))?;
                 if let Some(old_thumbnail_id) = old_thumbnail_id {
                     store
-                        .delete_by_id(old_thumbnail_id)
+                        .delete_by_id(&old_thumbnail_id)
                         .await
                         .map_err(|e| ServiceError::from(&e))?;
 
@@ -112,13 +104,12 @@ impl FileUpload {
                 .await?;
 
             self.internal_name = internal_name;
-
-            store
-                .update(&self.id, self)
-                .await
-                .map_err(|e| ServiceError::from(&e))?;
         }
 
+        store
+            .update(&self.id, self)
+            .await
+            .map_err(|e| ServiceError::from(&e))?;
         Ok(())
     }
 

@@ -7,22 +7,17 @@
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none column items-center">
           <q-img
-            :src="profilePictureUrl"
+            :src="profilePictureUrl()"
             spinner-color="white"
+            @click="selectFile()"
             style="height: 140px; max-width: 150px"
           />
-          <div class="q-pa-md">
-            <q-file
-              dense
-              outlined
-              v-model="profilePictureFile"
-              accept="image/*"
-            >
-              <template v-slot:prepend>
-                <q-icon name="attach_file" />
-              </template>
-            </q-file>
-          </div>
+          <q-file
+            ref="fileRef"
+            style="display: none"
+            v-model="profilePictureFile"
+            accept="image/*"
+          />
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
@@ -296,14 +291,14 @@
 <script lang="ts">
 import usePersonStore from 'src/stores/person';
 import useGeoStore, { PostalCode } from 'src/stores/geoentities';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, Ref, ref } from 'vue';
 import useUploadStore from 'src/stores/uploads';
+import { QFile } from 'quasar';
 const personStore = usePersonStore();
 const geoStore = useGeoStore();
 const uploadStore = useUploadStore();
 await personStore.fetchCurrent();
 await geoStore.fetchCountries();
-
 export default defineComponent({
   name: 'PersonalInformation',
   components: {},
@@ -374,6 +369,7 @@ export default defineComponent({
     },
   },
   async setup() {
+    const fileRef = ref() as Ref<QFile>;
     const profilePictureFile = ref(null as unknown as File);
     const current = ref(personStore.current);
     const countries = geoStore.countries;
@@ -389,17 +385,29 @@ export default defineComponent({
       name: municipality || '',
     } as PostalCode);
     const postalCodesOptions = ref(null as unknown as PostalCode[]);
-    const profilePictureUrl = personStore.current.profilePictureId
-      ? uploadStore.getDownloadUrl(personStore.current.profilePictureId)
-      : 'images/unknown.png';
+
     return {
       current,
+      fileRef,
       profilePictureFile,
-      profilePictureUrl,
       countriesOptions,
       selectedCountry,
       postalCodesOptions,
       selectedPostalCode,
+
+      selectFile() {
+        fileRef.value.pickFiles();
+      },
+
+      profilePictureUrl() {
+        if (profilePictureFile.value) {
+          return URL.createObjectURL(profilePictureFile.value);
+        } else {
+          return personStore.current.profilePictureId
+            ? uploadStore.getDownloadUrl(personStore.current.profilePictureId)
+            : 'images/unknown.png';
+        }
+      },
       municipalityLabel(opt?: PostalCode | string) {
         if (!opt) {
           return '';
@@ -471,6 +479,7 @@ export default defineComponent({
           this.current._id
         );
         this.current.profilePictureId = upload._id;
+        this.profilePictureFile = null as unknown as File;
       }
       this.current = await personStore.update(this.current);
     },

@@ -479,7 +479,7 @@ export default defineComponent({
           this.current._id
         );
         this.current.profilePictureId = upload._id;
-        this.profilePictureFile = null as unknown as File;
+       // this.profilePictureFile = null as unknown as File;
       }
       this.current = await personStore.update(this.current);
     },

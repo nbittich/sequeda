@@ -1,7 +1,12 @@
-use std::{error::Error, fmt::Display, path::PathBuf};
+use std::{
+    error::Error,
+    fmt::Display,
+    io::{Cursor, Read, Seek, SeekFrom},
+    path::PathBuf,
+};
 
 use chrono::{Local, NaiveDateTime};
-use image::ImageFormat;
+use image::{EncodableLayout, ImageFormat};
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
@@ -129,7 +134,7 @@ impl FileUpload {
     ) -> Result<Option<String>, ServiceError> {
         if self.is_image() {
             let image = image::load_from_memory(file_handle).map_err(|e| ServiceError::from(&e))?;
-            let thumb = image::imageops::thumbnail(&image, THUMB_WIDTH, THUMB_HEIGHT);
+            let thumb = image.thumbnail(THUMB_WIDTH, THUMB_HEIGHT);
 
             let Some(ct) = &self.content_type  else {
                 return Err(ServiceError("No Content type! Should not happen".into()))
@@ -140,6 +145,22 @@ impl FileUpload {
             };
 
             tracing::debug!("generate thumbnail...");
+
+            let mut cursor = Cursor::new(Vec::new());
+
+            thumb
+                .write_to(&mut cursor, image_format)
+                .map_err(|e| ServiceError(format!("{e}")))?;
+            cursor
+                .seek(SeekFrom::Start(0))
+                .map_err(|e| ServiceError(format!("{e}")))?;
+
+            let mut thumb = Vec::new();
+            
+            cursor
+                .read_to_end(&mut thumb)
+                .map_err(|e| ServiceError(format!("{e}")))?;
+
             let thumbnail = Self {
                 content_type: self.content_type.clone(),
                 thumbnail_id: None,
@@ -155,11 +176,8 @@ impl FileUpload {
 
             let path_buf = PathBuf::from(&share_drive_path).join(&thumbnail.internal_name);
 
-            // blocking but whatever todo find a non blocking way
-            let file = std::fs::File::create(path_buf).map_err(|e| ServiceError::from(&e))?;
-            let mut buffer = std::io::BufWriter::new(file);
-            thumb
-                .write_to(&mut buffer, image_format)
+            tokio::fs::write(path_buf, thumb.as_bytes())
+                .await
                 .map_err(|e| ServiceError::from(&e))?;
 
             store

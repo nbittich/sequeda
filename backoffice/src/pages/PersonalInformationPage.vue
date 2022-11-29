@@ -1,3 +1,215 @@
+
+<script lang="ts">
+import usePersonStore from 'src/stores/person';
+import useGeoStore, { PostalCode } from 'src/stores/geoentities';
+import { defineComponent, Ref, ref } from 'vue';
+import useUploadStore from 'src/stores/uploads';
+import { QFile } from 'quasar';
+const personStore = usePersonStore();
+const geoStore = useGeoStore();
+const uploadStore = useUploadStore();
+await personStore.fetchCurrent();
+await geoStore.fetchCountries();
+export default defineComponent({
+  name: 'PersonalInformation',
+  components: {},
+  computed: {
+    gender: () => {
+      return [
+        {
+          label: 'Male',
+          value: 'MALE',
+        },
+        {
+          label: 'Female',
+          value: 'FEMALE',
+        },
+        {
+          label: 'Unknown',
+          value: 'UNKNOWN',
+        },
+      ];
+    },
+    maritalStatuses: () => {
+      return [
+        {
+          label: '-',
+          value: null,
+        },
+        {
+          label: 'Single',
+          value: 'SINGLE',
+        },
+        {
+          label: 'Married',
+          value: 'MARRIED',
+        },
+        {
+          label: 'Divorced',
+          value: 'DIVORCED',
+        },
+        {
+          label: 'Separated',
+          value: 'SEPARATED',
+        },
+        {
+          label: 'Civil Partnership',
+          value: 'CIVIL_PARTNERSHIP',
+        },
+        {
+          label: 'Widowed',
+          value: 'WIDOWED',
+        },
+      ];
+    },
+    academicTitle: () => {
+      return [
+        {
+          label: '-',
+          value: null,
+        },
+        {
+          label: 'Doctor',
+          value: 'DR',
+        },
+        {
+          label: 'Professor',
+          value: 'PROFESSOR',
+        },
+      ];
+    },
+  },
+  async setup() {
+    const fileRef = ref() as Ref<QFile>;
+    const profilePictureFile = ref(null as unknown as File);
+    const current = ref(personStore.current);
+    const countries = geoStore.countries;
+    const countriesOptions = ref(geoStore.countries);
+    const country = countries.find(
+      (c) => c.label === personStore.current.contactDetail.address.country
+    );
+    const municipality = personStore.current.contactDetail.address.municipality;
+    const selectedCountry = ref(country);
+    const selectedPostalCode = ref({
+      postalCode: personStore.current.contactDetail.address.postCode,
+      countryCode: country?.code || '',
+      name: municipality || '',
+    } as PostalCode);
+    const postalCodesOptions = ref(null as unknown as PostalCode[]);
+
+    const profilePictureUrl = ref(null as unknown as string);
+    const profilePictureUrlChange = async () => {
+      console.log("ddd")
+      if (profilePictureFile.value) {
+           profilePictureUrl.value = URL.createObjectURL(profilePictureFile.value);
+        } else {
+          if (personStore.current.profilePictureId) {
+            const pictureMetadata = await uploadStore.getMetadata(personStore.current.profilePictureId);
+            profilePictureUrl.value = uploadStore.getDownloadUrl(pictureMetadata.thumbnailId);
+          }else {
+            profilePictureUrl.value = 'images/unknown.png';
+          }
+        }
+    };
+    await profilePictureUrlChange();
+
+    return {
+      current,
+      fileRef,
+      profilePictureFile,
+      countriesOptions,
+      selectedCountry,
+      postalCodesOptions,
+      selectedPostalCode,
+      profilePictureUrl,
+      profilePictureUrlChange,
+      selectFile() {
+        fileRef.value.pickFiles();
+      },
+      municipalityLabel(opt?: PostalCode | string) {
+        if (!opt) {
+          return '';
+        }
+        if (typeof opt === 'string') {
+          return opt;
+        }
+        return selectedPostalCode.value === opt
+          ? opt.postalCode
+          : `${opt.postalCode} ${opt.name}`;
+      },
+      filterCountry(
+        val: string,
+        update: (arg0: () => void) => void,
+        _abort: any
+      ) {
+        update(() => {
+          const needle = val.toLocaleLowerCase();
+          countriesOptions.value = countries.filter(
+            (v) => v.label?.toLocaleLowerCase()?.indexOf(needle) > -1
+          );
+        });
+      },
+      async filterPostalCodes(
+        val: string,
+        update: (arg0: () => void) => void,
+        _abort: any
+      ) {
+        let postCodes: PostalCode[] = [];
+        if (selectedCountry.value) {
+          postCodes = await geoStore.postCodesByQuery(
+            selectedCountry.value,
+            val.trim()
+          );
+        }
+        update(() => {
+          postalCodesOptions.value = postCodes;
+        });
+      },
+      setCountry(val: string) {
+        if (val) {
+          selectedCountry.value = countries.find((c) => c.label === val);
+          if (
+            selectedPostalCode.value &&
+            selectedPostalCode.value.countryCode !== selectedCountry.value?.code
+          ) {
+            selectedPostalCode.value = null as unknown as PostalCode;
+            current.value.contactDetail.address.postCode = '';
+            current.value.contactDetail.address.municipality = '';
+          }
+        }
+      },
+      setPostalCode(val: string) {
+        if (val && selectedPostalCode.value) {
+          current.value.contactDetail.address.municipality =
+            selectedPostalCode.value.name;
+          current.value.contactDetail.address.postCode =
+            selectedPostalCode.value.postalCode;
+        }
+      },
+    };
+  },
+  methods: {
+    async update() {
+      if (this.profilePictureFile) {
+        const upload = await uploadStore.uploadFile(
+          this.profilePictureFile,
+          this.current.profilePictureId,
+          this.current._id
+        );
+        this.current.profilePictureId = upload._id;
+        this.profilePictureFile = null as unknown as File;
+      }
+      this.current = await personStore.update(this.current);
+    },
+    async reset(e: Event) {
+      e.preventDefault();
+      await personStore.fetchCurrent();
+      this.current =  personStore.current;
+    },
+  },
+});
+</script>
+
 <template>
   <div class="row">
     <div class="col-12">
@@ -7,7 +219,8 @@
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none column items-center">
           <q-img
-            :src="profilePictureUrl()"
+            class="border-fluid"
+            :src="profilePictureUrl"
             spinner-color="white"
             @click="selectFile()"
             style="height: 140px; max-width: 150px"
@@ -16,6 +229,7 @@
             ref="fileRef"
             style="display: none"
             v-model="profilePictureFile"
+            @update:model-value="profilePictureUrlChange()"
             accept="image/*"
           />
         </q-card-section>
@@ -50,7 +264,7 @@
             </div>
           </div>
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-md-4 col-12">
+            <div class="col-lg-4 col-12">
               <q-input
                 dense
                 outlined
@@ -280,213 +494,12 @@
         <q-separator />
 
         <q-card-actions>
-          <q-btn flat @click="update">Save</q-btn>
-          <q-btn flat @click="reset">Cancel</q-btn>
+          <q-btn color="primary" @click="update">Save</q-btn>
+          <q-btn color="deep-orange" @click="reset">Cancel</q-btn>
         </q-card-actions>
       </q-card>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import usePersonStore from 'src/stores/person';
-import useGeoStore, { PostalCode } from 'src/stores/geoentities';
-import { defineComponent, Ref, ref } from 'vue';
-import useUploadStore from 'src/stores/uploads';
-import { QFile } from 'quasar';
-const personStore = usePersonStore();
-const geoStore = useGeoStore();
-const uploadStore = useUploadStore();
-await personStore.fetchCurrent();
-await geoStore.fetchCountries();
-export default defineComponent({
-  name: 'PersonalInformation',
-  components: {},
-  computed: {
-    gender: () => {
-      return [
-        {
-          label: 'Male',
-          value: 'MALE',
-        },
-        {
-          label: 'Female',
-          value: 'FEMALE',
-        },
-        {
-          label: 'Unknown',
-          value: 'UNKNOWN',
-        },
-      ];
-    },
-    maritalStatuses: () => {
-      return [
-        {
-          label: '-',
-          value: null,
-        },
-        {
-          label: 'Single',
-          value: 'SINGLE',
-        },
-        {
-          label: 'Married',
-          value: 'MARRIED',
-        },
-        {
-          label: 'Divorced',
-          value: 'DIVORCED',
-        },
-        {
-          label: 'Separated',
-          value: 'SEPARATED',
-        },
-        {
-          label: 'Civil Partnership',
-          value: 'CIVIL_PARTNERSHIP',
-        },
-        {
-          label: 'Widowed',
-          value: 'WIDOWED',
-        },
-      ];
-    },
-    academicTitle: () => {
-      return [
-        {
-          label: '-',
-          value: null,
-        },
-        {
-          label: 'Doctor',
-          value: 'DR',
-        },
-        {
-          label: 'Professor',
-          value: 'PROFESSOR',
-        },
-      ];
-    },
-  },
-  async setup() {
-    const fileRef = ref() as Ref<QFile>;
-    const profilePictureFile = ref(null as unknown as File);
-    const current = ref(personStore.current);
-    const countries = geoStore.countries;
-    const countriesOptions = ref(geoStore.countries);
-    const country = countries.find(
-      (c) => c.label === personStore.current.contactDetail.address.country
-    );
-    const municipality = personStore.current.contactDetail.address.municipality;
-    const selectedCountry = ref(country);
-    const selectedPostalCode = ref({
-      postalCode: personStore.current.contactDetail.address.postCode,
-      countryCode: country?.code || '',
-      name: municipality || '',
-    } as PostalCode);
-    const postalCodesOptions = ref(null as unknown as PostalCode[]);
-
-    return {
-      current,
-      fileRef,
-      profilePictureFile,
-      countriesOptions,
-      selectedCountry,
-      postalCodesOptions,
-      selectedPostalCode,
-
-      selectFile() {
-        fileRef.value.pickFiles();
-      },
-
-      profilePictureUrl() {
-        if (profilePictureFile.value) {
-          return URL.createObjectURL(profilePictureFile.value);
-        } else {
-          return personStore.current.profilePictureId
-            ? uploadStore.getDownloadUrl(personStore.current.profilePictureId)
-            : 'images/unknown.png';
-        }
-      },
-      municipalityLabel(opt?: PostalCode | string) {
-        if (!opt) {
-          return '';
-        }
-        if (typeof opt === 'string') {
-          return opt;
-        }
-        return selectedPostalCode.value === opt
-          ? opt.postalCode
-          : `${opt.postalCode} ${opt.name}`;
-      },
-      filterCountry(
-        val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
-      ) {
-        update(() => {
-          const needle = val.toLocaleLowerCase();
-          countriesOptions.value = countries.filter(
-            (v) => v.label?.toLocaleLowerCase()?.indexOf(needle) > -1
-          );
-        });
-      },
-      async filterPostalCodes(
-        val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
-      ) {
-        let postCodes: PostalCode[] = [];
-        if (selectedCountry.value) {
-          postCodes = await geoStore.postCodesByQuery(
-            selectedCountry.value,
-            val.trim()
-          );
-        }
-        update(() => {
-          postalCodesOptions.value = postCodes;
-        });
-      },
-      setCountry(val: string) {
-        if (val) {
-          selectedCountry.value = countries.find((c) => c.label === val);
-          if (
-            selectedPostalCode.value &&
-            selectedPostalCode.value.countryCode !== selectedCountry.value?.code
-          ) {
-            selectedPostalCode.value = null as unknown as PostalCode;
-            current.value.contactDetail.address.postCode = '';
-            current.value.contactDetail.address.municipality = '';
-          }
-        }
-      },
-      setPostalCode(val: string) {
-        if (val && selectedPostalCode.value) {
-          current.value.contactDetail.address.municipality =
-            selectedPostalCode.value.name;
-          current.value.contactDetail.address.postCode =
-            selectedPostalCode.value.postalCode;
-        }
-      },
-    };
-  },
-  methods: {
-    async update() {
-      if (this.profilePictureFile) {
-        const upload = await uploadStore.uploadFile(
-          this.profilePictureFile,
-          this.current.profilePictureId,
-          this.current._id
-        );
-        this.current.profilePictureId = upload._id;
-       // this.profilePictureFile = null as unknown as File;
-      }
-      this.current = await personStore.update(this.current);
-    },
-    async reset(e: Event) {
-      e.preventDefault();
-    },
-  },
-});
-</script>
 <style lang="sass" scoped></style>

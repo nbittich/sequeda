@@ -29,7 +29,7 @@
 
       <q-scroll-area class="fit">
         <q-list padding class="menu-list">
-          <q-item clickable v-ripple @click="alert('hello')">
+          <q-item clickable v-ripple to="/personal-info">
             <q-item-section avatar>
               <q-icon name="corporate_fare" />
             </q-item-section>

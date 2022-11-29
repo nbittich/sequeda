@@ -47,8 +47,12 @@ const useUploadStore = defineStore('upload', {
       );
       return response.data;
     },
-    getDownloadUrl(id: string) {
+    getDownloadUrl(id?: string) {
       return `/api/uploads/download/${id}`;
+    },
+    async getMetadata(id: string): Promise<FileUpload> {
+      const resp =  await api.get<FileUpload>(`/uploads/metadata/${id}`);
+      return resp.data;
     },
   },
 });

@@ -1,12 +1,13 @@
 [workspace]
 
 members = [
-    "service/domain/person",
-    "service/domain/file_upload",
-    "service/service_common",
-    "service/message_broker",
-    "service/geo_service",
-    "service/gateway",
+    "services/domain/person",
+    "services/domain/file_upload",
+    "services/domain/audit_log",
+    "services/service_common",
+    "services/message_broker",
+    "services/geo_service",
+    "services/gateway",
     "libraries/common",
     "libraries/store",
     "libraries/message_client",

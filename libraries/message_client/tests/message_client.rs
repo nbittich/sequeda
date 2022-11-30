@@ -9,7 +9,7 @@ mod test {
     #[tokio::test]
     async fn test_client() {
         let subscriber = FmtSubscriber::builder()
-            .with_max_level(Level::INFO)
+            .with_max_level(Level::TRACE)
             .finish();
 
         tracing::subscriber::set_global_default(subscriber)
@@ -21,7 +21,11 @@ mod test {
                 let mut client = MessageClient::new(&format!("person{i}")).await.unwrap();
                 tracing::info!("stop waiting");
                 client
-                    .send(Exchange::new("Hello World", "Animal"))
+                    .send(Exchange::new(
+                        "Hello World".as_bytes(),
+                        "Animal",
+                        Some("artcoded".to_string()),
+                    ))
                     .await
                     .unwrap();
                 drop(client);
@@ -34,6 +38,8 @@ mod test {
         let mut count = 0;
         while let Some(Ok(msg)) = client.recv().await {
             tracing::info!("{msg:?}");
+            let msg = Exchange::get_message_as_string(&msg.message);
+            assert_eq!("Hello World", &msg);
             count += 1;
         }
 

@@ -54,6 +54,7 @@ impl Config {
         let buf_reader = BufReader::new(file);
         serde_yaml::from_reader(buf_reader).unwrap()
     }
+
     #[allow(unused)]
     pub fn serialize(&self) -> String {
         match serde_yaml::to_string(&self) {

@@ -156,7 +156,7 @@ impl FileUpload {
                 .map_err(|e| ServiceError(format!("{e}")))?;
 
             let mut thumb = Vec::new();
-            
+
             cursor
                 .read_to_end(&mut thumb)
                 .map_err(|e| ServiceError(format!("{e}")))?;

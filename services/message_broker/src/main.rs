@@ -10,7 +10,7 @@ use futures_util::StreamExt;
 use sequeda_common::TextMessage;
 use tokio::{sync::Mutex, task, time};
 use tracing::Level;
-use tracing_subscriber::{FmtSubscriber, EnvFilter};
+use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use crate::{
     constants::{PUB_HOST, PUB_INTERVAL_CONSUMER, PUB_INTERVAL_SYNC_FILE, PUB_PORT},
@@ -19,7 +19,6 @@ use crate::{
 
 mod constants;
 mod exchange_manager;
-
 
 #[tokio::main]
 async fn main() {

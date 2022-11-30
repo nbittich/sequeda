@@ -110,7 +110,7 @@ impl ExchangeManager {
             for (index, subscriber) in &mut self.subscribers.iter_mut().enumerate() {
                 if subscriber
                     .subscriptions
-                    .contains(&exchange.get_topic().to_uppercase())
+                    .contains(&exchange.topic.to_uppercase())
                 {
                     tracing::info!("send binary message to {}", subscriber.service_id);
                     if let Err(e) = subscriber
@@ -177,8 +177,10 @@ mod test {
               "topic": "Animal"
             }
           }
-        "#,
+        "#
+            .as_bytes(),
             "Animal",
+            Some("topic".to_string()),
         );
 
         println!("{}", connect.serialize().unwrap());

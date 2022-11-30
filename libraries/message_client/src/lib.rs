@@ -2,8 +2,8 @@ use std::time::Duration;
 use std::{env::var, error::Error, fmt::Display};
 
 use futures_util::{SinkExt, StreamExt};
-use sequeda_common::exchange::Exchange;
-use sequeda_common::TextMessage;
+pub use sequeda_common::exchange::Exchange;
+pub use sequeda_common::TextMessage;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{

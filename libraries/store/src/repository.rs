@@ -1,15 +1,25 @@
 use crate::{doc, Collection, Document, StoreClient, StoreError};
-use crate::{Cursor, DeleteResult, FindOptions, InsertManyResult, InsertOneResult};
+use crate::{DeleteResult, FindOptions, InsertManyResult, InsertOneResult};
 use futures_util::TryStreamExt;
 use mongodb::options::FindOneAndReplaceOptions;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-#[derive(Serialize, Deserialize)]
-pub struct Page {
-    page: i64,
-    limit: i64,
-    sort: Option<Document>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Pageable {
+    pub page: i64,
+    pub limit: i64,
+    pub sort: Option<Document>,
 }
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Page<T: Serialize + DeserializeOwned> {
+    pub total_elements: i64,
+    pub current_page: i64,
+    pub next_page: Option<i64>,
+    pub page_len: usize,
+    pub content: Vec<T>,
+}
+
 pub struct StoreRepository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     collection: Collection<T>,
 }
@@ -81,8 +91,8 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn find_page(
         &self,
         query: Option<Document>,
-        page: Page,
-    ) -> Result<Option<Cursor<T>>, StoreError> {
+        pageable: Pageable,
+    ) -> Result<Option<Page<T>>, StoreError> {
         let collection = self.get_collection();
         let query = if let Some(q) = query {
             q
@@ -90,20 +100,37 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             doc! {}
         };
         let count = self.count().await? as i64;
-        let skip = page.limit * (page.page - 1); // start at page 1
+        let skip = pageable.limit * pageable.page; // start at page 0
         if count <= skip {
             return Ok(None);
         }
         let options = FindOptions::builder()
             .skip(Some(skip as u64))
-            .sort(page.sort)
-            .limit(Some(page.limit))
+            .sort(pageable.sort)
+            .limit(Some(pageable.limit))
             .build();
         let cursor = collection
             .find(query, Some(options))
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
-        Ok(Some(cursor))
+        let collection: Vec<T> = cursor
+            .try_collect()
+            .await
+            .map_err(|e| StoreError { msg: e.to_string() })?;
+        let next_page = if count >= (pageable.limit * (pageable.page + 1)) {
+            Some(pageable.page + 1)
+        } else {
+            None
+        };
+        let page_len = collection.len();
+        let page = Page {
+            total_elements: count,
+            content: collection,
+            current_page: pageable.page,
+            next_page,
+            page_len,
+        };
+        Ok(Some(page))
     }
 
     async fn delete_many(&self, query: Option<Document>) -> Result<DeleteResult, StoreError> {

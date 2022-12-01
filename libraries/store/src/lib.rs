@@ -13,7 +13,7 @@ pub use mongodb::{
     options::FindOptions, results::DeleteResult, results::InsertManyResult,
     results::InsertOneResult, results::UpdateResult, Cursor,
 };
-pub use repository::{Page, Repository, StoreRepository};
+pub use repository::{Page, Pageable, Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
 pub use uuid::Uuid;
 

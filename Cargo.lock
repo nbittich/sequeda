@@ -206,25 +206,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "065374052e7df7ee4047b1160cca5e1467a12351a40b3da123c870ba0b8eda2a"
 
 [[package]]
-name = "audit_log"
-version = "0.1.0"
-dependencies = [
- "axum",
- "axum-extra",
- "chrono",
- "sequeda_message_client",
- "sequeda_service_common",
- "sequeda_store",
- "serde",
- "serde_json",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "uuid 1.2.1",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2223,6 +2204,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
+name = "sequeda_audit_log"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "axum-extra",
+ "chrono",
+ "sequeda_message_client",
+ "sequeda_service_common",
+ "sequeda_store",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.2.1",
+]
+
+[[package]]
 name = "sequeda_common"
 version = "0.1.0"
 dependencies = [
@@ -2242,6 +2242,7 @@ dependencies = [
  "futures",
  "image",
  "mime_guess",
+ "sequeda_message_client",
  "sequeda_service_common",
  "sequeda_store",
  "serde",

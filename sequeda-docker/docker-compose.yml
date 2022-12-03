@@ -1,4 +1,18 @@
 version: "3.9"
+x-common-variables: &common-variables
+      RUST_LOG: DEBUG
+      SERVICE_CONFIG_VOLUME: /config
+      SERVICE_HOST: 0.0.0.0
+      SERVICE_PORT: 80
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      MONGO_USERNAME: root
+      MONGO_PASSWORD: root
+      MONGO_ADMIN_DATABASE: admin
+      MSG_CONS_HOST: broker
+      MSG_CONS_PORT: 80
+      MSG_CONS_PROTOCOL: ws
+      MSG_CONS_TIMEOUT: 1000
 services:
   ####### MongoDB #######
   mongo:
@@ -57,10 +71,7 @@ services:
     volumes:
       - ./config/gateway/config.yml:/config/gateway.yml
     environment:
-      RUST_LOG: DEBUG
-      SERVICE_CONFIG_VOLUME: /config
-      SERVICE_HOST: 0.0.0.0
-      SERVICE_PORT: 80
+      <<: *common-variables      
       OPENID_ENABLED: "true"
       APP_ROOT_URL: "https://api.somehost.org"
       OPENID_ISSUER_URL: "http://auth.somehost.org/realms/sequeda"
@@ -77,16 +88,7 @@ services:
       context: ../
       args:
         CRATE_NAME: sequeda_person
-    environment:
-      RUST_LOG: DEBUG
-      SERVICE_CONFIG_VOLUME: /config
-      SERVICE_HOST: 0.0.0.0
-      SERVICE_PORT: 80
-      MONGO_HOST: mongo
-      MONGO_PORT: 27017
-      MONGO_USERNAME: root
-      MONGO_PASSWORD: root
-      MONGO_ADMIN_DATABASE: admin
+    environment: *common-variables
     restart: "always"
     networks:
       sequeda:
@@ -96,10 +98,7 @@ services:
       context: ../
       args:
         CRATE_NAME: sequeda_geo_service
-    environment:
-      RUST_LOG: DEBUG
-      SERVICE_HOST: 0.0.0.0
-      SERVICE_PORT: 80
+    environment: *common-variables
     restart: "always"
     networks:
       sequeda:
@@ -112,16 +111,38 @@ services:
     volumes:
       - ./data/share:/share
     environment:
-      RUST_LOG: DEBUG
-      SERVICE_HOST: 0.0.0.0
+      <<: *common-variables
       BODY_SIZE_LIMIT: 536870912 # 512Mb
       SHARE_DRIVE_PATH: "/share"
-      SERVICE_PORT: 80
-      MONGO_HOST: mongo
-      MONGO_PORT: 27017
-      MONGO_USERNAME: root
-      MONGO_PASSWORD: root
-      MONGO_ADMIN_DATABASE: admin
+    restart: "always"
+    networks:
+      sequeda:
+  ####### service auditlog  #######
+  auditlog:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_audit_log
+    volumes:
+      - ./config/audit-log:/config
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
+  ####### service broker  #######
+  broker:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_message_broker
+    volumes:
+      - ./data/broker:/broker
+    environment:
+      PUB_HOST: 0.0.0.0
+      PUB_PORT: 80
+      PUB_PERSISTENT_DIR: "/broker"
+      PUB_INTERVAL_CONSUMER: 20
+      PUB_INTERVAL_SYNC_FILE: 100
     restart: "always"
     networks:
       sequeda:

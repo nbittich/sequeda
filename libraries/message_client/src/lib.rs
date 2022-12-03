@@ -87,7 +87,7 @@ impl MessageClient {
         Ok(())
     }
     pub async fn recv(&mut self) -> Option<Result<Exchange, MessageClientError>> {
-        tracing::info!("receiving...");
+        tracing::trace!("receiving...");
 
         if let Ok(Some(msg)) = tokio::time::timeout(self._timeout, self._socket.next()).await {
             match msg {
@@ -120,6 +120,12 @@ impl Drop for MessageClient {
             self._socket.close(None).await.unwrap();
         })
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct TopicMessage {
+    pub tenant: Option<String>,
+    pub message: String,
 }
 
 #[cfg(test)]

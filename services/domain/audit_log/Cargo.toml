@@ -1,5 +1,5 @@
 [package]
-name = "audit_log"
+name = "sequeda_audit_log"
 version = {workspace = true}
 edition = {workspace = true}
 license = {workspace = true}

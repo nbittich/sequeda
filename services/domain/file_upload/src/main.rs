@@ -11,6 +11,7 @@ use axum::{routing::post, Extension, Router};
 
 use axum::extract::{Multipart, Query};
 use mime_guess::mime::APPLICATION_OCTET_STREAM;
+use sequeda_message_client::{Exchange, MessageClient, TopicMessage};
 use sequeda_service_common::user_header::ExtractUserInfo;
 use sequeda_service_common::{
     setup_tracing, to_value, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT,
@@ -18,14 +19,17 @@ use sequeda_service_common::{
 };
 use sequeda_store::{Repository, StoreClient, StoreRepository};
 use serde_json::json;
+use tokio::sync::broadcast::{channel, Receiver, Sender};
 use tokio_util::io::ReaderStream;
 use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::file_upload::{FileUpload, SHARE_DRIVE_PATH};
 
-pub mod file_upload;
+mod file_upload;
 #[derive(Clone, Debug)]
 struct ShareDrive(String);
+
+const TOPIC: &str = "TOPIC_UPLOAD";
 
 #[tokio::main]
 async fn main() {
@@ -41,25 +45,55 @@ async fn main() {
 
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 
+    let mut message_client = MessageClient::new(&app_name).await.unwrap();
+
+    let (sender, mut receiver): (Sender<TopicMessage>, Receiver<TopicMessage>) = channel(16);
+
     let client = StoreClient::new(app_name).await.unwrap();
     let collection_name: String =
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("upload"));
 
-    let app = Router::new()
-        .route("/upload", post(upload))
-        .route("/download/:id", get(download))
-        .route("/metadata/:id", get(metadata))
-        .layer(RequestBodyLimitLayer::new(body_size_limit))
-        .layer(Extension(client))
-        .layer(Extension(ShareDrive(share_drive_path)))
-        .layer(Extension(StoreCollection(collection_name)));
+    let mut server = tokio::spawn(async move {
+        let app = Router::new()
+            .route("/upload", post(upload))
+            .route("/download/:id", get(download))
+            .route("/metadata/:id", get(metadata))
+            .layer(RequestBodyLimitLayer::new(body_size_limit))
+            .layer(Extension(client))
+            .layer(Extension(sender))
+            .layer(Extension(ShareDrive(share_drive_path)))
+            .layer(Extension(StoreCollection(collection_name)));
 
-    tracing::info!("listening on {:?}", addr);
+        tracing::info!("listening on {:?}", addr);
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+        axum::Server::bind(&addr)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
+    });
+
+    let mut message_sender = tokio::spawn(async move {
+        loop {
+            if let Ok(msg) = receiver.recv().await {
+                tracing::debug!("receiving {msg:?}");
+                if let Err(e) = message_client
+                    .send(Exchange::new(msg.message.as_bytes(), TOPIC, msg.tenant))
+                    .await
+                {
+                    tracing::error!("error sending msg {e}");
+                }
+            }
+        }
+    });
+
+    tokio::select! {
+        _ = (&mut message_sender) =>{
+            server.abort();
+        },
+        _ = (&mut server) =>{
+            message_sender.abort();
+        }
+    }
 }
 async fn metadata(
     Extension(client): Extension<StoreClient>,
@@ -148,9 +182,10 @@ async fn download(
 
 async fn upload(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    Extension(message_sender): Extension<Sender<TopicMessage>>,
     Extension(collection): Extension<StoreCollection>,
     Extension(ShareDrive(share_drive_path)): Extension<ShareDrive>,
+    ExtractUserInfo(x_user_info): ExtractUserInfo,
     mut multipart: Multipart,
     Query(mut query): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
@@ -207,9 +242,21 @@ async fn upload(
         upl.upload(&share_drive_path, Some(&data), &repository)
             .await
             .unwrap();
+        if let Err(e) = message_sender.send(TopicMessage {
+            tenant: Some(tenant),
+            message: format!(
+                "user {} uploaded file '{}' with id {}",
+                &x_user_info.username.unwrap_or(x_user_info.id),
+                &upl.original_filename,
+                &upl.id
+            ),
+        }) {
+            tracing::error!("could not send message {e}");
+        }
         (StatusCode::OK, Json(to_value(upl)))
     } else {
         let mut uploads_resp = Vec::with_capacity(uploads.len());
+        let username = &x_user_info.username.unwrap_or(x_user_info.id);
         let tenant = &x_user_info.tenant.unwrap();
         let repository: StoreRepository<FileUpload> =
             StoreRepository::get_repository(client, &collection.0, tenant).await;
@@ -217,6 +264,15 @@ async fn upload(
             upl.upload(&share_drive_path, Some(&data), &repository)
                 .await
                 .unwrap();
+            if let Err(e) = message_sender.send(TopicMessage {
+                tenant: Some(tenant.clone()),
+                message: format!(
+                    "user {} uploaded file '{}' with id {}",
+                    &username, &upl.original_filename, &upl.id
+                ),
+            }) {
+                tracing::error!("could not send message {e}");
+            }
             uploads_resp.push(upl);
         }
         (StatusCode::OK, Json(to_value(uploads_resp)))

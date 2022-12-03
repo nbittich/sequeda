@@ -131,7 +131,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<Mutex<ExchangeManager>>) {
                 }
                 Message::Binary(exchange_binary) => {
                     let mut em = state.lock().await;
-                    tracing::info!("receive binary message from {service_id}");
+                    tracing::debug!("receive binary message from {service_id}");
                     if let Err(e) = em.publish(exchange_binary).await {
                         tracing::error!("error in exchange {e:?}");
                     }
@@ -150,7 +150,7 @@ async fn handle_socket(socket: WebSocket, state: Arc<Mutex<ExchangeManager>>) {
                     if let Err(e) = em.close_connection(&service_id).await {
                         tracing::error!("could not unsubscribe {e:?}");
                     } else {
-                        tracing::info!("unsubscribed");
+                        tracing::info!("{service_id} unsubscribed");
                     }
                 }
             }

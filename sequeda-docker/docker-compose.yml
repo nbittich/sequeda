@@ -12,7 +12,7 @@ x-common-variables: &common-variables
       MSG_CONS_HOST: broker
       MSG_CONS_PORT: 80
       MSG_CONS_PROTOCOL: ws
-      MSG_CONS_TIMEOUT: 1000
+      MSG_CONS_TIMEOUT: 5000 # 5 seconds timeout, maybe must be increased to avoid connection closed
 services:
   ####### MongoDB #######
   mongo:

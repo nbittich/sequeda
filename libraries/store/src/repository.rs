@@ -16,7 +16,7 @@ pub struct Page<T: Serialize + DeserializeOwned> {
     pub total_elements: i64,
     pub current_page: i64,
     pub next_page: Option<i64>,
-    pub page_len: usize,
+    pub page_size: usize,
     pub content: Vec<T>,
 }
 
@@ -122,13 +122,13 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
         } else {
             None
         };
-        let page_len = collection.len();
+        let page_size = collection.len();
         let page = Page {
             total_elements: count,
             content: collection,
             current_page: pageable.page,
             next_page,
-            page_len,
+            page_size,
         };
         Ok(Some(page))
     }

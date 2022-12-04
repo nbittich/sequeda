@@ -38,6 +38,7 @@ routes:
       - !rewrite_path
         source: /person/find-all/**
         dest: /find-all
+
   - id: person_current
     uri: http://person
     predicates:
@@ -90,7 +91,20 @@ routes:
         has_roles:
           - creep
           - demo
-
+  - id: audit_log_find_all
+    uri: http://auditlog
+    predicates:
+      - !path /audit-log/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /audit-log/find-all/**
+        dest: /find-all
   # - id: keycloak
   #   uri: http://keycloak:80
   #   filters:

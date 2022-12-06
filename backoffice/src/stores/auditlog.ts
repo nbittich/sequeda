@@ -7,6 +7,7 @@ export interface Country {
 }
 
 export interface AuditLog {
+  _id: string,
   receivedDate: string,
   message: string,
 }
@@ -24,6 +25,7 @@ const useAuditLogStore = defineStore('auditLog', {
     async fetchAuditLogs(pageable: Pageable = {page: 0, limit:20, } as Pageable) {
       const response = await api.get<Page<AuditLog>>(`audit-log/find-all?page=${pageable.page}&limit=${pageable.limit}${pageable.sort ? '&sort='+ JSON.stringify(pageable.sort):''}`);
       this.logs = response.data;
+      return this.logs;
     },
 
   },

@@ -117,7 +117,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .try_collect()
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
-        let next_page = if count >= (pageable.limit * (pageable.page + 1)) {
+        let next_page = if count > (pageable.limit * (pageable.page + 1)) {
             Some(pageable.page + 1)
         } else {
             None

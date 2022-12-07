@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod test {
 
+    use std::collections::HashMap;
+
     use sequeda_common::exchange::Exchange;
     use sequeda_message_client::MessageClient;
     use tracing::Level;
@@ -25,6 +27,7 @@ mod test {
                         "Hello World".as_bytes(),
                         "Animal",
                         Some("artcoded".to_string()),
+                        HashMap::new(),
                     ))
                     .await
                     .unwrap();

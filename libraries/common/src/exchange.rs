@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct Exchange {
     pub timestamp: NaiveDateTime,
     pub topic: String,
@@ -25,11 +25,17 @@ impl Default for Exchange {
 }
 
 impl Exchange {
-    pub fn new(message: &[u8], topic: &str, tenant: Option<String>) -> Exchange {
+    pub fn new(
+        message: &[u8],
+        topic: &str,
+        tenant: Option<String>,
+        headers: HashMap<String, String>,
+    ) -> Exchange {
         Exchange {
             topic: topic.into(),
             message: message.to_vec(),
             tenant,
+            headers,
             ..Default::default()
         }
     }

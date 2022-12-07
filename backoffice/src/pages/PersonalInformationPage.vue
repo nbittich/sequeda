@@ -235,7 +235,7 @@ export default defineComponent({
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 :autofocus="true"
                 class="q-mr-sm-xs"
@@ -245,7 +245,7 @@ export default defineComponent({
                 label="First name"
               />
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 class="q-mr-md-xs"
                 dense
@@ -254,7 +254,20 @@ export default defineComponent({
                 label="Last name"
               />
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+          </div>
+          <div class="row q-mb-xs-none q-mb-md-xs">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
+              <q-input
+                :autofocus="true"
+                class="q-mr-sm-xs"
+                dense
+                outlined
+                v-model="current.nickName"
+                label="First name"
+              />
+            </div>
+            </div>
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 dense
                 outlined

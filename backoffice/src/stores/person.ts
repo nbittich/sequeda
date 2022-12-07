@@ -10,7 +10,7 @@ export interface Person {
   dateOfBirth?: string;
   creationDate?: Date;
   updatedDate?: Date;
-  nickname?: string;
+  nickName?: string;
   gender?: string;
   maritalStatus?: string;
   academicTitle?: string;

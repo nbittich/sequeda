@@ -5,6 +5,8 @@ use futures_util::{SinkExt, StreamExt};
 pub use sequeda_common::exchange::Exchange;
 pub use sequeda_common::TextMessage;
 use tokio::net::TcpStream;
+use tokio::sync::broadcast::{channel, Receiver, Sender};
+use tokio::task::JoinHandle;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::{
     connect_async,
@@ -112,6 +114,22 @@ impl MessageClient {
             .map_err(to_lib_error)?;
         Ok(())
     }
+
+    pub fn spawn_send(mut self) -> (Sender<Exchange>, JoinHandle<()>) {
+        let (sender, mut receiver): (Sender<Exchange>, Receiver<Exchange>) = channel(16);
+
+        let task = tokio::spawn(async move {
+            loop {
+                if let Ok(msg) = receiver.recv().await {
+                    tracing::debug!("receiving {msg:?}");
+                    if let Err(e) = self.send(msg).await {
+                        tracing::error!("error sending msg {e}");
+                    }
+                }
+            }
+        });
+        (sender, task)
+    }
 }
 
 impl Drop for MessageClient {
@@ -120,12 +138,6 @@ impl Drop for MessageClient {
             self._socket.close(None).await.unwrap();
         })
     }
-}
-
-#[derive(Clone, Debug)]
-pub struct TopicMessage {
-    pub tenant: Option<String>,
-    pub message: String,
 }
 
 #[cfg(test)]

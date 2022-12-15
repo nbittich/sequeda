@@ -2,8 +2,10 @@ use crate::{constant::COOKIE_NAME, openid::destroy_session};
 use async_redis_session::RedisSessionStore;
 use async_session::{async_trait, SessionStore};
 use axum::{
-    extract::{rejection::TypedHeaderRejectionReason, FromRequest, RequestParts},
-    headers, Extension, TypedHeader,
+    extract::{rejection::TypedHeaderRejectionReason, FromRequestParts},
+    headers,
+    http::request::Parts,
+    Extension, TypedHeader,
 };
 use hyper::header::{self};
 use openidconnect::{core::CoreGenderClaim, UserInfoClaims};
@@ -168,23 +170,23 @@ impl User {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for User
+impl<B> FromRequestParts<B> for User
 where
-    B: Send,
+    B: Send + Sync,
 {
     // If anything goes wrong or no session is found, redirect to the auth page
     type Rejection = LoginPageRedirect;
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let Extension(store) = Extension::<RedisSessionStore>::from_request(req)
+    async fn from_request_parts(req: &mut Parts, state: &B) -> Result<Self, Self::Rejection> {
+        let Extension(store) = Extension::<RedisSessionStore>::from_request_parts(req, state)
             .await
             .expect("`RedisSessionStore` extension is missing");
 
-        let Extension(config) = Extension::<AuthConfig>::from_request(req)
+        let Extension(config) = Extension::<AuthConfig>::from_request_parts(req, state)
             .await
             .expect("`Auth config` extension is missing");
 
-        let Extension(client) = Extension::<OpenIdClient>::from_request(req)
+        let Extension(client) = Extension::<OpenIdClient>::from_request_parts(req, state)
             .await
             .expect("`OpenIdClient` extension is missing");
 
@@ -203,7 +205,7 @@ where
             })
         };
 
-        match TypedHeader::<headers::Cookie>::from_request(req)
+        match TypedHeader::<headers::Cookie>::from_request_parts(req, state)
             .await
             .map_err(|e| match *e.name() {
                 header::COOKIE => match e.reason() {

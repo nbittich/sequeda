@@ -7,7 +7,6 @@ pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_
 
 use axum::{
     extract::Extension,
-    handler::Handler,
     headers::ContentType,
     http::{Request, Response},
     response::IntoResponse,
@@ -75,7 +74,7 @@ async fn main() {
     let client: Client = hyper::client::Client::builder().build(https);
 
     let mut app = Router::new()
-        .fallback(handler.into_service())
+        .fallback(handler)
         .layer(Extension(client))
         .layer(Extension(Arc::new(request_handler)));
 

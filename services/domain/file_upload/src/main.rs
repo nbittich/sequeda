@@ -172,8 +172,8 @@ async fn upload(
     Extension(collection): Extension<StoreCollection>,
     Extension(ShareDrive(share_drive_path)): Extension<ShareDrive>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
-    mut multipart: Multipart,
     Query(mut query): Query<HashMap<String, String>>,
+    mut multipart: Multipart,
 ) -> impl IntoResponse {
     tracing::debug!("Person list route entered!");
 

@@ -3,6 +3,7 @@
 members = [
     "services/domain/person",
     "services/domain/file_upload",
+    "services/domain/organization",
     "services/domain/audit_log",
     "services/service_common",
     "services/message_broker",
@@ -25,7 +26,7 @@ mongodb = "2.3.1"
 chrono = "0.4.22"
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
-axum = "0.5.17"
+axum = "0.6.1"
 tower-http = "0.3.4"
 futures-util = "0.3.25"
 async-trait = "0.1.58"
@@ -33,9 +34,9 @@ dirs = "4.0.0"
 tower = "0.4.13"
 queue-file = "1.4.6"
 reqwest = "0.11.12"
-tokio-tungstenite = "0.17.2"
+tokio-tungstenite = "0.18.0"
 futures ="0.3.25"
-axum-core ="0.2.9"
+axum-core ="0.3.0"
 hyper = "0.14.20"
 toml = "0.5.9"
 serde_yaml = "0.9"
@@ -45,10 +46,10 @@ rustls = "0.20.7"
 openidconnect = "2.4.0"
 async-redis-session = "0.2.2"
 async-session = "3.0.0"
-axum-sessions = "0.3.1"
-axum-extra = "0.3.7"
+axum-sessions = "0.4.1"
+axum-extra = "0.4.2"
 rand = "0.8.5"
-base64 = "0.13.1"
+base64 = "0.20.0"
 jsonwebtoken = "8.1.1"
 mime_guess = "2.0.4"
 multipart = "0.18.0"

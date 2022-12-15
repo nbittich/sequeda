@@ -1,11 +1,10 @@
 use std::ops::Deref;
 
+use axum::async_trait;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::Json;
-use axum::{
-    async_trait,
-    extract::{FromRequest, RequestParts},
-};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -36,14 +35,14 @@ pub struct UserInfo {
 }
 
 #[async_trait]
-impl<B> FromRequest<B> for ExtractUserInfo
+impl<B> FromRequestParts<B> for ExtractUserInfo
 where
-    B: Send,
+    B: Send + Sync,
 {
     type Rejection = (StatusCode, axum::Json<serde_json::Value>);
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        if let Some(user_info) = req.headers().get(X_USER_INFO_HEADER) {
+    async fn from_request_parts(req: &mut Parts, _state: &B) -> Result<Self, Self::Rejection> {
+        if let Some(user_info) = req.headers.get(X_USER_INFO_HEADER) {
             match user_info
                 .to_str()
                 .ok()

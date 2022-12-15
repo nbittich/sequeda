@@ -37,9 +37,9 @@ pub async fn open_id_router(
 }
 
 async fn login(
-    user: Option<User>,
     Extension(client): Extension<OpenIdClient>,
     Extension(config): Extension<AuthConfig>,
+    user: Option<User>,
 ) -> impl IntoResponse {
     if user.is_some() {
         return Redirect::permanent("/@me").into_response();

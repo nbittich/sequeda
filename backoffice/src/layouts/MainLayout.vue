@@ -35,6 +35,12 @@
             </q-item-section>
             <q-item-section> Profile </q-item-section>
           </q-item>
+          <q-item clickable v-ripple to="/audit">
+            <q-item-section avatar>
+              <q-icon name="history" />
+            </q-item-section>
+            <q-item-section> Logs </q-item-section>
+          </q-item>
         </q-list>
       </q-scroll-area>
 

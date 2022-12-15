@@ -104,10 +104,10 @@ impl ExchangeManager {
     pub async fn consume_queue(&mut self) -> Result<(), ExchangeError> {
         let mut consumed_messages = vec![];
         for exchange_binary in self.queue.iter() {
-            //let mut unsubscribed = vec![];
+            let mut unsubscribed = vec![];
             let exchange = Exchange::deserialize(&exchange_binary).map_err(to_service_error)?;
             let mut consumed = false;
-            for (_index, subscriber) in &mut self.subscribers.iter_mut().enumerate() {
+            for (index, subscriber) in &mut self.subscribers.iter_mut().enumerate() {
                 if subscriber
                     .subscriptions
                     .contains(&exchange.topic.to_uppercase())
@@ -119,7 +119,7 @@ impl ExchangeManager {
                         .await
                     {
                         tracing::error!("error {e} for subscriber {}", subscriber.service_id);
-                        //unsubscribed.push(index); // todo for now we don't unsubscribe in case of errors
+                        unsubscribed.push(index); 
                     } else {
                         consumed = true;
                     }
@@ -128,10 +128,10 @@ impl ExchangeManager {
             if consumed {
                 consumed_messages.push(exchange_binary);
             }
-            // for position in unsubscribed {
-            //     let mut subscriber = self.subscribers.remove(position);
-            //     subscriber.sender.close().await.map_err(to_service_error)?;
-            // }
+            for position in unsubscribed {
+                let mut subscriber = self.subscribers.remove(position);
+                subscriber.sender.close().await.map_err(to_service_error)?;
+            }
         }
         let stored = self
             .queue

@@ -119,7 +119,7 @@ impl ExchangeManager {
                         .await
                     {
                         tracing::error!("error {e} for subscriber {}", subscriber.service_id);
-                        unsubscribed.push(index); 
+                        unsubscribed.push(index);
                     } else {
                         consumed = true;
                     }

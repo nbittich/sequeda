@@ -11,7 +11,7 @@ struct Country<'a> {
     #[serde(borrow)]
     label: &'a str,
 }
-impl <'a> Country<'a> {
+impl<'a> Country<'a> {
     const COUNTRIES_STR: &str = include_str!("./countries-codes-filtered.csv");
     fn from_csv() -> Vec<Self> {
         Self::COUNTRIES_STR
@@ -38,7 +38,7 @@ struct PostalCode<'a> {
     name: &'a str,
 }
 
-impl <'a> PostalCode<'a> {
+impl<'a> PostalCode<'a> {
     const POST_CODE_STR: &str = include_str!("./geonames-postal-code-filtered.csv");
     fn from_csv() -> HashMap<&'a str, Vec<Self>> {
         Self::POST_CODE_STR
@@ -125,7 +125,9 @@ async fn find_by_country(
     )))
 }
 
-async fn get_countries(Extension(countries): Extension<Arc<Vec<Country<'_>>>>) -> impl IntoResponse {
+async fn get_countries(
+    Extension(countries): Extension<Arc<Vec<Country<'_>>>>,
+) -> impl IntoResponse {
     tracing::debug!("Get countries route entered!");
     Json(to_value(&*countries))
 }

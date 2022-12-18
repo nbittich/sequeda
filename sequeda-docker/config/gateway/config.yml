@@ -23,7 +23,7 @@ routes:
       - !rewrite_path
         source: /api/(?P<segment>.*)
         dest: /${segment}
-
+# person
   - id: person_find_all
     uri: http://person
     predicates:
@@ -61,6 +61,36 @@ routes:
         dest: /
     predicates:
       - !path /person/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+  # position
+  - id: position_find_all
+    uri: http://org-position
+    predicates:
+      - !path /org-position/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /org-position/find-all/**
+        dest: /find-all
+  - id: position_upsert
+    uri: http://org-position
+    filters:
+      - !rewrite_path
+        source: /org-position/**
+        dest: /
+    predicates:
+      - !path /org-position/**
       - !method POST
     authorizations:
       - !authorization

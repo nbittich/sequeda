@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/nbittich/sequeda#readme",
   "dependencies": {
-    "mongodb": "^4.12.1"
+    "mongodb": "^4.12.1",
+    "uuid": "^9.0.0"
   }
 }

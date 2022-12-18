@@ -2,6 +2,7 @@
 
 members = [
     "services/domain/person",
+    "services/domain/org_position",
     "services/domain/file_upload",
     "services/domain/audit_log",
     "services/service_common",

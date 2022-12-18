@@ -92,6 +92,16 @@ services:
     restart: "always"
     networks:
       sequeda:
+  ####### service org_position  #######
+  org-position:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_org_position
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
   ####### service geo  #######
   geo-entities:
     build:

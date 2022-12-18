@@ -129,6 +129,16 @@ services:
     restart: "always"
     networks:
       sequeda:
+  ####### service migrations  #######
+  migrations:
+    build:
+      context: ../migrations/.
+    volumes:
+      - ./config/migrations:/migrations
+    environment: *common-variables
+    restart: "no"
+    networks:
+      sequeda:
   ####### service broker  #######
   broker:
     build:

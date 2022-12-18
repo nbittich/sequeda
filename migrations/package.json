@@ -1,0 +1,22 @@
+{
+  "name": "sequeda_migrations",
+  "version": "1.0.0",
+  "description": "Database Migrations",
+  "main": "app.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nbittich/sequeda.git"
+  },
+  "author": "Nordine Bittich",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/nbittich/sequeda/issues"
+  },
+  "homepage": "https://github.com/nbittich/sequeda#readme",
+  "dependencies": {
+    "mongodb": "^4.12.1"
+  }
+}

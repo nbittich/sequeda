@@ -5,11 +5,13 @@ use sequeda_service_common::{setup_tracing, to_value, SERVICE_HOST, SERVICE_PORT
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
-struct Country {
-    code: &'static str,
-    label: &'static str,
+struct Country<'a> {
+    #[serde(borrow)]
+    code: &'a str,
+    #[serde(borrow)]
+    label: &'a str,
 }
-impl Country {
+impl <'a> Country<'a> {
     const COUNTRIES_STR: &str = include_str!("./countries-codes-filtered.csv");
     fn from_csv() -> Vec<Self> {
         Self::COUNTRIES_STR
@@ -27,15 +29,18 @@ impl Country {
 }
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct PostalCode {
-    country_code: &'static str,
-    postal_code: &'static str,
-    name: &'static str,
+struct PostalCode<'a> {
+    #[serde(borrow)]
+    country_code: &'a str,
+    #[serde(borrow)]
+    postal_code: &'a str,
+    #[serde(borrow)]
+    name: &'a str,
 }
 
-impl PostalCode {
+impl <'a> PostalCode<'a> {
     const POST_CODE_STR: &str = include_str!("./geonames-postal-code-filtered.csv");
-    fn from_csv() -> HashMap<&'static str, Vec<Self>> {
+    fn from_csv() -> HashMap<&'a str, Vec<Self>> {
         Self::POST_CODE_STR
             .split('\n')
             .into_iter()
@@ -57,18 +62,18 @@ impl PostalCode {
                 map
             })
     }
-    fn filter_by_country_code<'a>(
-        postal_codes: &'a HashMap<&'static str, Vec<Self>>,
+    fn filter_by_country_code(
+        postal_codes: &'a HashMap<&'a str, Vec<Self>>,
         code: &'a str,
     ) -> Option<&'a Vec<Self>> {
         postal_codes.get(code)
     }
     #[allow(unused)]
-    fn find_by_postal_code<'a>(postal_codes: &'a [Self], code: &'a str) -> Option<&'a Self> {
+    fn find_by_postal_code(postal_codes: &'a [Self], code: &'a str) -> Option<&'a Self> {
         postal_codes.iter().find(|pc| pc.postal_code == code)
     }
-    fn find_by_country_code_and_query<'a>(
-        postal_codes: &'a HashMap<&'static str, Vec<Self>>,
+    fn find_by_country_code_and_query(
+        postal_codes: &'a HashMap<&'a str, Vec<Self>>,
         country_code: &'a str,
         query: &'a str,
     ) -> Option<Vec<&'a Self>> {
@@ -110,7 +115,7 @@ async fn main() {
 }
 
 async fn find_by_country(
-    Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode>>>>,
+    Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode<'_>>>>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by country route entered!");
@@ -120,13 +125,13 @@ async fn find_by_country(
     )))
 }
 
-async fn get_countries(Extension(countries): Extension<Arc<Vec<Country>>>) -> impl IntoResponse {
+async fn get_countries(Extension(countries): Extension<Arc<Vec<Country<'_>>>>) -> impl IntoResponse {
     tracing::debug!("Get countries route entered!");
     Json(to_value(&*countries))
 }
 
 async fn find_by_query(
-    Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode>>>>,
+    Extension(postal_codes): Extension<Arc<HashMap<&'static str, Vec<PostalCode<'_>>>>>,
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by query route entered!");

@@ -124,6 +124,7 @@ const INSERTS = [
     level: "OPERATIONAL",
   },
 ];
+
 const execute = async (db, context = {}) => {
   const { now, uuid } = context;
   INSERTS.forEach((i) => {
@@ -135,12 +136,14 @@ const execute = async (db, context = {}) => {
     INSERTS
   );
 };
+
 const rollback = async (db, context = {}) => {
   const positionCollection = await db.collection("position");
   for (const { name } of INSERTS) {
     await positionCollection.deletOne({ name });
   }
 };
+
 module.exports = {
   targetDatabases: null, // force to run on all db
   description: "Add default positions",

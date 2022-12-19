@@ -19,6 +19,12 @@ const CLIENT = new MongoClient(
 
 const ADMIN_CLIENT = CLIENT.db().admin();
 
+const CONTEXT = {
+  uuid: require('uuid').v4,
+  moment: require('moment'),
+  now: () => new Date().toISOString().slice(0, 23)
+}
+
 async function main() {
   await ping();
   const fileNames = await readDirRecursive(MIGRATIONS_DIR);
@@ -40,7 +46,7 @@ async function main() {
           `Migration ${file} didn't run yet for db ${database}, executing...`
         );
         try {
-          await execute(db);
+          await execute(db, CONTEXT);
           const migration = { name: file, executedAt: new Date(), description };
           await migrationCollection.insertOne(migration);
           console.log(`Migration ${file} for db ${database} ran successfully!`);
@@ -49,7 +55,7 @@ async function main() {
             `an error occurred while proceeding ${file} for db ${db}. Error: ${e}, try to rollback...`
           );
           try {
-            await rollback(db);
+            await rollback(db, CONTEXT);
           } catch (e) {
             console.log(`could not rollback ${file} & db ${db}.`);
           }

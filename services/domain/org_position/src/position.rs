@@ -1,4 +1,4 @@
-use chrono::{Local, DateTime, Utc};
+use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -9,8 +9,8 @@ pub struct Position {
     pub name: String,
     pub description: Option<String>,
     pub level: PositionLevel,
-    pub creation_date: DateTime<Utc>,
-    pub updated_date: Option<DateTime<Utc>>,
+    pub creation_date: NaiveDateTime,
+    pub updated_date: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -30,7 +30,7 @@ impl Default for Position {
             name: Default::default(),
             description: Default::default(),
             level: PositionLevel::Operational,
-            creation_date: DateTime::from_utc(Local::now().naive_local(), Utc),
+            creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
         }
     }
@@ -50,7 +50,6 @@ pub enum PositionLevel {
 #[cfg(test)]
 mod test {
     use super::Position;
-
 
     #[test]
     fn test_deserialize() {

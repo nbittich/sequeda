@@ -7,7 +7,7 @@ use axum::{
     routing::{delete, get, post},
     Extension, Json, Router,
 };
-use chrono::{Local, DateTime, Utc};
+use chrono::Local;
 use sequeda_service_common::{
     to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
@@ -43,12 +43,16 @@ async fn find_all(
         &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
     )
     .await;
+
     match repository.find_all().await {
         Ok(positions) => (StatusCode::OK, Json(to_value(positions))),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": e.to_string()})),
-        ),
+        Err(e) => {
+            tracing::debug!("error {e}");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        }
     }
 }
 async fn find_one(
@@ -133,7 +137,7 @@ async fn upsert(
         if let Some(id) = &payload.id {
             let p = repository.find_by_id(id).await;
             if let Ok(Some(mut p)) = p {
-                p.updated_date = Some(DateTime::from_local(Local::now().naive_local(), Utc));
+                p.updated_date = Some(Local::now().naive_local());
                 return p;
             }
         }

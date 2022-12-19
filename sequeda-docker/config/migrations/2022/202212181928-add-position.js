@@ -132,9 +132,7 @@ const execute = async (db, context = {}) => {
     i._id = uuid();
   });
   const positionCollection = await db.collection("position");
-  await positionCollection.insertMany(
-    INSERTS
-  );
+  await positionCollection.insertMany(INSERTS);
 };
 
 const rollback = async (db, context = {}) => {

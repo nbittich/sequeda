@@ -17,24 +17,23 @@
       bordered
       class="bg-grey-3"
     >
-      <template v-slot:mini>
-        <q-scroll-area class="fit mini-slot cursor-pointer">
-          <div class="q-py-lg">
-            <div class="column items-start">
-              <q-icon name="corporate_fare" class="mini-icon" />
-            </div>
-          </div>
-        </q-scroll-area>
-      </template>
 
       <q-scroll-area class="fit">
         <q-list padding class="menu-list">
           <q-item clickable v-ripple to="/personal-info">
             <q-item-section avatar>
-              <q-icon name="corporate_fare" />
+              <q-icon name="perm_identity" />
             </q-item-section>
             <q-item-section> Profile </q-item-section>
           </q-item>
+          <q-expansion-item expand-separator icon="corporate_fare" label="Organization">
+            <q-item clickable v-ripple to="/org/positions"  >
+            <q-item-section avatar>
+              <q-icon name="school" />
+            </q-item-section>
+            <q-item-section> Positions </q-item-section>
+          </q-item>
+          </q-expansion-item>
           <q-item clickable v-ripple to="/audit">
             <q-item-section avatar>
               <q-icon name="history" />

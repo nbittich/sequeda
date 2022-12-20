@@ -1,5 +1,5 @@
 [package]
-name = "sequeda_org_position"
+name = "sequeda_org_member"
 version = {workspace = true}
 edition = {workspace = true}
 license = {workspace = true}
@@ -16,6 +16,6 @@ axum = {workspace=true, features = ["headers"]}
 chrono ={workspace=true, features=["serde"]}
 uuid ={workspace=true, features=["v4"]}
 tower-http = { workspace=true, features = ["cors"] }
-sequeda_store = {path = "../../../libraries/store"}
-sequeda_service_common = {path = "../../service_common"}
+sequeda_store = {path = "../../../../libraries/store"}
+sequeda_service_common = {path = "../../../service_common"}
 axum-extra ={workspace=true}

@@ -62,6 +62,6 @@ version = "0.1.0"
 authors = ["Nordine Bittich"]
 description = "Simple ERP"
 documentation = "https://github.com/nbittich/sequeda"
-rust-version = "1.65.0"
+rust-version = "1.66.0"
 edition = "2021"
 license = "MPL-2.0"

@@ -68,11 +68,11 @@ routes:
         has_roles:
           - creep
           - demo
-  # position
+  # positions
   - id: position_find_all
     uri: http://org-position
     predicates:
-      - !path /org-position/find-all/**
+      - !path /orgs/position/find-all/**
     authorizations:
       - !authorization
         method: "GET"
@@ -81,16 +81,16 @@ routes:
           - demo
     filters:
       - !rewrite_path
-        source: /org-position/find-all/**
+        source: /orgs/position/find-all/**
         dest: /find-all
   - id: position_upsert
     uri: http://org-position
     filters:
       - !rewrite_path
-        source: /org-position/**
+        source: /orgs/position/**
         dest: /
     predicates:
-      - !path /org-position/**
+      - !path /orgs/position/**
       - !method POST
     authorizations:
       - !authorization
@@ -98,6 +98,37 @@ routes:
         has_roles:
           - creep
           - demo
+  # members
+  - id: member_find_all
+    uri: http://org-member
+    predicates:
+      - !path /orgs/member/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/member/find-all/**
+        dest: /find-all
+  - id: member_upsert
+    uri: http://org-member
+    filters:
+      - !rewrite_path
+        source: /orgs/member/**
+        dest: /
+    predicates:
+      - !path /orgs/member/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+  # geo_entities
   - id: geo_entities
     uri: http://geo-entities
     filters:

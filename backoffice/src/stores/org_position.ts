@@ -23,7 +23,7 @@ const useOrgPositionStore = defineStore('org-position', {
 
   actions: {
     async fetchPositions() {
-      const response = await api.get<Position[]>(`org-position/find-all`);
+      const response = await api.get<Position[]>(`orgs/position/find-all`);
       this.positions = response.data || [];
       return this.positions;
     },

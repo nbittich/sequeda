@@ -118,7 +118,7 @@ mod test {
         let person: Person = Person {
             first_name: "Nordine".into(),
             last_name: "Bittich".into(),
-            date_of_birth: NaiveDate::from_ymd(1988, 3, 10),
+            date_of_birth: NaiveDate::from_ymd_opt(1988, 3, 10).unwrap(),
             nick_name: Some("nbittich".into()),
             gender: Gender::Male,
             contact_detail: super::ContactDetail {

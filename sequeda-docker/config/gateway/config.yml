@@ -120,7 +120,52 @@ routes:
         source: /orgs/member/**
         dest: /
     predicates:
-      - !path /orgs/member/**
+      - !path /orgs/member
+      /**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+  # orgs
+  - id: orgs_current
+    uri: http://orgs
+    predicates:
+      - !path /orgs/current/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/current/**
+        dest: /current
+  - id: orgs_find_all
+    uri: http://orgs
+    predicates:
+      - !path /orgs/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/find-all/**
+        dest: /find-all
+  - id: orgs_upsert
+    uri: http://orgs
+    filters:
+      - !rewrite_path
+        source: /orgs/**
+        dest: /
+    predicates:
+      - !path /orgs
+      /**
       - !method POST
     authorizations:
       - !authorization

@@ -102,6 +102,16 @@ services:
     restart: "always"
     networks:
       sequeda:
+  ####### service orgs  #######
+  orgs:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_orgs
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
   ####### service org_member  #######
   org-member:
     build:

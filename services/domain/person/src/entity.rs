@@ -1,4 +1,5 @@
 use chrono::{Local, NaiveDate, NaiveDateTime};
+use sequeda_service_common::{BankAccount, ContactDetail};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -19,6 +20,7 @@ pub struct Person {
     pub marital_status: Option<MaritalStatus>,
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
+    pub bank_account: Option<BankAccount>,
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -36,6 +38,7 @@ pub struct PersonUpsert {
     pub gender: Gender,
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
+    pub bank_account: Option<BankAccount>,
 }
 
 impl Default for Person {
@@ -55,31 +58,9 @@ impl Default for Person {
             academic_title: Default::default(),
             contact_detail: Default::default(),
             middle_name: Default::default(),
+            bank_account: Default::default(),
         }
     }
-}
-
-#[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ContactDetail {
-    pub email_address_1: String,
-    pub email_address_2: Option<String>,
-    pub phone_number_1: String,
-    pub phone_number_2: Option<String>,
-    pub website: Option<String>,
-    pub address: Address,
-}
-
-#[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Address {
-    pub street: String,
-    pub number: String,
-    pub box_number: Option<String>,
-    pub post_code: String,
-    pub municipality: String,
-    pub province: Option<String>,
-    pub country: String,
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -111,6 +92,7 @@ pub enum MaritalStatus {
 #[cfg(test)]
 mod test {
     use chrono::NaiveDate;
+    use sequeda_service_common::{Address, BankAccount};
 
     use super::{Gender, Person};
     #[test]
@@ -124,7 +106,7 @@ mod test {
             contact_detail: super::ContactDetail {
                 email_address_1: "nordine@sequeda.eu".into(),
                 phone_number_1: "0484/79.23.22".into(),
-                address: super::Address {
+                address: Address {
                     street: "bekker street".into(),
                     number: "33".into(),
                     post_code: "3080".into(),
@@ -134,6 +116,10 @@ mod test {
                 },
                 ..Default::default()
             },
+            bank_account: Some(BankAccount {
+                number: "BEXXX XXX XXX XXX".into(),
+                bic: "GEBABAB".into(),
+            }),
             ..Default::default()
         };
 

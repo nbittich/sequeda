@@ -10,7 +10,7 @@ import {
 import useGeoStore, { PostalCode } from 'src/stores/geoentities';
 import { ContactDetail } from 'src/stores/person';
 
-import { computed, defineComponent, ref, toRefs } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 const geoStore = useGeoStore();
 await geoStore.fetchCountries();
 

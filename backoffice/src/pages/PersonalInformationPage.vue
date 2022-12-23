@@ -1,15 +1,15 @@
 <script lang="ts">
 import usePersonStore from 'src/stores/person';
-import { defineComponent, Ref, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import useUploadStore from 'src/stores/uploads';
-import { QFile } from 'quasar';
 import ContactDetailForm from 'src/components/contact-detail-form.vue';
+import ImageUpload from 'src/components/image-upload.vue';
 const personStore = usePersonStore();
 const uploadStore = useUploadStore();
 await personStore.fetchCurrent();
 export default defineComponent({
   name: 'PersonalInformation',
-  components: { ContactDetailForm },
+  components: { ContactDetailForm, ImageUpload },
   computed: {
     gender: () => {
       return [
@@ -77,38 +77,12 @@ export default defineComponent({
     },
   },
   async setup() {
-    const fileRef = ref() as Ref<QFile>;
-    const profilePictureFile = ref(null as unknown as File);
     const current = ref(personStore.current);
-
-    const profilePictureUrl = ref(null as unknown as string);
-    const profilePictureUrlChange = async () => {
-      if (profilePictureFile.value) {
-        profilePictureUrl.value = URL.createObjectURL(profilePictureFile.value);
-      } else {
-        if (personStore.current.profilePictureId) {
-          const pictureMetadata = await uploadStore.getMetadata(
-            personStore.current.profilePictureId
-          );
-          profilePictureUrl.value = uploadStore.getDownloadUrl(
-            pictureMetadata.thumbnailId
-          );
-        } else {
-          profilePictureUrl.value = 'images/unknown.png';
-        }
-      }
-    };
-    await profilePictureUrlChange();
+    const profilePictureFile = ref(null as unknown as File);
 
     return {
       current,
-      fileRef,
       profilePictureFile,
-      profilePictureUrl,
-      profilePictureUrlChange,
-      selectFile() {
-        fileRef.value.pickFiles();
-      },
     };
   },
   methods: {
@@ -141,19 +115,9 @@ export default defineComponent({
           <div class="text-h6">Personal Information</div>
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none column items-center">
-          <q-img
-            class="border-fluid rounded-borders"
-            :src="profilePictureUrl"
-            spinner-color="white"
-            @click="selectFile()"
-            style="height: 140px; max-width: 150px"
-          />
-          <q-file
-            ref="fileRef"
-            style="display: none"
+          <ImageUpload
             v-model="profilePictureFile"
-            @update:model-value="profilePictureUrlChange()"
-            accept="image/*"
+            :pictureId="current.profilePictureId"
           />
         </q-card-section>
         <q-card-section class="q-mb-none q-pb-none">

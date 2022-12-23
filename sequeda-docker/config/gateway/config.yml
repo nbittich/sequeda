@@ -120,8 +120,7 @@ routes:
         source: /orgs/member/**
         dest: /
     predicates:
-      - !path /orgs/member
-      /**
+      - !path /orgs/member/**
       - !method POST
     authorizations:
       - !authorization
@@ -164,8 +163,7 @@ routes:
         source: /orgs/**
         dest: /
     predicates:
-      - !path /orgs
-      /**
+      - !path /orgs/**
       - !method POST
     authorizations:
       - !authorization

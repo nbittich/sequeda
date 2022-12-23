@@ -1,18 +1,15 @@
-
 <script lang="ts">
 import usePersonStore from 'src/stores/person';
-import useGeoStore, { PostalCode } from 'src/stores/geoentities';
 import { defineComponent, Ref, ref } from 'vue';
 import useUploadStore from 'src/stores/uploads';
 import { QFile } from 'quasar';
+import ContactDetailForm from 'src/components/contact-detail-form.vue';
 const personStore = usePersonStore();
-const geoStore = useGeoStore();
 const uploadStore = useUploadStore();
 await personStore.fetchCurrent();
-await geoStore.fetchCountries();
 export default defineComponent({
   name: 'PersonalInformation',
-  components: {},
+  components: { ContactDetailForm },
   computed: {
     gender: () => {
       return [
@@ -83,33 +80,23 @@ export default defineComponent({
     const fileRef = ref() as Ref<QFile>;
     const profilePictureFile = ref(null as unknown as File);
     const current = ref(personStore.current);
-    const countries = geoStore.countries;
-    const countriesOptions = ref(geoStore.countries);
-    const country = countries.find(
-      (c) => c.label === personStore.current.contactDetail.address.country
-    );
-    const municipality = personStore.current.contactDetail.address.municipality;
-    const selectedCountry = ref(country);
-    const selectedPostalCode = ref({
-      postalCode: personStore.current.contactDetail.address.postCode,
-      countryCode: country?.code || '',
-      name: municipality || '',
-    } as PostalCode);
-    const postalCodesOptions = ref(null as unknown as PostalCode[]);
 
     const profilePictureUrl = ref(null as unknown as string);
     const profilePictureUrlChange = async () => {
-      console.log("ddd")
       if (profilePictureFile.value) {
-           profilePictureUrl.value = URL.createObjectURL(profilePictureFile.value);
+        profilePictureUrl.value = URL.createObjectURL(profilePictureFile.value);
+      } else {
+        if (personStore.current.profilePictureId) {
+          const pictureMetadata = await uploadStore.getMetadata(
+            personStore.current.profilePictureId
+          );
+          profilePictureUrl.value = uploadStore.getDownloadUrl(
+            pictureMetadata.thumbnailId
+          );
         } else {
-          if (personStore.current.profilePictureId) {
-            const pictureMetadata = await uploadStore.getMetadata(personStore.current.profilePictureId);
-            profilePictureUrl.value = uploadStore.getDownloadUrl(pictureMetadata.thumbnailId);
-          }else {
-            profilePictureUrl.value = 'images/unknown.png';
-          }
+          profilePictureUrl.value = 'images/unknown.png';
         }
+      }
     };
     await profilePictureUrlChange();
 
@@ -117,74 +104,10 @@ export default defineComponent({
       current,
       fileRef,
       profilePictureFile,
-      countriesOptions,
-      selectedCountry,
-      postalCodesOptions,
-      selectedPostalCode,
       profilePictureUrl,
       profilePictureUrlChange,
       selectFile() {
         fileRef.value.pickFiles();
-      },
-      municipalityLabel(opt?: PostalCode | string) {
-        if (!opt) {
-          return '';
-        }
-        if (typeof opt === 'string') {
-          return opt;
-        }
-        return selectedPostalCode.value === opt
-          ? opt.postalCode
-          : `${opt.postalCode} ${opt.name}`;
-      },
-      filterCountry(
-        val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
-      ) {
-        update(() => {
-          const needle = val.toLocaleLowerCase();
-          countriesOptions.value = countries.filter(
-            (v) => v.label?.toLocaleLowerCase()?.indexOf(needle) > -1
-          );
-        });
-      },
-      async filterPostalCodes(
-        val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
-      ) {
-        let postCodes: PostalCode[] = [];
-        if (selectedCountry.value) {
-          postCodes = await geoStore.postCodesByQuery(
-            selectedCountry.value,
-            val.trim()
-          );
-        }
-        update(() => {
-          postalCodesOptions.value = postCodes;
-        });
-      },
-      setCountry(val: string) {
-        if (val) {
-          selectedCountry.value = countries.find((c) => c.label === val);
-          if (
-            selectedPostalCode.value &&
-            selectedPostalCode.value.countryCode !== selectedCountry.value?.code
-          ) {
-            selectedPostalCode.value = null as unknown as PostalCode;
-            current.value.contactDetail.address.postCode = '';
-            current.value.contactDetail.address.municipality = '';
-          }
-        }
-      },
-      setPostalCode(val: string) {
-        if (val && selectedPostalCode.value) {
-          current.value.contactDetail.address.municipality =
-            selectedPostalCode.value.name;
-          current.value.contactDetail.address.postCode =
-            selectedPostalCode.value.postalCode;
-        }
       },
     };
   },
@@ -204,7 +127,7 @@ export default defineComponent({
     async reset(e: Event) {
       e.preventDefault();
       await personStore.fetchCurrent();
-      this.current =  personStore.current;
+      this.current = personStore.current;
     },
   },
 });
@@ -268,6 +191,7 @@ export default defineComponent({
             <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-input
                 dense
+                class="q-mr-md-xs"
                 outlined
                 v-model="current.middleName"
                 label="Middle name"
@@ -276,7 +200,7 @@ export default defineComponent({
           </div>
 
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-4 col-12">
+            <div class="col-lg-6 col-12">
               <q-input
                 dense
                 outlined
@@ -308,7 +232,7 @@ export default defineComponent({
                 </template>
               </q-input>
             </div>
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
                 dense
                 class="q-mr-md-xs"
@@ -322,25 +246,12 @@ export default defineComponent({
                 label="Gender"
               />
             </div>
-            <div class="col-lg-4 col-12">
-              <q-select
-                dense
-                outlined
-                v-model="current.academicTitle"
-                :options="academicTitle"
-                label="Title"
-                option-label="label"
-                option-value="value"
-                emit-value
-                map-options
-              />
-            </div>
           </div>
         </q-card-section>
 
         <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
           <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-4 col-12 q-mb-xs-sm q-mb-lg-none">
+            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
               <q-select
                 class="q-mr-md-xs"
                 dense
@@ -354,155 +265,26 @@ export default defineComponent({
                 map-options
               />
             </div>
-            <div class="col-lg-8 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                type="url"
-                dense
-                outlined
-                v-model="current.contactDetail.website"
-                label="Website"
-              />
-            </div>
-          </div>
-        </q-card-section>
-        <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
-          <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                type="email"
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="current.contactDetail.emailAddress1"
-                label="Email #1"
-              />
-            </div>
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                type="email"
-                dense
-                outlined
-                v-model="current.contactDetail.emailAddress2"
-                label="Email #2"
-              />
-            </div>
-          </div>
-          <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="current.contactDetail.phoneNumber1"
-                label="Gsm"
-              />
-            </div>
-            <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                dense
-                outlined
-                v-model="current.contactDetail.phoneNumber2"
-                label="Other Phone number"
-              />
-            </div>
-          </div>
-        </q-card-section>
-        <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
-          <div class="row q-mb-xs-none q-mb-md-xs">
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="current.contactDetail.address.street"
-                label="Street"
-              />
-            </div>
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="current.contactDetail.address.number"
-                label="N°"
-              />
-            </div>
 
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="current.contactDetail.address.boxNumber"
-                label="Box"
-              />
-            </div>
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
+            <div class="col-lg-6 col-12">
               <q-select
-                class="q-mr-md-xs"
                 dense
+                class="q-mr-md-xs"
                 outlined
-                v-model="current.contactDetail.address.country"
-                use-input
+                v-model="current.academicTitle"
+                :options="academicTitle"
+                label="Title"
                 option-label="label"
-                option-value="label"
+                option-value="value"
                 emit-value
                 map-options
-                hide-selected
-                fill-input
-                input-debounce="0"
-                :options="countriesOptions"
-                @filter="filterCountry"
-                @input-value="setCountry"
-                label="Country"
-              >
-                <template v-slot:no-option>
-                  <q-item>
-                    <q-item-section class="text-grey">
-                      No results
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
-            </div>
-            <div class="col-lg-1 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-select
-                class="q-mr-md-xs"
-                dense
-                outlined
-                v-model="selectedPostalCode"
-                use-input
-                :option-label="municipalityLabel"
-                map-options
-                emit-value
-                hide-selected
-                fill-input
-                input-debounce="0"
-                :options="postalCodesOptions"
-                @filter="filterPostalCodes"
-                @input-value="setPostalCode"
-                label="Post code"
-              >
-                <template v-slot:no-option>
-                  <q-item>
-                    <q-item-section class="text-grey">
-                      No results
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
-            </div>
-            <div class="col-lg-3 col-12 q-mb-xs-sm q-mb-lg-none">
-              <q-input
-                :disable="true"
-                dense
-                outlined
-                v-model="current.contactDetail.address.municipality"
-                label="Municipality"
               />
             </div>
           </div>
         </q-card-section>
+
+        <ContactDetailForm v-model="current.contactDetail" :title="'Contact'" />
+
         <q-separator />
 
         <q-card-actions>

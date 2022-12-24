@@ -1,3 +1,4 @@
+import { BankAccount } from './bank-account';
 import { ContactDetail, SelectOption } from './contact-detail';
 
 export const genders: SelectOption[] = [
@@ -75,5 +76,6 @@ export interface Person {
   gender?: string;
   maritalStatus?: string;
   academicTitle?: string;
+  bankAccount?: BankAccount;
   contactDetail: ContactDetail;
 }

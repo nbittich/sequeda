@@ -67,7 +67,7 @@ pub struct Address {
 
 #[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct BankAccount {
+pub struct  BankAccount {
     pub number: String,
     pub bic: String,
 }

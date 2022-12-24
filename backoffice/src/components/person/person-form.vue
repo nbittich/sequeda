@@ -9,9 +9,10 @@ import {
 
 import ContactDetailForm from 'src/components/shared/contact-detail-form.vue';
 import ImageUpload from 'src/components/shared/image-upload.vue';
+import BankAccountForm from '../shared/bank-account-form.vue';
 export default defineComponent({
   name: 'PersonForm',
-  components: { ContactDetailForm, ImageUpload },
+  components: { ContactDetailForm, ImageUpload, BankAccountForm },
   props: {
     title: {
       type: String,
@@ -180,5 +181,6 @@ export default defineComponent({
     </q-card-section>
 
     <ContactDetailForm v-model="person.contactDetail" :title="'Contact'" />
+    <BankAccountForm v-model="person.bankAccount"></BankAccountForm>
   </q-card>
 </template>

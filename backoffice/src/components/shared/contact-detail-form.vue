@@ -1,6 +1,6 @@
 <script lang="ts">
 import useGeoStore from 'src/stores/geoentities';
-import { ContactDetail, PostalCode } from 'src/models/shared';
+import { ContactDetail, PostalCode } from 'src/models/contact-detail';
 import { computed, defineComponent, ref } from 'vue';
 
 const geoStore = useGeoStore();

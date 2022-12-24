@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { Country, PostalCode } from 'src/models/shared';
+import { Country, PostalCode } from 'src/models/contact-detail';
 
 const useGeoStore = defineStore('geo', {
   state: () => ({

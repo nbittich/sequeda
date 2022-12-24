@@ -1,4 +1,4 @@
-import { ContactDetail, SelectOption } from './shared';
+import { ContactDetail, SelectOption } from './contact-detail';
 
 export const genders: SelectOption[] = [
   {

@@ -1,16 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-
-export interface Position {
-  _id?: string;
-  name: string;
-  description?: string;
-  level: string;
-  creationDate?: Date;
-  updatedDate?: Date;
-}
-
-export const LEVEL = ['EXECUTIVE, MANAGEMENT, OPERATIONAL'];
+import { Position } from 'src/models/orgs';
 
 const useOrgPositionStore = defineStore('org-position', {
   state: () => ({

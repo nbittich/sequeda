@@ -1,7 +1,11 @@
 <script lang="ts">
-import { Person } from 'src/stores/person';
 import { computed, defineComponent } from 'vue';
-import { genders, academicTitles, maritalStatuses } from 'src/stores/person';
+import {
+  Person,
+  genders,
+  academicTitles,
+  maritalStatuses,
+} from 'src/models/person';
 
 import ContactDetailForm from 'src/components/shared/contact-detail-form.vue';
 import ImageUpload from 'src/components/shared/image-upload.vue';

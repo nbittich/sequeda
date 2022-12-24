@@ -1,25 +1,13 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-export interface Country {
-  code: string,
-  label: string
-}
-
-export interface PostalCode {
-  countryCode: string,
-  postalCode: string,
-  name: string,
-}
-
+import { Country, PostalCode } from 'src/models/shared';
 
 const useGeoStore = defineStore('geo', {
   state: () => ({
-    countries: [] as Country[]
+    countries: [] as Country[],
   }),
 
-  getters: {
-
-  },
+  getters: {},
 
   actions: {
     async fetchCountries() {
@@ -27,10 +15,11 @@ const useGeoStore = defineStore('geo', {
       this.countries = response.data;
     },
     async postCodesByQuery(country: Country, query: string) {
-      const response = await api.get<PostalCode[]>(`/geo/municipality/by-query?country_code=${country.code}&query=${query}`);
+      const response = await api.get<PostalCode[]>(
+        `/geo/municipality/by-query?country_code=${country.code}&query=${query}`
+      );
       return response.data;
     },
-
   },
 });
 export default useGeoStore;

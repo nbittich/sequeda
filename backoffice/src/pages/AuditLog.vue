@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import useAuditLogStore from 'src/stores/auditlog';
-import { Pageable } from 'src/stores/pagination';
+import { Pageable } from 'src/models/pagination';
 import { QTableColumn } from 'quasar';
 const auditLogStore = useAuditLogStore();
 

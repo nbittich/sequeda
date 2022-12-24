@@ -1,18 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-
-export interface FileUpload {
-  _id: string;
-  creationDate?: Date;
-  updatedDate?: Date;
-  thumbnailId?: string;
-  contentType?: string;
-  originalFilename?: string;
-  extension?: string;
-  size?: number;
-  publicResource?: number;
-  correlationId?: number;
-}
+import { FileUpload } from 'src/models/file-upload';
 
 const useUploadStore = defineStore('upload', {
   state: () => ({
@@ -51,7 +39,7 @@ const useUploadStore = defineStore('upload', {
       return `/api/uploads/download/${id}`;
     },
     async getMetadata(id: string): Promise<FileUpload> {
-      const resp =  await api.get<FileUpload>(`/uploads/metadata/${id}`);
+      const resp = await api.get<FileUpload>(`/uploads/metadata/${id}`);
       return resp.data;
     },
   },

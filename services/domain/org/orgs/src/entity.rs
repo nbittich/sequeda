@@ -10,7 +10,6 @@ pub struct Organization {
     pub creation_date: NaiveDateTime,
     pub updated_date: Option<NaiveDateTime>,
     pub name: String,
-    pub parent_organization: Option<String>,
     pub description: String,
     pub vat_number: String,
     pub logo_id: Option<String>,
@@ -28,7 +27,6 @@ pub struct OrganizationUpsert {
     #[serde(rename = "_id")]
     pub id: Option<String>,
     pub name: String,
-    pub parent_organization: Option<String>,
     pub description: String,
     pub vat_number: String,
     pub logo_id: Option<String>,

@@ -1,10 +1,12 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import useAuditLogStore from 'src/stores/auditlog';
-import { QTable } from 'quasar';
 import { Pageable } from 'src/stores/pagination';
+import { QTableColumn } from 'quasar';
 const auditLogStore = useAuditLogStore();
-const columns: any[] = [
+
+type PaginationProp = { pagination: { page: number; rowsPerPage: number } };
+const columns: QTableColumn[] = [
   {
     name: 'receivedDate',
     align: 'center',
@@ -33,16 +35,16 @@ export default defineComponent({
       rowsPerPage: pageRequest.value.limit,
       rowsNumber: logs.value.totalElements,
     });
-    const fetchPageLogs = async (props: any) => {
+    const fetchPageLogs = async (props: PaginationProp) => {
       const { page, rowsPerPage } = props.pagination;
-        pageRequest.value.page = page -1;
-        pageRequest.value.limit = rowsPerPage;
-        logs.value = await auditLogStore.fetchAuditLogs(pageRequest.value);
-        pagination.value = {
-          page: logs.value.currentPage + 1,
-          rowsPerPage: pageRequest.value.limit,
-          rowsNumber: logs.value.totalElements,
-        };
+      pageRequest.value.page = page - 1;
+      pageRequest.value.limit = rowsPerPage;
+      logs.value = await auditLogStore.fetchAuditLogs(pageRequest.value);
+      pagination.value = {
+        page: logs.value.currentPage + 1,
+        rowsPerPage: pageRequest.value.limit,
+        rowsNumber: logs.value.totalElements,
+      };
     };
 
     return { logs, pageRequest, columns, fetchPageLogs, pagination };

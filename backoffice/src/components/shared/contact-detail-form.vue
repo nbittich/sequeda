@@ -1,16 +1,8 @@
 <script lang="ts">
-import {
-  QCard,
-  QCardSection,
-  QInput,
-  QSelect,
-  QItem,
-  QItemSection,
-} from 'quasar';
 import useGeoStore, { PostalCode } from 'src/stores/geoentities';
 import { ContactDetail } from 'src/stores/person';
-
 import { computed, defineComponent, ref } from 'vue';
+
 const geoStore = useGeoStore();
 await geoStore.fetchCountries();
 
@@ -63,10 +55,11 @@ export default defineComponent({
           ? opt.postalCode
           : `${opt.postalCode} ${opt.name}`;
       },
+
       filterCountry(
         val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
+        update: (arg0: () => void) => void
+        // _abort: any
       ) {
         update(() => {
           const needle = val.toLocaleLowerCase();
@@ -75,10 +68,11 @@ export default defineComponent({
           );
         });
       },
+
       async filterPostalCodes(
         val: string,
-        update: (arg0: () => void) => void,
-        _abort: any
+        update: (arg0: () => void) => void
+        // _abort: any
       ) {
         let postCodes: PostalCode[] = [];
         if (selectedCountry.value) {

@@ -1,11 +1,10 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import useOrgPositionStore from 'src/stores/org_position';
-import { QTable } from 'quasar';
+import { QTableColumn } from 'quasar';
 const positionStore = useOrgPositionStore();
-const columns: any[] = [
-
-{
+const columns: QTableColumn[] = [
+  {
     name: 'level',
     align: 'center',
     label: 'Level',

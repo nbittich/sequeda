@@ -1,5 +1,9 @@
 <script lang="ts">
-import usePersonStore from 'src/stores/person';
+import usePersonStore, {
+  genders,
+  academicTitles,
+  maritalStatuses,
+} from 'src/stores/person';
 import { defineComponent, ref } from 'vue';
 import useUploadStore from 'src/stores/uploads';
 import ContactDetailForm from 'src/components/contact-detail-form.vue';
@@ -10,79 +14,16 @@ await personStore.fetchCurrent();
 export default defineComponent({
   name: 'PersonalInformation',
   components: { ContactDetailForm, ImageUpload },
-  computed: {
-    gender: () => {
-      return [
-        {
-          label: 'Male',
-          value: 'MALE',
-        },
-        {
-          label: 'Female',
-          value: 'FEMALE',
-        },
-        {
-          label: 'Unknown',
-          value: 'UNKNOWN',
-        },
-      ];
-    },
-    maritalStatuses: () => {
-      return [
-        {
-          label: '-',
-          value: null,
-        },
-        {
-          label: 'Single',
-          value: 'SINGLE',
-        },
-        {
-          label: 'Married',
-          value: 'MARRIED',
-        },
-        {
-          label: 'Divorced',
-          value: 'DIVORCED',
-        },
-        {
-          label: 'Separated',
-          value: 'SEPARATED',
-        },
-        {
-          label: 'Civil Partnership',
-          value: 'CIVIL_PARTNERSHIP',
-        },
-        {
-          label: 'Widowed',
-          value: 'WIDOWED',
-        },
-      ];
-    },
-    academicTitle: () => {
-      return [
-        {
-          label: '-',
-          value: null,
-        },
-        {
-          label: 'Doctor',
-          value: 'DR',
-        },
-        {
-          label: 'Professor',
-          value: 'PROFESSOR',
-        },
-      ];
-    },
-  },
+
   async setup() {
     const current = ref(personStore.current);
     const profilePictureFile = ref(null as unknown as File);
-
     return {
       current,
       profilePictureFile,
+      academicTitles,
+      maritalStatuses,
+      genders,
     };
   },
   methods: {
@@ -202,7 +143,7 @@ export default defineComponent({
                 class="q-mr-md-xs"
                 outlined
                 v-model="current.gender"
-                :options="gender"
+                :options="genders"
                 option-label="label"
                 option-value="value"
                 emit-value
@@ -236,7 +177,7 @@ export default defineComponent({
                 class="q-mr-md-xs"
                 outlined
                 v-model="current.academicTitle"
-                :options="academicTitle"
+                :options="academicTitles"
                 label="Title"
                 option-label="label"
                 option-value="value"

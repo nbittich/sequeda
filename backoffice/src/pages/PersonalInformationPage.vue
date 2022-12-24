@@ -3,8 +3,6 @@ import { computed, defineComponent, ref } from 'vue';
 import useUploadStore from 'src/stores/uploads';
 import usePersonStore from 'src/stores/person';
 import PersonForm from 'src/components/person/person-form.vue';
-import { title } from 'process';
-import { QCard, QSeparator, QCardActions, QBtn } from 'quasar';
 
 const personStore = usePersonStore();
 const uploadStore = useUploadStore();

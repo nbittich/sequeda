@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, Ref, ref, toRefs } from 'vue';
+import { computed, defineComponent, Ref, ref, toRefs } from 'vue';
 import { QFile } from 'quasar';
 import useUploadStore from 'src/stores/uploads';
 const uploadStore = useUploadStore();
@@ -18,7 +18,15 @@ export default defineComponent({
   },
   async setup(props, context) {
     const { pictureId } = toRefs(props);
-    const pictureFile = ref(null as unknown as File);
+    const picture = computed({
+      get: () => props.modelValue,
+      set: (value) => context.emit('update:modelValue', value),
+    });
+
+    // for some reason picture above is no longer reactive with computed in this case (!)
+    // workaround is to wrap it into a ref
+    // maybe there's a better way, not willing to read the manual to find out.
+    const pictureFile = ref(picture.value as File);
 
     const fileRef = ref() as Ref<QFile>;
     const pictureUrl = ref(null as unknown as string);
@@ -26,7 +34,7 @@ export default defineComponent({
     const pictureUrlChange = async () => {
       if (pictureFile.value) {
         pictureUrl.value = URL.createObjectURL(pictureFile.value);
-        context.emit('update:modelValue', pictureFile);
+        context.emit('update:modelValue', pictureFile.value);
       } else {
         if (pictureId.value) {
           const pictureMetadata = await uploadStore.getMetadata(

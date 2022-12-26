@@ -48,18 +48,15 @@ async fn current(
         );
     };
     tracing::debug!("tenant is {}", &tenant);
-
     let repository: StoreRepository<Organization> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
-    if let Ok(Some(organization)) = repository
-        .find_one(Some(doc! {"userId": &x_user_info.id}))
-        .await
-    {
-        tracing::debug!("user was found, organization {:?}", &organization);
+    if let Ok(Some(organization)) = repository.find_one(Some(doc! {"current": true})).await {
+        tracing::debug!("current was found, organization {:?}", &organization);
         (StatusCode::OK, Json(to_value(organization)))
     } else {
         let organization = Organization {
             name: tenant,
+            current: true,
             ..Default::default()
         };
         let result = repository.update(&organization.id, &organization).await;

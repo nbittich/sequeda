@@ -17,7 +17,6 @@
       bordered
       class="bg-grey-3"
     >
-
       <q-scroll-area class="fit">
         <q-list padding class="menu-list">
           <q-item clickable v-ripple to="/personal-info">
@@ -26,13 +25,23 @@
             </q-item-section>
             <q-item-section> Profile </q-item-section>
           </q-item>
-          <q-expansion-item expand-separator icon="corporate_fare" label="Organization">
-            <q-item clickable v-ripple to="/org/positions"  >
-            <q-item-section avatar>
-              <q-icon name="school" />
-            </q-item-section>
-            <q-item-section> Positions </q-item-section>
-          </q-item>
+          <q-expansion-item
+            expand-separator
+            icon="corporate_fare"
+            label="Organization"
+          >
+            <q-item clickable v-ripple to="/org/current">
+              <q-item-section avatar>
+                <q-icon name="school" />
+              </q-item-section>
+              <q-item-section> Your Organization </q-item-section>
+            </q-item>
+            <q-item clickable v-ripple to="/org/positions">
+              <q-item-section avatar>
+                <q-icon name="school" />
+              </q-item-section>
+              <q-item-section> Positions </q-item-section>
+            </q-item>
           </q-expansion-item>
           <q-item clickable v-ripple to="/audit">
             <q-item-section avatar>

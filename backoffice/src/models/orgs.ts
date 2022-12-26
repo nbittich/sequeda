@@ -1,5 +1,5 @@
 import { BankAccount } from './bank-account';
-import { ContactDetail } from './contact-detail';
+import { ContactDetail, SelectOption } from './contact-detail';
 
 export interface Position {
   _id?: string;
@@ -10,11 +10,24 @@ export interface Position {
   updatedDate?: Date;
 }
 export const LEVEL = ['EXECUTIVE', 'MANAGEMENT', 'OPERATIONAL'];
-export const STATUS = [
-  'ACTIVE',
-  'PROPOSAL_TO_STRIKE_OFF',
-  'DISSOLVED',
-  'LIQUIDATION',
+
+export const orgStatuses: SelectOption[] = [
+  {
+    label: 'Active',
+    value: 'ACTIVE',
+  },
+  {
+    label: 'Proposal to strike off',
+    value: 'PROPOSAL_TO_STRIKE_OFF',
+  },
+  {
+    label: 'Dissolved',
+    value: 'DISSOLVED',
+  },
+  {
+    label: 'Liquidation',
+    value: 'LIQUIDATION',
+  },
 ];
 
 export interface Organization {

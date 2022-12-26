@@ -9,7 +9,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/personal-info',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/PersonalInformationPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/PersonalInformationPage.vue'),
+      },
+    ],
   },
   {
     path: '/audit',
@@ -19,7 +24,22 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/org/positions',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/organization/OrgPositionPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/organization/OrgPositionPage.vue'),
+      },
+    ],
+  },
+  {
+    path: '/org/current',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/organization/PersonalOrgPage.vue'),
+      },
+    ],
   },
 
   // Always leave this as last one,

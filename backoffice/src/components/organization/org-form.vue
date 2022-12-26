@@ -1,6 +1,7 @@
 <script lang="ts">
-import { Organization } from 'src/models/orgs';
-import { computed, defineComponent } from 'vue';
+import { Organization, orgStatuses } from 'src/models/orgs';
+import { computed, defineComponent, ref } from 'vue';
+import ImageUpload from '../shared/image-upload.vue';
 export default defineComponent({
   name: 'OrgForm',
   props: {
@@ -19,21 +20,152 @@ export default defineComponent({
   },
   emits: ['update:orgModel', 'update:orgLogo'],
   async setup(props, context) {
-    const org = computed({
+    const orgComputed = computed({
       get: () => props.orgModel,
       set: (value) => context.emit('update:orgModel', value),
     });
+    const org = ref(orgComputed);
+    const orgClosed = ref(org.value.closedDate !== null);
     const logoFile = computed({
       get: () => props.orgLogo,
       set: (value) => context.emit('update:orgLogo', value),
     });
     return {
       org,
+      orgStatuses,
       logoFile,
+      orgClosed,
     };
   },
+  methods: {
+    setStatus(val: string) {
+      this.org.status = val;
+      this.orgClosed = val !== 'ACTIVE';
+      if (!this.orgClosed) {
+        this.org.closedDate = null;
+      }
+    },
+  },
+  components: { ImageUpload },
 });
 </script>
 <template>
-  <div>My component</div>
+  <q-card>
+    <q-card-section>
+      <div class="text-h6">{{ title }}</div>
+    </q-card-section>
+
+    <q-card-section class="q-mb-none q-pb-none column items-center">
+      <ImageUpload v-model="logoFile" :pictureId="org.logoId" />
+    </q-card-section>
+    <q-card-section class="q-mb-none q-pb-none">
+      <div class="row q-mb-xs-none q-mb-md-xs">
+        <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
+          <q-input
+            :autofocus="true"
+            class="q-mr-sm-xs"
+            dense
+            outlined
+            v-model="org.name"
+            label="Name"
+          />
+        </div>
+        <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
+          <q-input
+            :autofocus="true"
+            class="q-mr-sm-xs"
+            dense
+            outlined
+            v-model="org.vatNumber"
+            label="VAT"
+          />
+        </div>
+      </div>
+      <div class="row q-mb-xs-none q-mb-md-xs">
+        <div class="col-12">
+          <q-input
+            v-model="org.description"
+            dense
+            outlined
+            label="Description"
+            autogrow
+          />
+        </div>
+      </div>
+      <div class="row q-mb-xs-none q-mb-md-xs">
+        <div class="col-12">
+          <q-input
+            dense
+            outlined
+            class="q-mr-md-xs"
+            label="Founded date"
+            v-model="org.foundedDate"
+            :rules="['date']"
+          >
+            <template v-slot:append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  :breakpoint="600"
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date mask="YYYY-MM-DD" v-model="org.foundedDate">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+      <div class="row q-mb-xs-none q-mb-md-xs">
+        <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
+          <q-select
+            dense
+            class="q-mr-md-xs"
+            outlined
+            v-model="org.status"
+            :options="orgStatuses"
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            label="Status"
+            @update:model-value="setStatus"
+          />
+        </div>
+        <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">
+          <q-input
+            dense
+            outlined
+            :disable="!orgClosed"
+            class="q-mr-md-xs"
+            label="Closed date"
+            v-model="org.closedDate"
+            :rules="['date']"
+          >
+            <template v-slot:append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  :breakpoint="600"
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date mask="YYYY-MM-DD" v-model="org.closedDate">
+                    <div class="row items-center justify-end">
+                      <q-btn v-close-popup label="Close" color="primary" flat />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+        </div>
+      </div>
+    </q-card-section>
+  </q-card>
 </template>

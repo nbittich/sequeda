@@ -19,6 +19,7 @@ pub struct Organization {
     pub founded_date: NaiveDate,
     pub closed_date: Option<NaiveDate>,
     pub status: Status,
+    pub current: bool,
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -63,6 +64,7 @@ impl Default for Organization {
             other_contacts: Default::default(),
             bank_accounts: Default::default(),
             closed_date: Default::default(),
+            current: Default::default(),
         }
     }
 }

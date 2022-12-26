@@ -9,12 +9,16 @@ export default defineComponent({
       type: String,
       default: () => 'Bank Account',
     },
+    deletable: {
+      type: Boolean,
+      default: () => false,
+    },
     modelValue: {
       type: Object,
       default: () => ({} as BankAccount),
     },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'deleted'],
   async setup(props, context) {
     const bankAccount = computed({
       get: () => props.modelValue,
@@ -29,13 +33,29 @@ export default defineComponent({
       bankAccount,
     };
   },
+  methods: {
+    deleteBankAccount() {
+      if (this.deletable) {
+        this.$emit('deleted');
+      }
+    },
+  },
 });
 </script>
 
 <template>
   <q-card>
     <q-card-section>
-      <div class="text-h6">{{ title }}</div>
+      <div class="row justify-between">
+        <div class="text-h6">{{ title }}</div>
+        <q-btn
+          round
+          icon="delete"
+          color="red"
+          v-if="deletable"
+          @click="deleteBankAccount"
+        />
+      </div>
     </q-card-section>
     <q-card-section class="q-mt-xs-sm q-mt-md-none q-pt-none">
       <div class="row q-mb-xs-none q-mb-md-xs">

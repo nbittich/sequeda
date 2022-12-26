@@ -1,8 +1,9 @@
 <script lang="ts">
-import { title } from 'process';
+import { BankAccount } from 'src/models/bank-account';
 import { Address, ContactDetail } from 'src/models/contact-detail';
 import { Organization, orgStatuses } from 'src/models/orgs';
 import { computed, defineComponent, ref } from 'vue';
+import BankAccountForm from '../shared/bank-account-form.vue';
 import ContactDetailForm from '../shared/contact-detail-form.vue';
 import ImageUpload from '../shared/image-upload.vue';
 export default defineComponent({
@@ -33,6 +34,9 @@ export default defineComponent({
     if (!org.value.otherContacts) {
       org.value.otherContacts = [];
     }
+    if (!org.value.otherBankAccounts) {
+      org.value.otherBankAccounts = [];
+    }
 
     const orgClosed = ref(org.value.closedDate !== null);
     const logoFile = computed({
@@ -52,6 +56,12 @@ export default defineComponent({
           address: {} as Address,
         } as ContactDetail);
       },
+      deleteBankAccount(index: number) {
+        org.value.otherBankAccounts.splice(index, 1);
+      },
+      addBankAccount() {
+        org.value.otherBankAccounts.push({} as BankAccount);
+      },
     };
   },
   methods: {
@@ -63,7 +73,7 @@ export default defineComponent({
       }
     },
   },
-  components: { ImageUpload, ContactDetailForm },
+  components: { ImageUpload, ContactDetailForm, BankAccountForm },
 });
 </script>
 <template>
@@ -202,6 +212,24 @@ export default defineComponent({
         :title="'Other Contact #' + (index + 1)"
         :deletable="true"
         @deleted="deleteContact(index)"
+      />
+    </template>
+    <BankAccountForm
+      v-model="org.primaryBankAccount"
+      :title="'Primary Bank Account'"
+    />
+
+    <div class="row justify-between q-pa-md q-gutter-sm">
+      <div class="text-h6">Other Bank Accounts</div>
+      <q-btn round icon="add" color="primary" @click="addBankAccount()" />
+    </div>
+    <template v-for="(ob, index) in org.otherBankAccounts" :key="index">
+      <BankAccountForm
+        v-if="ob"
+        v-model="org.otherBankAccounts[index]"
+        :title="'Other Bank Account #' + (index + 1)"
+        :deletable="true"
+        @deleted="deleteBankAccount(index)"
       />
     </template>
   </q-card>

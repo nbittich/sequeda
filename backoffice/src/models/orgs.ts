@@ -40,7 +40,8 @@ export interface Organization {
   logoId?: string;
   primaryContact?: ContactDetail;
   otherContacts?: ContactDetail[];
-  bankAccounts?: BankAccount[];
+  primaryBankAccount?: BankAccount;
+  otherBankAccounts?: BankAccount[];
   foundedDate?: string;
   closedDate?: string;
   status?: string;

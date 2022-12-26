@@ -1,6 +1,9 @@
 <script lang="ts">
+import { title } from 'process';
+import { Address, ContactDetail } from 'src/models/contact-detail';
 import { Organization, orgStatuses } from 'src/models/orgs';
 import { computed, defineComponent, ref } from 'vue';
+import ContactDetailForm from '../shared/contact-detail-form.vue';
 import ImageUpload from '../shared/image-upload.vue';
 export default defineComponent({
   name: 'OrgForm',
@@ -24,7 +27,13 @@ export default defineComponent({
       get: () => props.orgModel,
       set: (value) => context.emit('update:orgModel', value),
     });
+
     const org = ref(orgComputed);
+
+    if (!org.value.otherContacts) {
+      org.value.otherContacts = [];
+    }
+
     const orgClosed = ref(org.value.closedDate !== null);
     const logoFile = computed({
       get: () => props.orgLogo,
@@ -35,6 +44,14 @@ export default defineComponent({
       orgStatuses,
       logoFile,
       orgClosed,
+      deleteContact(index: number) {
+        org.value.otherContacts.splice(index, 1);
+      },
+      addContact() {
+        org.value.otherContacts.push({
+          address: {} as Address,
+        } as ContactDetail);
+      },
     };
   },
   methods: {
@@ -46,7 +63,7 @@ export default defineComponent({
       }
     },
   },
-  components: { ImageUpload },
+  components: { ImageUpload, ContactDetailForm },
 });
 </script>
 <template>
@@ -78,17 +95,6 @@ export default defineComponent({
             outlined
             v-model="org.vatNumber"
             label="VAT"
-          />
-        </div>
-      </div>
-      <div class="row q-mb-xs-none q-mb-md-xs">
-        <div class="col-12">
-          <q-input
-            v-model="org.description"
-            dense
-            outlined
-            label="Description"
-            autogrow
           />
         </div>
       </div>
@@ -166,6 +172,37 @@ export default defineComponent({
           </q-input>
         </div>
       </div>
+
+      <div class="row q-mb-xs-none q-mb-md-xs">
+        <div class="col-12">
+          <q-input
+            v-model="org.description"
+            dense
+            outlined
+            label="Description"
+            autogrow
+          />
+        </div>
+      </div>
     </q-card-section>
+
+    <ContactDetailForm
+      v-model="org.primaryContact"
+      :title="'Primary Contact'"
+    />
+
+    <div class="row justify-between q-pa-md q-gutter-sm">
+      <div class="text-h6">Other Contacts</div>
+      <q-btn round icon="add" color="primary" @click="addContact()" />
+    </div>
+    <template v-for="(oc, index) in org.otherContacts" :key="index">
+      <ContactDetailForm
+        v-if="oc"
+        v-model="org.otherContacts[index]"
+        :title="'Other Contact #' + (index + 1)"
+        :deletable="true"
+        @deleted="deleteContact(index)"
+      />
+    </template>
   </q-card>
 </template>

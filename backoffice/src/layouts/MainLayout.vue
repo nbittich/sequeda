@@ -32,9 +32,9 @@
           >
             <q-item clickable v-ripple to="/org/current">
               <q-item-section avatar>
-                <q-icon name="school" />
+                <q-icon name="store" />
               </q-item-section>
-              <q-item-section> Your Organization </q-item-section>
+              <q-item-section> General </q-item-section>
             </q-item>
             <q-item clickable v-ripple to="/org/positions">
               <q-item-section avatar>

@@ -197,20 +197,22 @@ async fn upsert(
         match member.remarks.iter().find(|r| r.id == remark.id) {
             Some(Remark {
                 id: _,
-                user_id,
+                added_by_user_id,
+                updated_by_user_id: _,
                 added_date,
                 updated_date: _,
                 message: _,
             }) => {
                 remark.updated_date = Some(Local::now().naive_local());
                 remark.added_date = *added_date;
-                remark.user_id = user_id.clone();
+                remark.added_by_user_id = added_by_user_id.clone();
+                remark.updated_by_user_id = Some(x_user_info.id.clone());
             }
             None => {
                 remark.id = Some(IdGenerator.get());
                 remark.added_date = Some(Local::now().naive_local());
                 remark.updated_date = None;
-                remark.user_id = Some(x_user_info.id.clone());
+                remark.added_by_user_id = Some(x_user_info.id.clone());
             }
         }
     }

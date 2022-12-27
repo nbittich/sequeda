@@ -41,7 +41,8 @@ impl Default for Member {
 #[serde(rename_all = "camelCase")]
 pub struct Remark {
     pub id: Option<String>,
-    pub user_id: Option<String>,
+    pub added_by_user_id: Option<String>,
+    pub updated_by_user_id: Option<String>,
     pub added_date: Option<NaiveDateTime>,
     pub updated_date: Option<NaiveDateTime>,
     pub message: String,

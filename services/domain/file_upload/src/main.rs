@@ -14,8 +14,8 @@ use mime_guess::mime::APPLICATION_OCTET_STREAM;
 use sequeda_message_client::{Exchange, MessageClient};
 use sequeda_service_common::user_header::ExtractUserInfo;
 use sequeda_service_common::{
-    setup_tracing, to_value, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT,
-    SERVICE_COLLECTION_NAME, SERVICE_HOST, SERVICE_PORT,
+    setup_tracing, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    SERVICE_HOST, SERVICE_PORT,
 };
 use sequeda_store::{Repository, StoreClient, StoreRepository};
 use serde_json::json;
@@ -88,7 +88,7 @@ async fn metadata(
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> impl IntoResponse {
     match get_file_upload(&id, &x_user_info, &client, &collection).await {
-        Some(upl) => Json(to_value(upl)).into_response(),
+        Some(upl) => Json(upl).into_response(),
         None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
     }
 }
@@ -243,7 +243,7 @@ async fn upload(
             tracing::error!("could not send message {e}");
         }
 
-        (StatusCode::OK, Json(to_value(upl)))
+        (StatusCode::OK, Json(upl)).into_response()
     } else {
         let mut uploads_resp = Vec::with_capacity(uploads.len());
         let username = &x_user_info.username.unwrap_or(x_user_info.id);
@@ -268,6 +268,6 @@ async fn upload(
             }
             uploads_resp.push(upl);
         }
-        (StatusCode::OK, Json(to_value(uploads_resp)))
+        (StatusCode::OK, Json(uploads_resp)).into_response()
     }
 }

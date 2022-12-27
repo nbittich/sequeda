@@ -20,11 +20,12 @@ pub fn setup_tracing() {
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 }
 
+#[deprecated]
 pub fn to_value<T: Serialize + core::fmt::Debug>(data: T) -> Value {
     match serde_json::to_value(&data) {
         Ok(value) => value,
         Err(e) => {
-            tracing::error!("error serialing {:?}, error: {e}", &data);
+            tracing::error!("error serializing {:?}, error: {e}", &data);
             json!({})
         }
     }
@@ -67,7 +68,7 @@ pub struct Address {
 
 #[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct  BankAccount {
+pub struct BankAccount {
     pub number: String,
     pub bic: String,
 }

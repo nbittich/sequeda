@@ -15,7 +15,7 @@ use axum::{
 use entity::{AuditLog, AuditLogConfig};
 use sequeda_message_client::{Exchange, MessageClient};
 use sequeda_service_common::{
-    setup_tracing, to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT,
+    setup_tracing, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT,
     SERVICE_APPLICATION_NAME, SERVICE_COLLECTION_NAME, SERVICE_CONFIG_VOLUME, SERVICE_HOST,
     SERVICE_PORT,
 };
@@ -114,11 +114,12 @@ async fn find_all(
     };
 
     match repository.find_page(None, page).await {
-        Ok(logs) => (StatusCode::OK, Json(to_value(logs))),
+        Ok(logs) => (StatusCode::OK, Json(logs)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 

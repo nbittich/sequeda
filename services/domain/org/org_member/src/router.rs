@@ -1,7 +1,7 @@
 use std::env::var;
 
 use axum::{
-    extract::{self, Path},
+    extract::{self, Path, Query},
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
@@ -9,9 +9,9 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{Repository, StoreClient, StoreRepository};
+use sequeda_store::{doc, Pageable, Repository, StoreClient, StoreRepository};
 use serde_json::json;
 
 use crate::entity::{Member, MemberUpsert};
@@ -22,6 +22,7 @@ pub fn get_router(client: StoreClient) -> Router {
 
     Router::new()
         .route("/find-all", get(find_all))
+        .route("/find-by-org/:org_id", get(find_by_org))
         .route("/find-one/:member_id", get(find_one))
         .route("/delete/:member_id", delete(delete_by_id))
         .route("/", post(upsert))
@@ -44,11 +45,12 @@ async fn find_all(
     )
     .await;
     match repository.find_all().await {
-        Ok(people) => (StatusCode::OK, Json(to_value(people))),
+        Ok(people) => (StatusCode::OK, Json(people)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 async fn find_one(
@@ -66,11 +68,49 @@ async fn find_one(
     .await;
 
     match repository.find_by_id(&member_id).await {
-        Ok(member) => (StatusCode::OK, Json(to_value(member))),
+        Ok(member) => (StatusCode::OK, Json(member)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
+    }
+}
+async fn find_by_org(
+    pagination: Option<Query<Pageable>>,
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    Path(org_id): Path<String>,
+) -> impl IntoResponse {
+    tracing::debug!("Member find by org route entered!");
+    let repository: StoreRepository<Member> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+
+    let page = if let Some(page) = pagination {
+        page.0
+    } else {
+        Pageable {
+            page: 0,
+            limit: i64::MAX,
+            sort: None,
+        }
+    };
+
+    match repository
+        .find_page(Some(doc! {"orgId": org_id}), page)
+        .await
+    {
+        Ok(members) => (StatusCode::OK, Json(members)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
     }
 }
 
@@ -125,7 +165,7 @@ async fn upsert(
             Json(json!({
                 "result": "tenant is missing"
             }))
-        );
+        ).into_response();
     };
     let repository: StoreRepository<Member> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -166,10 +206,11 @@ async fn upsert(
 
     let result = repository.update(&member.id, &member).await;
     match result {
-        Ok(_) => (StatusCode::OK, Json(to_value(member))),
+        Ok(_) => (StatusCode::OK, Json(member)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": e.to_string() })),
-        ),
+        )
+            .into_response(),
     }
 }

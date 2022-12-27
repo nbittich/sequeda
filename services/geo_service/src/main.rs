@@ -1,7 +1,7 @@
 use std::{collections::HashMap, env::var, net::SocketAddr, str::FromStr, sync::Arc};
 
 use axum::{extract::Query, response::IntoResponse, routing::get, Extension, Json, Router};
-use sequeda_service_common::{setup_tracing, to_value, SERVICE_HOST, SERVICE_PORT};
+use sequeda_service_common::{setup_tracing, SERVICE_HOST, SERVICE_PORT};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
@@ -119,17 +119,18 @@ async fn find_by_country(
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by country route entered!");
-    Json(to_value(PostalCode::filter_by_country_code(
+    Json(PostalCode::filter_by_country_code(
         &postal_codes,
         &params["country_code"],
-    )))
+    ))
+    .into_response()
 }
 
 async fn get_countries(
     Extension(countries): Extension<Arc<Vec<Country<'_>>>>,
 ) -> impl IntoResponse {
     tracing::debug!("Get countries route entered!");
-    Json(to_value(&*countries))
+    Json(&*countries).into_response()
 }
 
 async fn find_by_query(
@@ -137,11 +138,12 @@ async fn find_by_query(
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
     tracing::debug!("Find by query route entered!");
-    Json(to_value(PostalCode::find_by_country_code_and_query(
+    Json(PostalCode::find_by_country_code_and_query(
         &postal_codes,
         &params["country_code"],
         &params["query"],
-    )))
+    ))
+    .into_response()
 }
 
 #[cfg(test)]

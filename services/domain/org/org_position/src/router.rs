@@ -9,7 +9,7 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{Repository, StoreClient, StoreRepository};
 use serde_json::json;
@@ -45,13 +45,14 @@ async fn find_all(
     .await;
 
     match repository.find_all().await {
-        Ok(positions) => (StatusCode::OK, Json(to_value(positions))),
+        Ok(positions) => (StatusCode::OK, Json(positions)).into_response(),
         Err(e) => {
             tracing::debug!("error {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({"error": e.to_string()})),
             )
+                .into_response()
         }
     }
 }
@@ -70,11 +71,12 @@ async fn find_one(
     .await;
 
     match repository.find_by_id(&position_id).await {
-        Ok(position) => (StatusCode::OK, Json(to_value(position))),
+        Ok(position) => (StatusCode::OK, Json(position)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 
@@ -129,7 +131,7 @@ async fn upsert(
             Json(json!({
                 "result": "tenant is missing"
             }))
-        );
+        ).into_response();
     };
     let repository: StoreRepository<Position> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -161,10 +163,11 @@ async fn upsert(
 
     let result = repository.update(&position.id, &position).await;
     match result {
-        Ok(_) => (StatusCode::OK, Json(to_value(position))),
+        Ok(_) => (StatusCode::OK, Json(position)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": e.to_string() })),
-        ),
+        )
+            .into_response(),
     }
 }

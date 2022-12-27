@@ -9,7 +9,7 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    to_value, user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
 use serde_json::json;
@@ -45,14 +45,14 @@ async fn current(
             Json(json!({
                 "result": "tenant is missing"
             }))
-        );
+        ).into_response();
     };
     tracing::debug!("tenant is {}", &tenant);
     let repository: StoreRepository<Organization> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
     if let Ok(Some(organization)) = repository.find_one(Some(doc! {"current": true})).await {
         tracing::debug!("current was found, organization {:?}", &organization);
-        (StatusCode::OK, Json(to_value(organization)))
+        (StatusCode::OK, Json(organization)).into_response()
     } else {
         let organization = Organization {
             name: tenant,
@@ -61,11 +61,12 @@ async fn current(
         };
         let result = repository.update(&organization.id, &organization).await;
         match result {
-            Ok(_) => (StatusCode::OK, Json(to_value(organization))),
+            Ok(_) => (StatusCode::OK, Json(organization)).into_response(),
             Err(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(json!({ "error": e.to_string() })),
-            ),
+            )
+                .into_response(),
         }
     }
 }
@@ -83,11 +84,12 @@ async fn find_all(
     )
     .await;
     match repository.find_all().await {
-        Ok(people) => (StatusCode::OK, Json(to_value(people))),
+        Ok(people) => (StatusCode::OK, Json(people)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 async fn find_one(
@@ -105,11 +107,12 @@ async fn find_one(
     .await;
 
     match repository.find_by_id(&organization_id).await {
-        Ok(organization) => (StatusCode::OK, Json(to_value(organization))),
+        Ok(organization) => (StatusCode::OK, Json(organization)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
-        ),
+        )
+            .into_response(),
     }
 }
 
@@ -164,7 +167,7 @@ async fn upsert(
             Json(json!({
                 "result": "tenant is missing"
             }))
-        );
+        ).into_response();
     };
     let repository: StoreRepository<Organization> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -211,10 +214,11 @@ async fn upsert(
 
     let result = repository.update(&organization.id, &organization).await;
     match result {
-        Ok(_) => (StatusCode::OK, Json(to_value(organization))),
+        Ok(_) => (StatusCode::OK, Json(organization)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({ "error": e.to_string() })),
-        ),
+        )
+            .into_response(),
     }
 }

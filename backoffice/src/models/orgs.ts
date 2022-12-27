@@ -64,5 +64,6 @@ export interface Remark {
   addedDate?: Date;
   updatedDate?: string;
   message: string;
-  userId?: string;
+  addedByUserId?: string;
+  updatedByUserId?: string;
 }

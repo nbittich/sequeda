@@ -1,4 +1,5 @@
 use chrono::{Local, NaiveDate, NaiveDateTime};
+use sequeda_service_common::IdGenerator;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -21,7 +22,7 @@ pub struct Member {
 impl Default for Member {
     fn default() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: IdGenerator.get(),
             org_id: Default::default(),
             person_id: Default::default(),
             position_id: Default::default(),
@@ -39,7 +40,9 @@ impl Default for Member {
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Remark {
-    pub added_date: NaiveDateTime,
+    pub id: Option<String>,
+    pub user_id: Option<String>,
+    pub added_date: Option<NaiveDateTime>,
     pub updated_date: Option<NaiveDateTime>,
     pub message: String,
 }

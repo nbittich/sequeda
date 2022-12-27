@@ -99,10 +99,10 @@ routes:
           - creep
           - demo
   # members
-  - id: member_find_all
-    uri: http://org-member
+  - id: members_find_all
+    uri: http://org-members
     predicates:
-      - !path /orgs/member/find-all/**
+      - !path /orgs/members/find-all/**
     authorizations:
       - !authorization
         method: "GET"
@@ -111,16 +111,30 @@ routes:
           - demo
     filters:
       - !rewrite_path
-        source: /orgs/member/find-all/**
+        source: /orgs/members/find-all/**
         dest: /find-all
-  - id: member_upsert
-    uri: http://org-member
+  - id: members_find_by_org
+    uri: http://org-members
+    predicates:
+      - !path /orgs/members/find-by-org/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
     filters:
       - !rewrite_path
-        source: /orgs/member/**
+        source: /orgs/members/find-by-org/(?P<segment>.*)
+        dest: /find-by-org/${segment}
+  - id: member_upsert
+    uri: http://org-members
+    filters:
+      - !rewrite_path
+        source: /orgs/members/**
         dest: /
     predicates:
-      - !path /orgs/member/**
+      - !path /orgs/members/**
       - !method POST
     authorizations:
       - !authorization

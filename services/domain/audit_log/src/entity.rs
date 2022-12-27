@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use sequeda_service_common::IdGenerator;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -13,7 +14,7 @@ pub struct AuditLog {
 impl Default for AuditLog {
     fn default() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: IdGenerator.get(),
             received_date: Default::default(),
             message: Default::default(),
         }

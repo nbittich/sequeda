@@ -9,12 +9,13 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, IdGenerator, StoreCollection, PUBLIC_TENANT,
+    SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Pageable, Repository, StoreClient, StoreRepository};
 use serde_json::json;
 
-use crate::entity::{Member, MemberUpsert};
+use crate::entity::{Member, MemberUpsert, Remark};
 
 pub fn get_router(client: StoreClient) -> Router {
     let collection_name: String =
@@ -187,10 +188,32 @@ async fn upsert(
         started,
         managed_by,
         responsible_of,
-        remarks,
+        mut remarks,
         person_id,
         position_id,
     } = payload;
+
+    for remark in remarks.iter_mut() {
+        match member.remarks.iter().find(|r| r.id == remark.id) {
+            Some(Remark {
+                id: _,
+                user_id,
+                added_date,
+                updated_date: _,
+                message: _,
+            }) => {
+                remark.updated_date = Some(Local::now().naive_local());
+                remark.added_date = *added_date;
+                remark.user_id = user_id.clone();
+            }
+            None => {
+                remark.id = Some(IdGenerator.get());
+                remark.added_date = Some(Local::now().naive_local());
+                remark.updated_date = None;
+                remark.user_id = Some(x_user_info.id.clone());
+            }
+        }
+    }
 
     let member = Member {
         org_id,

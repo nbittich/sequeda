@@ -46,3 +46,23 @@ export interface Organization {
   closedDate?: string;
   status?: string;
 }
+export interface OrgMember {
+  _id?: string;
+  creationDate?: Date;
+  updatedDate?: Date;
+  orgId?: string;
+  personId?: string;
+  positionId?: string;
+  responsibleOf?: string[];
+  managedBy?: string;
+  started?: string;
+  ended?: string;
+  remarks?: Remark[];
+}
+export interface Remark {
+  id?: string;
+  addedDate?: Date;
+  updatedDate?: string;
+  message: string;
+  userId?: string;
+}

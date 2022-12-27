@@ -2406,6 +2406,7 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
+ "uuid 1.2.2",
 ]
 
 [[package]]

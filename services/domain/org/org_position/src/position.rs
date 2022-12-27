@@ -1,4 +1,5 @@
 use chrono::{Local, NaiveDateTime};
+use sequeda_service_common::IdGenerator;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -26,7 +27,7 @@ pub struct PositionUpsert {
 impl Default for Position {
     fn default() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: IdGenerator.get(),
             name: Default::default(),
             description: Default::default(),
             level: PositionLevel::Operational,

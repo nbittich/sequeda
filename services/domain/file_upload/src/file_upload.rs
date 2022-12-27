@@ -7,6 +7,7 @@ use std::{
 
 use chrono::{Local, NaiveDateTime};
 use image::{EncodableLayout, ImageFormat};
+use sequeda_service_common::IdGenerator;
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
@@ -36,7 +37,7 @@ pub struct FileUpload {
 impl Default for FileUpload {
     fn default() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: IdGenerator.get(),
             content_type: Default::default(),
             original_filename: Default::default(),
             internal_name: Default::default(),

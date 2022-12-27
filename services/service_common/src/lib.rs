@@ -72,3 +72,11 @@ pub struct BankAccount {
     pub number: String,
     pub bic: String,
 }
+
+pub struct IdGenerator;
+
+impl IdGenerator {
+    pub fn get(&self) -> String {
+        uuid::Uuid::new_v4().to_string()
+    }
+}

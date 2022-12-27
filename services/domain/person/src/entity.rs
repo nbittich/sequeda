@@ -1,5 +1,5 @@
 use chrono::{Local, NaiveDate, NaiveDateTime};
-use sequeda_service_common::{BankAccount, ContactDetail};
+use sequeda_service_common::{BankAccount, ContactDetail, IdGenerator};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub struct PersonUpsert {
 impl Default for Person {
     fn default() -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: IdGenerator.get(),
             user_id: Default::default(),
             first_name: Default::default(),
             last_name: Default::default(),

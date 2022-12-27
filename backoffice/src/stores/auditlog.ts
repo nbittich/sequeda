@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { Page, Pageable } from '../models/pagination';
+import { Page, Pageable, toQueryString } from '../models/pagination';
 import { AuditLog } from 'src/models/auditlog';
 
 const useAuditLogStore = defineStore('auditLog', {
@@ -11,15 +11,11 @@ const useAuditLogStore = defineStore('auditLog', {
   getters: {},
 
   actions: {
-    async fetchAuditLogs(
-      pageable: Pageable = { page: 0, limit: 20 } as Pageable
-    ) {
+    async fetchAuditLogs(pageable: Pageable = { page: 0, limit: 20 }) {
       const response = await api.get<Page<AuditLog>>(
-        `audit-log/find-all?page=${pageable.page}&limit=${pageable.limit}${
-          pageable.sort ? '&sort=' + JSON.stringify(pageable.sort) : ''
-        }`
+        `audit-log/find-all?${toQueryString(pageable)}`
       );
-      this.logs = response.data || [];
+      this.logs = response.data || {};
       return this.logs;
     },
   },

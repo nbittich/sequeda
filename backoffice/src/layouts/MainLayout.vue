@@ -42,6 +42,12 @@
               </q-item-section>
               <q-item-section> Positions </q-item-section>
             </q-item>
+            <q-item clickable v-ripple to="/org/members">
+              <q-item-section avatar>
+                <q-icon name="badge" />
+              </q-item-section>
+              <q-item-section> Members </q-item-section>
+            </q-item>
           </q-expansion-item>
           <q-item clickable v-ripple to="/audit">
             <q-item-section avatar>
@@ -108,9 +114,6 @@ export default defineComponent({
           // intended for switching drawer to "normal" mode only
           e.stopPropagation();
         }
-      },
-      alert(msg: string) {
-        window.alert(msg);
       },
     };
   },

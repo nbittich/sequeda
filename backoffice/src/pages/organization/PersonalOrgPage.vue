@@ -1,6 +1,6 @@
 <script lang="ts">
 import OrgForm from 'src/components/organization/org-form.vue';
-import useOrgsStore from 'src/stores/orgs';
+import useOrgsStore from 'src/stores/organization/orgs';
 import useUploadStore from 'src/stores/uploads';
 import { computed, defineComponent, ref } from 'vue';
 const uploadStore = useUploadStore();

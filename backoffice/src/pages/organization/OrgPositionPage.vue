@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import useOrgPositionStore from 'src/stores/org_position';
+import useOrgPositionStore from 'src/stores/organization/position';
 import { QTableColumn } from 'quasar';
 const positionStore = useOrgPositionStore();
 const columns: QTableColumn[] = [

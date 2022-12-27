@@ -69,6 +69,20 @@ routes:
           - creep
           - demo
   # positions
+  - id: position_find_one
+    uri: http://org-position
+    predicates:
+      - !path /orgs/position/find-one/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/position/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
   - id: position_find_all
     uri: http://org-position
     predicates:

@@ -1,5 +1,10 @@
 <script lang="ts">
+import useMemberStore from 'src/stores/organization/member';
+import useOrgPositionStore from 'src/stores/organization/position';
 import { defineComponent, ref } from 'vue';
+
+const positionStore = useOrgPositionStore();
+const memberStore = useMemberStore();
 
 export default defineComponent({
   name: 'OrgMembers',

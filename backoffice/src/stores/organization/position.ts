@@ -15,6 +15,12 @@ const useOrgPositionStore = defineStore('org-position', {
       this.positions = response.data || [];
       return this.positions;
     },
+    async findPositionById(id: string): Promise<Position | null> {
+      const response = await api.get<Position | null>(
+        `orgs/position/find-one/${id}`
+      );
+      return response.data;
+    },
   },
 });
 

@@ -1,0 +1,62 @@
+order: 1
+routes:
+  - id: person_find_by_ids
+    uri: http://person
+    predicates:
+      - !path /person/find-by-ids/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /person/find-by-ids/**
+        dest: /find-by-ids
+  - id: person_find_all
+    uri: http://person
+    predicates:
+      - !path /person/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /person/find-all/**
+        dest: /find-all
+
+  - id: person_current
+    uri: http://person
+    predicates:
+      - !path /person/current/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /person/current/**
+        dest: /current
+  - id: person_upsert
+    uri: http://person
+    filters:
+      - !rewrite_path
+        source: /person/**
+        dest: /
+    predicates:
+      - !path /person/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+  
+  

@@ -69,7 +69,7 @@ services:
       args:
         CRATE_NAME: sequeda_gateway
     volumes:
-      - ./config/gateway/config.yml:/config/gateway.yml
+      - ./config/gateway:/config
     environment:
       <<: *common-variables      
       OPENID_ENABLED: "true"

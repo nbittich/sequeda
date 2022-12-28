@@ -78,7 +78,7 @@ routes:
       args:
         CRATE_NAME: sequeda_gateway
     volumes:
-      - ./config/gateway/config.yml:/config/gateway.yml
+      - ./config/gateway:/config
     environment:
       RUST_LOG: DEBUG
       SERVICE_CONFIG_VOLUME: /config

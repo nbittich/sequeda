@@ -1,0 +1,45 @@
+order: 1
+routes:
+  - id: members_find_all
+    uri: http://org-members
+    predicates:
+      - !path /orgs/members/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/members/find-all/**
+        dest: /find-all
+  - id: members_find_by_org
+    uri: http://org-members
+    predicates:
+      - !path /orgs/members/find-by-org/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/members/find-by-org/(?P<segment>.*)
+        dest: /find-by-org/${segment}
+  - id: member_upsert
+    uri: http://org-members
+    filters:
+      - !rewrite_path
+        source: /orgs/members/**
+        dest: /
+    predicates:
+      - !path /orgs/members/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+ 

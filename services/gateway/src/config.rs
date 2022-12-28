@@ -2,7 +2,7 @@ use std::{fs::File, io::BufReader, path::Path};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub struct Route {
     pub id: String,
@@ -12,7 +12,7 @@ pub struct Route {
     pub authorizations: Option<Vec<Authorization>>,
 }
 
-#[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub struct Authorization {
     pub method: String,
@@ -23,17 +23,18 @@ pub struct Authorization {
 #[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub struct Config {
+    pub order: usize,
     pub routes: Vec<Route>,
 }
 
-#[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum Predicate {
     Host(String),
     Path(String),
     Method(String),
 }
-#[derive(Deserialize, PartialEq, Eq, Serialize, Debug)]
+#[derive(Deserialize, PartialEq, Eq, Serialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum Filter {
     RewritePath { source: String, dest: String },
@@ -43,16 +44,42 @@ pub enum Filter {
 
 impl Config {
     #[allow(unused)]
-    pub fn deserialize(toml: &str) -> Self {
-        match serde_yaml::from_str(toml) {
-            Ok(toml) => toml,
-            Err(e) => panic!("could not deserialize toml {e}"),
+    pub fn deserialize(yaml: &str) -> Self {
+        match serde_yaml::from_str(yaml) {
+            Ok(yaml) => yaml,
+            Err(e) => panic!("could not deserialize yaml {e}"),
         }
     }
-    pub fn deserialize_file(config_path: &Path) -> Self {
+    pub fn merge(mut self, config: &mut Config) -> Self {
+        self.routes.append(&mut config.routes);
+        self
+    }
+    pub fn from_file(config_path: &Path) -> Self {
         let file = File::open(config_path).unwrap();
         let buf_reader = BufReader::new(file);
         serde_yaml::from_reader(buf_reader).unwrap()
+    }
+
+    pub fn from_dir(service_volume_path: &Path) -> Self {
+        if !service_volume_path.is_dir() {
+            panic!("{service_volume_path:?} not a directory!");
+        }
+        let mut configs: Vec<Config> = service_volume_path
+            .read_dir()
+            .expect("could not read config directory!")
+            .filter_map(|e| e.ok().map(|p| p.path()).filter(|p| p.is_file()))
+            .inspect(|p| tracing::debug!("loading config {p:?}"))
+            .map(|p| Self::from_file(p.as_path()))
+            .collect();
+
+        configs.sort_by_key(|c| c.order);
+        
+        let config: Option<Config> = configs.into_iter().reduce(|acc, mut e| acc.merge(&mut e));
+
+        match config {
+            Some(config) => config,
+            None => panic!("Could not build config from volume!"),
+        }
     }
 
     #[allow(unused)]
@@ -73,6 +100,7 @@ mod test {
     #[test]
     fn test_deserialize() {
         let config = r#"
+         order: 0
          routes:
             - id: yahoo_finance_chart
               uri: https://query1.finance.yahoo.com
@@ -102,6 +130,7 @@ mod test {
         assert_eq!(
             config,
             Config {
+                order: 0,
                 routes: vec![
                     Route {
                         id: "yahoo_finance_chart".into(),

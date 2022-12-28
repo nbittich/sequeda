@@ -80,3 +80,6 @@ impl IdGenerator {
         uuid::Uuid::new_v4().to_string()
     }
 }
+
+#[derive(Deserialize)]
+pub struct QueryIds(pub Vec<String>);

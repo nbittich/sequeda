@@ -9,7 +9,7 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, ContactDetail, StoreCollection, PUBLIC_TENANT,
+    user_header::ExtractUserInfo, ContactDetail, QueryIds, StoreCollection, PUBLIC_TENANT,
     SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
@@ -18,22 +18,16 @@ use serde_json::json;
 use crate::entity::{Person, PersonUpsert};
 
 pub fn get_router(client: StoreClient) -> Router {
-    //let allow_origin = var(CORS_ALLOW_ORIGIN).unwrap_or_else(|_| String::from("*"));
-    //let _allow_origin_header = allow_origin.parse::<HeaderValue>().unwrap();
     let collection_name: String =
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("person"));
 
     Router::new()
         .route("/current", get(current))
         .route("/find-all", get(find_all))
+        .route("/find-by-ids", post(find_by_ids))
         .route("/find-one/:person_id", get(find_one))
         .route("/delete/:person_id", delete(delete_by_id))
         .route("/", post(upsert))
-        // .layer(
-        //     CorsLayer::new()
-        //         .allow_origin(allow_origin_header)
-        //         .allow_methods(vec![Method::GET, Method::POST, Method::DELETE]),
-        // )
         .layer(Extension(client))
         .layer(Extension(StoreCollection(collection_name)))
 }
@@ -103,6 +97,28 @@ async fn find_all(
     )
     .await;
     match repository.find_all().await {
+        Ok(people) => (StatusCode::OK, Json(people)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+async fn find_by_ids(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+    extract::Json(QueryIds(query_ids)): extract::Json<QueryIds>,
+) -> impl IntoResponse {
+    tracing::debug!("Person list by ids route entered!");
+    let repository: StoreRepository<Person> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_by_ids(query_ids).await {
         Ok(people) => (StatusCode::OK, Json(people)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,

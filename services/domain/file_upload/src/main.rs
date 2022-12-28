@@ -87,6 +87,8 @@ async fn metadata(
     x_user_info: Option<ExtractUserInfo>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> impl IntoResponse {
+    tracing::debug!("Metadata route entered!");
+
     match get_file_upload(&id, &x_user_info, &client, &collection).await {
         Some(upl) => Json(upl).into_response(),
         None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
@@ -136,6 +138,8 @@ async fn download(
     x_user_info: Option<ExtractUserInfo>,
     axum::extract::Path(id): axum::extract::Path<String>,
 ) -> impl IntoResponse {
+    tracing::debug!("Download route entered!");
+
     tracing::debug!("trying to fetch document with id {id}");
 
     match get_file_upload(&id, &x_user_info, &client, &collection).await {
@@ -175,7 +179,7 @@ async fn upload(
     Query(mut query): Query<HashMap<String, String>>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
-    tracing::debug!("Person list route entered!");
+    tracing::debug!("Upload route entered!");
 
     let mut uploads = HashMap::new();
 

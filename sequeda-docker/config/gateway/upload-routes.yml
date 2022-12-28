@@ -1,0 +1,17 @@
+# for some reason this has to be the latest route loaded otherwise broken pipe (os 32)
+order: 1000 
+routes:
+  - id: upload_service
+    uri: http://uploads
+    filters:
+      - !rewrite_path
+        source: /uploads/(?P<segment>.*)
+        dest: /${segment}
+    predicates:
+      - !path /uploads/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo

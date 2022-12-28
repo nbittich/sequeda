@@ -38,7 +38,6 @@ use crate::{
 
 type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
 
-const CONFIG_FILE_NAME: &str = "CONFIG_FILE_NAME";
 const DEMO_ACCOUNT: &str = "DEMO_ACCOUNT";
 
 #[tokio::main]
@@ -54,15 +53,10 @@ async fn main() {
         .and_then(|enabled| enabled.parse::<bool>().ok())
         .unwrap_or(false);
     let config_volume = var(SERVICE_CONFIG_VOLUME).unwrap_or_else(|_| String::from("/tmp"));
-    let config_file_name = var(CONFIG_FILE_NAME).unwrap_or_else(|_| String::from("gateway.yml"));
 
-    let path_config = PathBuf::new().join(&config_volume).join(config_file_name);
+    let path_dir = PathBuf::new().join(&config_volume);
 
-    if !path_config.exists() {
-        panic!("Missing config `{path_config:?}`");
-    }
-
-    let config: Config = Config::deserialize_file(path_config.as_path());
+    let config: Config = Config::from_dir(path_dir.as_path());
     let request_handler: RequestHandler = RequestHandler::from_config(config);
 
     let https = hyper_rustls::HttpsConnectorBuilder::new()
@@ -71,7 +65,8 @@ async fn main() {
         .enable_http1()
         .build();
 
-    let client: Client = hyper::client::Client::builder().build(https);
+    let client: Client = hyper::client::Client::builder()
+    .build(https);
 
     let mut app = Router::new()
         .fallback(handler)

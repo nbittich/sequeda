@@ -88,6 +88,23 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(count)
     }
+
+    async fn find_by_ids(&self, ids: Vec<String>) -> Result<Vec<T>, StoreError> {
+        self.find_by_query(doc! {"_id": {"$in": ids}}).await
+    }
+
+    async fn find_by_query(&self, query: Document) -> Result<Vec<T>, StoreError> {
+        let collection = self.get_collection();
+        let cursor = collection
+            .find(query, None)
+            .await
+            .map_err(|e| StoreError { msg: e.to_string() })?;
+        cursor
+            .try_collect()
+            .await
+            .map_err(|e| StoreError { msg: e.to_string() })
+    }
+
     async fn find_page(
         &self,
         query: Option<Document>,

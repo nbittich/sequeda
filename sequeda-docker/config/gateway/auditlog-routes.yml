@@ -1,0 +1,16 @@
+order: 1
+routes:
+  - id: audit_log_find_all
+    uri: http://auditlog
+    predicates:
+      - !path /audit-log/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /audit-log/find-all/**
+        dest: /find-all

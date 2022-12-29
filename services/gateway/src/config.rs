@@ -73,7 +73,7 @@ impl Config {
             .collect();
 
         configs.sort_by_key(|c| c.order);
-        
+
         let config: Option<Config> = configs.into_iter().reduce(|acc, mut e| acc.merge(&mut e));
 
         match config {

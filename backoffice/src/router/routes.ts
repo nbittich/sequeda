@@ -52,6 +52,17 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/org/members/new',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () =>
+          import('pages/organization/members/NewOrgMemberPage.vue'),
+      },
+    ],
+  },
 
   // Always leave this as last one,
   // but you can also remove it

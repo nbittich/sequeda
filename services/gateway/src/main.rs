@@ -65,8 +65,7 @@ async fn main() {
         .enable_http1()
         .build();
 
-    let client: Client = hyper::client::Client::builder()
-    .build(https);
+    let client: Client = hyper::client::Client::builder().build(https);
 
     let mut app = Router::new()
         .fallback(handler)

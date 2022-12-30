@@ -21,45 +21,41 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/AuditLog.vue') }],
   },
+
   {
-    path: '/org/positions',
+    path: '/org',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: '',
-        component: () => import('pages/organization/OrgPositionPage.vue'),
-      },
-    ],
-  },
-  {
-    path: '/org/current',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
-      {
-        path: '',
+        path: 'current',
         component: () => import('pages/organization/PersonalOrgPage.vue'),
       },
-    ],
-  },
-  {
-    path: '/org/members',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
       {
-        path: '',
-        component: () =>
-          import('pages/organization/members/OrgMembersPage.vue'),
+        path: 'positions',
+        component: () => import('pages/organization/OrgPositionPage.vue'),
       },
-    ],
-  },
-  {
-    path: '/org/members/new',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [
       {
-        path: '',
-        component: () =>
-          import('pages/organization/members/NewOrgMemberPage.vue'),
+        path: 'members',
+        children: [
+          {
+            name: 'org.members.new',
+            path: 'new',
+            component: () =>
+              import('pages/organization/members/NewOrgMemberPage.vue'),
+          },
+          {
+            name: 'org.members.edit',
+            path: 'edit/:id',
+            component: () =>
+              import('pages/organization/members/EditOrgMemberPage.vue'),
+          },
+          {
+            name: 'org.members.root',
+            path: '',
+            component: () =>
+              import('pages/organization/members/OrgMembersPage.vue'),
+          },
+        ],
       },
     ],
   },

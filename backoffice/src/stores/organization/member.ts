@@ -18,6 +18,12 @@ const useMemberStore = defineStore('memberStore', {
       );
       return response.data;
     },
+    async findOne(memberId: string): Promise<OrgMember> {
+      const response = await api.get<OrgMember>(
+        `/orgs/members/find-one/${memberId}`
+      );
+      return response.data;
+    },
     async update(member: OrgMember) {
       const response = await api.post<OrgMember>('/orgs/members', member);
       return response.data;

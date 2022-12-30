@@ -14,6 +14,20 @@ routes:
       - !rewrite_path
         source: /orgs/members/find-all/**
         dest: /find-all
+  - id: members_find_one
+    uri: http://org-members
+    predicates:
+      - !path /orgs/members/find-one/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/members/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
   - id: members_find_by_org
     uri: http://org-members
     predicates:

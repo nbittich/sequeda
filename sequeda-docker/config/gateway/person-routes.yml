@@ -1,5 +1,19 @@
 order: 1
 routes:
+  - id: person_find_one
+    uri: http://person
+    predicates:
+      - !path /person/find-one/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /person/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
   - id: person_find_by_ids
     uri: http://person
     predicates:

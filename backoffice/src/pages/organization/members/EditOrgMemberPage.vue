@@ -11,6 +11,7 @@ import usePersonStore from 'src/stores/person';
 import person from 'src/stores/person';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 const memberStore = useMemberStore();
 const uploadStore = useUploadStore();
@@ -19,20 +20,30 @@ const orgStore = useOrgsStore();
 const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
-  name: 'NewOrgMemberPage',
+  name: 'EditOrgMemberPage',
   components: { OrgMemberForm },
   computed: {},
   async setup() {
-    const person = ref({
-      contactDetail: { address: {} as Address } as ContactDetail,
-      bankAccount: {} as BankAccount,
-    } as Person);
+    const route = useRoute();
+    const memberId = route.params.id as string;
+    const member = ref(await memberStore.findOne(memberId));
+    const person = ref(
+      await personStore.findOne(member.value.personId as string)
+    );
     const profilePictureFile = ref(null as unknown as File);
-    const started = ref(null as unknown as string);
-    const ended = ref(null as unknown as string);
-    const remarks = ref([] as Remark[]);
-    const positionId = ref(null as unknown as string);
-    return { remarks, person, profilePictureFile, positionId, started, ended };
+    const started = ref(member.value.started);
+    const ended = ref(member.value.ended);
+    const remarks = ref(member.value.remarks);
+    const positionId = ref(member.value.positionId);
+    return {
+      remarks,
+      person,
+      profilePictureFile,
+      positionId,
+      started,
+      ended,
+      member,
+    };
   },
   methods: {
     async update() {
@@ -47,16 +58,13 @@ export default defineComponent({
         this.profilePictureFile = null as unknown as File;
         person = await personStore.update(person);
       }
-      let member: OrgMember = {
-        orgId: currentOrg._id,
-        started: this.started,
-        ended: this.ended,
-        personId: person._id,
-        positionId: this.positionId,
-        responsibleOf: [], // todo
-        remarks: this.remarks,
-      };
-      await memberStore.update(member);
+      this.member.started = this.started;
+      this.member.ended = this.ended;
+      this.member.positionId = this.positionId;
+      this.member.responsibleOf = []; // todo
+      this.member.remarks = this.remarks;
+
+      await memberStore.update(this.member);
       this.$router.push({ name: 'org.members.root' });
     },
     async reset() {

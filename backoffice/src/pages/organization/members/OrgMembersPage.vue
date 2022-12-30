@@ -22,8 +22,7 @@ const columns: QTableColumn[] = [
     name: 'name',
     align: 'left',
     label: 'Name',
-    field: (row: OrgMemberDetail) =>
-      row.person?.firstName + ' ' + row.person?.lastName,
+    field: (row) => 'nordin',
     sortable: false,
   },
   {
@@ -45,6 +44,13 @@ const columns: QTableColumn[] = [
     align: 'left',
     label: 'End Date',
     field: 'ended',
+    sortable: false,
+  },
+  {
+    name: 'action',
+    align: 'left',
+    label: 'Action',
+    field: 'action',
     sortable: false,
   },
 ];
@@ -84,9 +90,19 @@ export default defineComponent({
       };
     };
     await fetchPageMembers({ pagination: pagination.value });
-    return { members, pageRequest, columns, fetchPageMembers, pagination };
+    return {
+      members,
+      pageRequest,
+      columns,
+      fetchPageMembers,
+      pagination,
+    };
   },
-  methods: {},
+  methods: {
+    newOrg() {
+      this.$router.push({ name: 'org.members.new' });
+    },
+  },
 });
 </script>
 
@@ -98,10 +114,48 @@ export default defineComponent({
         dense
         :rows="members.content"
         :columns="columns"
-        row-key="id"
+        row-key="name"
         @request="fetchPageMembers"
         v-model:pagination="pagination"
-      />
+      >
+        <template v-slot:top>
+          <div class="row full-width justify-between">
+            <div class="text-h6">Members</div>
+            <q-btn
+              color="primary"
+              icon="add"
+              label="New member"
+              @click="newOrg"
+            />
+          </div>
+        </template>
+        <template v-slot:body="props">
+          <q-tr :props="props">
+            <q-td key="name" :props="props">
+              {{
+                props.row.person?.firstName + ' ' + props.row.person?.lastName
+              }}
+            </q-td>
+            <q-td key="position" :props="props">
+              {{ props.row.position.name }}
+            </q-td>
+            <q-td key="started" :props="props">
+              {{ props.row.started }}
+            </q-td>
+            <q-td key="ended" :props="props">
+              {{ props.row.ended }}
+            </q-td>
+            <q-td key="action" :props="props">
+              <q-btn
+                round
+                icon="edit"
+                color="primary"
+                :to="'/org/members/edit/' + props.row._id"
+              ></q-btn>
+            </q-td>
+          </q-tr>
+        </template>
+      </q-table>
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from 'boot/axios';
-import { Organization, OrgMember } from 'src/models/orgs';
+import { OrgMember, OrgMemberDetail } from 'src/models/orgs';
 import { Page, Pageable, toQueryString } from 'src/models/pagination';
 
 const useMemberStore = defineStore('memberStore', {
@@ -12,8 +12,8 @@ const useMemberStore = defineStore('memberStore', {
     async fetchMembers(
       orgId: string,
       pageable: Pageable = { page: 0, limit: 20 }
-    ): Promise<Page<OrgMember>> {
-      const response = await api.get<Page<OrgMember>>(
+    ): Promise<Page<OrgMemberDetail>> {
+      const response = await api.get<Page<OrgMemberDetail>>(
         `/orgs/members/find-by-org/${orgId}?${toQueryString(pageable)}`
       );
       return response.data;

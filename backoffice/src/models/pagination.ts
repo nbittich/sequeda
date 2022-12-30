@@ -17,3 +17,7 @@ export interface Page<T> {
   pageSize: number;
   content: T[];
 }
+
+export type PaginationProp = {
+  pagination: { page?: number; rowsPerPage?: number; rowsNumber?: number };
+};

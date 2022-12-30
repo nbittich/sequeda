@@ -1,11 +1,10 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import useAuditLogStore from 'src/stores/auditlog';
-import { Pageable } from 'src/models/pagination';
+import { Pageable, PaginationProp } from 'src/models/pagination';
 import { QTableColumn } from 'quasar';
 const auditLogStore = useAuditLogStore();
 
-type PaginationProp = { pagination: { page: number; rowsPerPage: number } };
 const columns: QTableColumn[] = [
   {
     name: 'receivedDate',
@@ -28,7 +27,7 @@ export default defineComponent({
   components: {},
   computed: {},
   async setup() {
-    const pageRequest = ref({ limit: 3, page: 0 } as Pageable);
+    const pageRequest = ref({ limit: 10, page: 0 } as Pageable);
     const logs = ref(await auditLogStore.fetchAuditLogs(pageRequest.value));
     const pagination = ref({
       page: pageRequest.value.page - 1,

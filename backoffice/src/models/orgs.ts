@@ -1,5 +1,6 @@
 import { BankAccount } from './bank-account';
 import { ContactDetail, SelectOption } from './contact-detail';
+import { Person } from './person';
 
 export interface Position {
   _id?: string;
@@ -58,6 +59,10 @@ export interface OrgMember {
   started?: string;
   ended?: string;
   remarks?: Remark[];
+}
+export interface OrgMemberDetail extends OrgMember {
+  position?: Position;
+  person?: Person;
 }
 export interface Remark {
   id?: string;

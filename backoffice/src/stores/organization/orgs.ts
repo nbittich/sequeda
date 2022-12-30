@@ -10,9 +10,10 @@ const useOrgsStore = defineStore('orgs', {
   getters: {},
 
   actions: {
-    async fetchCurrent() {
+    async fetchCurrent(): Promise<Organization> {
       const response = await api.get<Organization>('/orgs/current');
       this.current = response.data;
+      return this.current;
     },
     async update(org: Organization) {
       const response = await api.post<Organization>('/orgs', org);

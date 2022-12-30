@@ -42,4 +42,5 @@ routes:
         method: "POST"
         has_roles:
           - creep
+          - demo
  

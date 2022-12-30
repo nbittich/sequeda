@@ -54,6 +54,7 @@ export default defineComponent({
     </q-card-section>
     <q-card-section class="q-mb-none q-pb-none column items-center">
       <ImageUpload
+        :key="person._id"
         v-model="profilePictureFile"
         :pictureId="person.profilePictureId"
       />

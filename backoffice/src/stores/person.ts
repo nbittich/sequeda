@@ -18,6 +18,10 @@ const usePersonStore = defineStore('person', {
       const response = await api.get<Person>(`/person/find-one/${personId}`);
       return response.data;
     },
+    async findAll() {
+      const response = await api.get<Person[]>('/person/find-all');
+      return response.data;
+    },
     async findByIds(ids: string[]): Promise<Person[]> {
       const response = await api.post<Person[]>('/person/find-by-ids', ids);
       return response.data;

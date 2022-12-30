@@ -4,8 +4,12 @@ import { computed, defineComponent, ref } from 'vue';
 import PersonForm from '../person/person-form.vue';
 import useOrgPositionStore from 'src/stores/organization/position';
 import { Remark } from 'src/models/orgs';
+import usePersonStore from 'src/stores/person';
 
 const positionStore = useOrgPositionStore();
+const personStore = usePersonStore();
+
+const persons = await personStore.findAll();
 
 export default defineComponent({
   name: 'OrgMemberForm',
@@ -51,6 +55,7 @@ export default defineComponent({
     const positions = await positionStore.fetchPositions();
 
     const positionsOptions = ref(positions);
+    const personsOptions = ref(persons);
     const personComputed = computed({
       get: () => props.personModel,
       set: (value) => context.emit('update:personModel', value),
@@ -73,23 +78,27 @@ export default defineComponent({
       set: (value) => context.emit('update:endedModel', value),
     });
 
+    const profilePictureFile = computed({
+      get: () => props.profilePictureModel,
+      set: (value) => context.emit('update:profilePictureModel', value),
+    });
+
     const person = ref(personComputed);
     const started = ref(startedComputed);
     const ended = ref(endedComputed);
     const positionId = ref(positionIdComputed);
     const remarks = ref(remarksComputed);
+    const picture = ref(profilePictureFile);
 
-    const profilePictureFile = computed({
-      get: () => props.profilePictureModel,
-      set: (value) => context.emit('update:profilePictureModel', value),
-    });
     return {
       person,
       remarks,
       started,
       ended,
+      persons,
+      personsOptions,
       positionId,
-      profilePictureFile,
+      picture,
       positions,
       positionsOptions,
       filterPosition(
@@ -104,6 +113,24 @@ export default defineComponent({
           );
         });
       },
+      filterPersons(
+        val: string,
+        update: (arg0: () => void) => void
+        // _abort: any
+      ) {
+        update(() => {
+          const needle = val.toLocaleLowerCase();
+          personsOptions.value = persons.filter(
+            (v) =>
+              v?.firstName?.toLocaleLowerCase().includes(needle) ||
+              v?.lastName?.toLocaleLowerCase().includes(needle)
+          );
+        });
+      },
+      refreshPerson(p: Person) {
+        person.value = p;
+        picture.value = null as unknown as File;
+      },
     };
   },
   methods: {},
@@ -113,12 +140,42 @@ export default defineComponent({
 <template>
   <q-card>
     <q-card-section>
-      <div class="text-h6">{{ title }}</div>
+      <div class="row justify-between">
+        <div class="text-h6">{{ title }}</div>
+        <q-select
+          class="q-mr-md-xs"
+          dense
+          outlined
+          v-model="person"
+          v-on:update:model-value="refreshPerson"
+          use-input
+          :option-label="
+            (person) =>
+              !person.firstName && !person.lastName
+                ? '-'
+                : person.firstName + ' ' + person.lastName
+          "
+          emit-value
+          map-options
+          hide-selected
+          fill-input
+          input-debounce="0"
+          :options="personsOptions"
+          @filter="filterPersons"
+          label="Choose existing person"
+        >
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey"> No results </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+      </div>
     </q-card-section>
     <PersonForm
       :title="'Person'"
       v-model:person-model="person"
-      v-model:profile-picture="profilePictureFile"
+      v-model:profile-picture="picture"
     />
     <q-card-section>
       <div class="text-h6 q-mb-md">Position</div>

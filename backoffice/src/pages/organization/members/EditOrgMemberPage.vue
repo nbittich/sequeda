@@ -1,12 +1,6 @@
 <script lang="ts">
-import { Address } from 'cluster';
 import OrgMemberForm from 'src/components/organization/org-member-form.vue';
-import { BankAccount } from 'src/models/bank-account';
-import { ContactDetail } from 'src/models/contact-detail';
-import { OrgMember, Remark } from 'src/models/orgs';
-import { Person } from 'src/models/person';
 import useMemberStore from 'src/stores/organization/member';
-import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
 import person from 'src/stores/person';
 import useUploadStore from 'src/stores/uploads';
@@ -16,8 +10,6 @@ import { useRoute } from 'vue-router';
 const memberStore = useMemberStore();
 const uploadStore = useUploadStore();
 const personStore = usePersonStore();
-const orgStore = useOrgsStore();
-const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
   name: 'EditOrgMemberPage',
@@ -68,7 +60,7 @@ export default defineComponent({
       this.$router.push({ name: 'org.members.root' });
     },
     async reset() {
-      alert('todo!');
+      this.$router.push({ name: 'org.members.root' });
     },
   },
 });
@@ -79,7 +71,7 @@ export default defineComponent({
     <div class="col-12">
       <q-card>
         <OrgMemberForm
-          :title="'New Member'"
+          :title="'Edit Member'"
           v-model:person-model="person"
           v-model:position-id-model="positionId"
           v-model:profile-picture-model="profilePictureFile"

@@ -60,7 +60,7 @@ export default defineComponent({
       this.$router.push({ name: 'org.members.root' });
     },
     async reset() {
-      alert('todo!');
+      this.$router.push({ name: 'org.members.root' });
     },
   },
 });

@@ -2,7 +2,6 @@
 import OrgMemberForm from 'src/components/organization/org-member-form.vue';
 import useMemberStore from 'src/stores/organization/member';
 import usePersonStore from 'src/stores/person';
-import person from 'src/stores/person';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';

@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Address } from 'cluster';
 import OrgMemberForm from 'src/components/organization/org-member-form.vue';
 import { BankAccount } from 'src/models/bank-account';
 import { ContactDetail } from 'src/models/contact-detail';
@@ -8,7 +7,6 @@ import { Person } from 'src/models/person';
 import useMemberStore from 'src/stores/organization/member';
 import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
-import person from 'src/stores/person';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
 

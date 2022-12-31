@@ -5,7 +5,7 @@ import PersonForm from '../person/person-form.vue';
 import useOrgPositionStore from 'src/stores/organization/position';
 import { Remark } from 'src/models/orgs';
 import usePersonStore from 'src/stores/person';
-
+import RemarkForm from '../shared/remark-form.vue';
 const positionStore = useOrgPositionStore();
 const personStore = usePersonStore();
 
@@ -134,7 +134,7 @@ export default defineComponent({
     };
   },
   methods: {},
-  components: { PersonForm },
+  components: { PersonForm, RemarkForm },
 });
 </script>
 <template>
@@ -142,28 +142,14 @@ export default defineComponent({
     <q-card-section>
       <div class="row justify-between">
         <div class="text-h6">{{ title }}</div>
-        <q-select
-          class="q-mr-md-xs"
-          dense
-          outlined
-          v-model="person"
-          v-on:update:model-value="refreshPerson"
-          use-input
+        <q-select class="q-mr-md-xs" dense outlined v-model="person" v-on:update:model-value="refreshPerson" use-input
           :option-label="
-            (person) =>
-              !person.firstName && !person.lastName
-                ? '-'
-                : person.firstName + ' ' + person.lastName
-          "
-          emit-value
-          map-options
-          hide-selected
-          fill-input
-          input-debounce="0"
-          :options="personsOptions"
-          @filter="filterPersons"
-          label="Choose existing person"
-        >
+  (person) =>
+    !person.firstName && !person.lastName
+      ? '-'
+      : person.firstName + ' ' + person.lastName
+" emit-value map-options hide-selected fill-input input-debounce="0" :options="personsOptions" @filter="filterPersons"
+          label="Choose existing person">
           <template v-slot:no-option>
             <q-item>
               <q-item-section class="text-grey"> No results </q-item-section>
@@ -172,32 +158,14 @@ export default defineComponent({
         </q-select>
       </div>
     </q-card-section>
-    <PersonForm
-      :title="'Person'"
-      v-model:person-model="person"
-      v-model:profile-picture="picture"
-    />
+    <PersonForm :title="'Person'" v-model:person-model="person" v-model:profile-picture="picture" />
     <q-card-section>
       <div class="text-h6 q-mb-md">Position</div>
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-12">
-          <q-select
-            class="q-mr-md-xs"
-            dense
-            outlined
-            v-model="positionId"
-            use-input
-            option-label="name"
-            option-value="_id"
-            emit-value
-            map-options
-            hide-selected
-            fill-input
-            input-debounce="0"
-            :options="positionsOptions"
-            @filter="filterPosition"
-            label="Position"
-          >
+          <q-select class="q-mr-md-xs" dense outlined v-model="positionId" use-input option-label="name"
+            option-value="_id" emit-value map-options hide-selected fill-input input-debounce="0"
+            :options="positionsOptions" @filter="filterPosition" label="Position">
             <template v-slot:no-option>
               <q-item>
                 <q-item-section class="text-grey"> No results </q-item-section>
@@ -208,22 +176,10 @@ export default defineComponent({
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-lg-6 col-12">
-          <q-input
-            dense
-            outlined
-            class="q-mr-md-xs"
-            label="Started"
-            v-model="started"
-            :rules="['date']"
-          >
+          <q-input dense outlined class="q-mr-md-xs" label="Started" v-model="started" :rules="['date']">
             <template v-slot:append>
               <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  :breakpoint="600"
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
+                <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
                   <q-date mask="YYYY-MM-DD" v-model="started">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -235,22 +191,10 @@ export default defineComponent({
           </q-input>
         </div>
         <div class="col-lg-6 col-12">
-          <q-input
-            dense
-            outlined
-            class="q-mr-md-xs"
-            label="Ended"
-            v-model="ended"
-            :rules="['date']"
-          >
+          <q-input dense outlined class="q-mr-md-xs" label="Ended" v-model="ended" :rules="['date']">
             <template v-slot:append>
               <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  :breakpoint="600"
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
+                <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
                   <q-date mask="YYYY-MM-DD" v-model="ended">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
@@ -264,10 +208,7 @@ export default defineComponent({
       </div>
     </q-card-section>
 
-    <q-card-section>
-      <div class="text-h6 q-mb-md">Remarks</div>
-      <p>todo!</p>
-    </q-card-section>
+    <RemarkForm v-model="remarks" />
     <q-card-section>
       <div class="text-h6 q-mb-md">Managed by</div>
       <p>todo!</p>

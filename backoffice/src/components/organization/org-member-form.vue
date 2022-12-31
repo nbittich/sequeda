@@ -143,13 +143,9 @@ export default defineComponent({
       <div class="row justify-between">
         <div class="text-h6">{{ title }}</div>
         <q-select class="q-mr-md-xs" dense outlined v-model="person" v-on:update:model-value="refreshPerson" use-input
-          :option-label="
-  (person) =>
-    !person.firstName && !person.lastName
-      ? '-'
-      : person.firstName + ' ' + person.lastName
-" emit-value map-options hide-selected fill-input input-debounce="0" :options="personsOptions" @filter="filterPersons"
-          label="Choose existing person">
+          :option-label="(person) => !person.firstName && !person.lastName ? '-' : person.firstName + ' ' + person.lastName"
+          emit-value map-options hide-selected fill-input input-debounce="0" :options="personsOptions"
+          @filter="filterPersons" label="Choose existing person">
           <template v-slot:no-option>
             <q-item>
               <q-item-section class="text-grey"> No results </q-item-section>
@@ -208,7 +204,7 @@ export default defineComponent({
       </div>
     </q-card-section>
 
-    <RemarkForm v-model="remarks" />
+    <RemarkForm v-model="remarks" :key="person._id" />
     <q-card-section>
       <div class="text-h6 q-mb-md">Managed by</div>
       <p>todo!</p>

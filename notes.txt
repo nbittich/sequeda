@@ -10,3 +10,5 @@ https://api.somehost.org/uploads/download/38c07697-5a27-4aac-bebc-95c9cd965a71
 
 
 ```
+
+there is a debug annotation for axum (`#[axum::debug_handler]`) to set on an fn handler

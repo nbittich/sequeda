@@ -3,6 +3,7 @@
 members = [
     "services/domain/person",
     "services/domain/org/org_member",
+    "services/domain/org/org_customer",
     "services/domain/org/org_position",
     "services/domain/org/orgs",
     "services/domain/file_upload",

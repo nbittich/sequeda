@@ -1,0 +1,22 @@
+
+[package]
+name = "sequeda_org_customer"
+version = {workspace = true}
+edition = {workspace = true}
+license = {workspace = true}
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = {workspace=true, features = ["derive"]}
+serde_json = {workspace=true}
+tokio = {workspace=true, features=["full"]}
+tracing = {workspace=true}
+tracing-subscriber = { workspace=true, features = ["env-filter"] }
+axum = {workspace=true, features = ["headers"]}
+chrono ={workspace=true, features=["serde"]}
+uuid ={workspace=true, features=["v4"]}
+tower-http = { workspace=true, features = ["cors"] }
+sequeda_store = {path = "../../../../libraries/store"}
+sequeda_service_common = {path = "../../../service_common"}
+axum-extra ={workspace=true}

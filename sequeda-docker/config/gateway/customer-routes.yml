@@ -1,0 +1,60 @@
+order: 1
+routes:
+  - id: customers_find_all
+    uri: http://org-customers
+    predicates:
+      - !path /orgs/customers/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/customers/find-all/**
+        dest: /find-all
+  - id: customers_find_one
+    uri: http://org-customers
+    predicates:
+      - !path /orgs/customers/find-one/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/customers/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
+  - id: customers_find_by_org
+    uri: http://org-customers
+    predicates:
+      - !path /orgs/customers/find-by-org/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /orgs/customers/find-by-org/(?P<segment>.*)
+        dest: /find-by-org/${segment}
+  - id: customer_upsert
+    uri: http://org-customers
+    filters:
+      - !rewrite_path
+        source: /orgs/customers/**
+        dest: /
+    predicates:
+      - !path /orgs/customers/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+ 

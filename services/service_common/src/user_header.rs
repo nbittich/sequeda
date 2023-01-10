@@ -5,6 +5,7 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::StatusCode;
 use axum::Json;
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -47,7 +48,7 @@ where
                 .to_str()
                 .ok()
                 .filter(|u| !u.trim().is_empty())
-                .and_then(|u| base64::decode(u).ok())
+                .and_then(|u| base64::engine::general_purpose::STANDARD.decode(u).ok())
                 .and_then(|u| serde_json::from_slice::<UserInfo>(&u).ok())
             {
                 Some(user_info) => Ok(ExtractUserInfo(user_info)),

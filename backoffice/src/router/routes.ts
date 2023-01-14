@@ -57,6 +57,16 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: 'customers',
+        children: [
+          {
+            name: 'org.customers.root',
+            path: '',
+            component: () => import('pages/organization/customers/OrgCustomersPage.vue')
+          }
+        ]
+      }
     ],
   },
 

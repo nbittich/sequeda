@@ -104,7 +104,6 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .await
             .map_err(|e| StoreError { msg: e.to_string() })
     }
-
     async fn find_page(
         &self,
         query: Option<Document>,
@@ -119,7 +118,13 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
         let count = self.count().await? as i64;
         let skip = pageable.limit * pageable.page; // start at page 0
         if count <= skip {
-            return Ok(None);
+            return Ok(Some(Page {
+                total_elements: 0,
+                current_page: 0,
+                next_page: None,
+                page_size: 0,
+                content: vec![],
+            }));
         }
         let options = FindOptions::builder()
             .skip(Some(skip as u64))

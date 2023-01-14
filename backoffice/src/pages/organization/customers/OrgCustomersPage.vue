@@ -72,33 +72,34 @@ export default defineComponent({
         currentOrg._id as string,
         pageRequest.value
       );
+      if (customers.value?.content?.length) {
+        const personIds = customers.value?.content
+          .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'PERSON')
+          .map((m) => m.representedById as string);
+        const persons = await personStore.findByIds(personIds);
 
-      const personIds = customers.value.content
-        .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'PERSON')
-        .map((m) => m.representedById as string);
-      const persons = await personStore.findByIds(personIds);
+        const orgIds = customers.value?.content
+          .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'ORGANIZATION')
+          .map((m) => m.representedById as string);
+        const organizations = await orgStore.findByIds(orgIds);
 
-      const orgIds = customers.value.content
-        .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'ORGANIZATION')
-        .map((m) => m.representedById as string);
-      const organizations = await orgStore.findByIds(orgIds);
-
-      for (const customer of customers.value.content) {
-        switch (customer.customerType) {
-          case 'PERSON':
-            customer.representedBy = persons.find((p) => p._id === customer.representedById);
-            break;
-          case 'ORGANIZATION':
-            customer.representedBy = organizations.find((o) => o._id === customer.representedById);
-            break;
-          default: throw Error('Could not determine customer type!');
+        for (const customer of customers.value?.content) {
+          switch (customer.customerType) {
+            case 'PERSON':
+              customer.representedBy = persons.find((p) => p._id === customer.representedById);
+              break;
+            case 'ORGANIZATION':
+              customer.representedBy = organizations.find((o) => o._id === customer.representedById);
+              break;
+            default: throw Error('Could not determine customer type!');
+          }
         }
+        pagination.value = {
+          page: customers.value.currentPage + 1,
+          rowsPerPage: pageRequest.value.limit,
+          rowsNumber: customers.value.totalElements,
+        };
       }
-      pagination.value = {
-        page: customers.value.currentPage + 1,
-        rowsPerPage: pageRequest.value.limit,
-        rowsNumber: customers.value.totalElements,
-      };
     };
     const getName = (representedBy: Person | Organization) => {
       if (representedByIsOrg(representedBy)) {
@@ -118,7 +119,7 @@ export default defineComponent({
     };
   },
   methods: {
-    newOrg() {
+    newCustomer() {
       this.$router.push({ name: 'org.customers.new' });
     },
   },
@@ -133,7 +134,7 @@ export default defineComponent({
         <template v-slot:top>
           <div class="row full-width justify-between">
             <div class="text-h6">Customers</div>
-            <q-btn color="primary" icon="add" label="New customer" @click="newOrg" />
+            <q-btn color="primary" icon="add" label="New customer" @click="newCustomer" />
           </div>
         </template>
         <template v-slot:body="props">

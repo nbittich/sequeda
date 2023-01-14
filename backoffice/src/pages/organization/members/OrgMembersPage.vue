@@ -75,13 +75,15 @@ export default defineComponent({
         currentOrg._id as string,
         pageRequest.value
       );
-      const personIds = members.value.content
-        .filter((m) => typeof m.personId == 'string')
-        .map((m) => m.personId as string);
-      const persons = await personStore.findByIds(personIds);
-      for (const member of members.value.content) {
-        member.position = positions.find((p) => p._id === member.positionId);
-        member.person = persons.find((p) => p._id == member.personId);
+      if (members.value?.content?.length) {
+        const personIds = members.value.content
+          .filter((m) => typeof m.personId == 'string')
+          .map((m) => m.personId as string);
+        const persons = await personStore.findByIds(personIds);
+        for (const member of members.value.content) {
+          member.position = positions.find((p) => p._id === member.positionId);
+          member.person = persons.find((p) => p._id == member.personId);
+        }
       }
       pagination.value = {
         page: members.value.currentPage + 1,

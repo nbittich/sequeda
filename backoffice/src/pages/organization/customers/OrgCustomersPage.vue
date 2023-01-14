@@ -1,22 +1,19 @@
 <script lang="ts">
 import { QTableColumn } from 'quasar';
-import { OrgMemberDetail } from 'src/models/orgs';
+import { Organization, OrgCustomerDetail, representedByIsOrg } from 'src/models/orgs';
 import { Page, Pageable, PaginationProp } from 'src/models/pagination';
-import useMemberStore from 'src/stores/organization/member';
+import { Person } from 'src/models/person';
+import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
-import useOrgPositionStore from 'src/stores/organization/position';
 import usePersonStore from 'src/stores/person';
 import { defineComponent, ref } from 'vue';
 
-const positionStore = useOrgPositionStore();
-const memberStore = useMemberStore();
+const customerStore = useCustomerStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
 
+
 const currentOrg = await orgStore.fetchCurrent();
-
-const positions = await positionStore.fetchPositions();
-
 const columns: QTableColumn[] = [
   {
     name: 'name',
@@ -56,51 +53,73 @@ const columns: QTableColumn[] = [
 ];
 
 export default defineComponent({
-  name: 'OrgMembers',
+  name: 'OrgCustomers',
   components: {},
   computed: {},
   async setup() {
     const pageRequest = ref({ limit: 10, page: 0 } as Pageable);
-    const members = ref(null as unknown as Page<OrgMemberDetail>);
+    const customers = ref(null as unknown as Page<OrgCustomerDetail>);
     const pagination = ref({ page: 1, rowsPerPage: 10 } as {
       page: number;
       rowsPerPage: number;
       rowsNumber: number;
     });
-    const fetchPageMembers = async (props: PaginationProp) => {
+    const fetchPageCustomers = async (props: PaginationProp) => {
       const { page, rowsPerPage } = props.pagination;
       pageRequest.value.page = (page || 1) - 1;
       pageRequest.value.limit = rowsPerPage || pageRequest.value.limit;
-      members.value = await memberStore.fetchMembers(
+      customers.value = await customerStore.fetchCustomers(
         currentOrg._id as string,
         pageRequest.value
       );
-      const personIds = members.value.content
-        .filter((m) => typeof m.personId == 'string')
-        .map((m) => m.personId as string);
+
+      const personIds = customers.value.content
+        .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'PERSON')
+        .map((m) => m.representedById as string);
       const persons = await personStore.findByIds(personIds);
-      for (const member of members.value.content) {
-        member.position = positions.find((p) => p._id === member.positionId);
-        member.person = persons.find((p) => p._id == member.personId);
+
+      const orgIds = customers.value.content
+        .filter((c: OrgCustomerDetail) => typeof c.representedById == 'string' && c.customerType === 'ORGANIZATION')
+        .map((m) => m.representedById as string);
+      const organizations = await orgStore.findByIds(orgIds);
+
+      for (const customer of customers.value.content) {
+        switch (customer.customerType) {
+          case 'PERSON':
+            customer.representedBy = persons.find((p) => p._id === customer.representedById);
+            break;
+          case 'ORGANIZATION':
+            customer.representedBy = organizations.find((o) => o._id === customer.representedById);
+            break;
+          default: throw Error('Could not determine customer type!');
+        }
       }
       pagination.value = {
-        page: members.value.currentPage + 1,
+        page: customers.value.currentPage + 1,
         rowsPerPage: pageRequest.value.limit,
-        rowsNumber: members.value.totalElements,
+        rowsNumber: customers.value.totalElements,
       };
     };
-    await fetchPageMembers({ pagination: pagination.value });
+    const getName = (representedBy: Person | Organization) => {
+      if (representedByIsOrg(representedBy)) {
+        return representedBy.name;
+      } else {
+        return representedBy.firstName + ' ' + representedBy.lastName;
+      }
+    };
+    await fetchPageCustomers({ pagination: pagination.value });
     return {
-      members,
+      customers,
       pageRequest,
       columns,
-      fetchPageMembers,
+      getName,
+      fetchPageCustomers,
       pagination,
     };
   },
   methods: {
-    newMember() {
-      this.$router.push({ name: 'org.members.new' });
+    newOrg() {
+      this.$router.push({ name: 'org.customers.new' });
     },
   },
 });
@@ -109,23 +128,20 @@ export default defineComponent({
 <template>
   <div class="row">
     <div class="col-12">
-      <q-table title="Members" dense :rows="members.content" :columns="columns" row-key="name"
-        @request="fetchPageMembers" v-model:pagination="pagination">
+      <q-table title="customers" dense :rows="customers.content" :columns="columns" row-key="name"
+        @request="fetchPageCustomers" v-model:pagination="pagination">
         <template v-slot:top>
           <div class="row full-width justify-between">
-            <div class="text-h6">Members</div>
-            <q-btn color="primary" icon="add" label="New member" @click="newMember" />
+            <div class="text-h6">Customers</div>
+            <q-btn color="primary" icon="add" label="New customer" @click="newOrg" />
           </div>
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
             <q-td key="name" :props="props">
               {{
-                props.row.person?.firstName + ' ' + props.row.person?.lastName
+                getName(props.row.person)
               }}
-            </q-td>
-            <q-td key="position" :props="props">
-              {{ props.row.position.name }}
             </q-td>
             <q-td key="started" :props="props">
               {{ props.row.started }}
@@ -134,7 +150,7 @@ export default defineComponent({
               {{ props.row.ended }}
             </q-td>
             <q-td key="action" :props="props">
-              <q-btn round icon="edit" color="primary" :to="'/org/members/edit/' + props.row._id"></q-btn>
+              <q-btn round icon="edit" color="primary" :to="'/org/customers/edit/' + props.row._id"></q-btn>
             </q-td>
           </q-tr>
         </template>

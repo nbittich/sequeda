@@ -19,6 +19,10 @@ const useOrgsStore = defineStore('orgs', {
       const response = await api.post<Organization>('/orgs', org);
       return response.data;
     },
+    async findByIds(ids: string[]): Promise<Organization[]> {
+      const response = await api.post<Organization[]>('/orgs/find-by-ids', ids);
+      return response.data;
+    },
   },
 });
 

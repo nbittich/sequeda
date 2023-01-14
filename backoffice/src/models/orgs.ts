@@ -31,6 +31,17 @@ export const orgStatuses: SelectOption[] = [
   },
 ];
 
+export const customerTypes: SelectOption[] = [
+  {
+    label: 'Person',
+    value: 'PERSON'
+  },
+  {
+    label: 'Organization',
+    value: 'ORGANIZATION'
+  }
+];
+
 export interface Organization {
   _id?: string;
   creationDate?: Date;
@@ -64,6 +75,32 @@ export interface OrgMemberDetail extends OrgMember {
   position?: Position;
   person?: Person;
 }
+
+export interface OrgCustomer {
+  _id?: string;
+  creationDate?: Date;
+  updatedDate?: Date;
+  orgId?: string;
+  representedById?: string;
+  customerType: string;
+  started?: string;
+  ended?: string;
+  documentIds?: string[];
+  communications?: Communication[];
+}
+
+export type RepresentedBy = Person | Organization;
+
+export function representedByIsOrg(v: RepresentedBy): v is Organization {
+  return 'vatNumber' in v;
+}
+
+export interface OrgCustomerDetail extends OrgCustomer {
+  representedBy?: RepresentedBy;
+}
+
+export type Communication = Remark
+
 export interface Remark {
   id?: string;
   addedDate?: Date;

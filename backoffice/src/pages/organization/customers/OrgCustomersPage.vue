@@ -23,13 +23,6 @@ const columns: QTableColumn[] = [
     field: (row) => row.name
   },
   {
-    name: 'position',
-    align: 'left',
-    label: 'Position',
-    field: (row) => row.position.name,
-    sortable: false,
-  },
-  {
     name: 'started',
     align: 'left',
     label: 'Start Date',
@@ -141,7 +134,7 @@ export default defineComponent({
           <q-tr :props="props">
             <q-td key="name" :props="props">
               {{
-                getName(props.row.person)
+                getName(props.row.representedBy)
               }}
             </q-td>
             <q-td key="started" :props="props">

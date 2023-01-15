@@ -1,7 +1,7 @@
 <script lang="ts">
 import OrgMemberForm from 'src/components/organization/org-member-form.vue';
 import { BankAccount } from 'src/models/bank-account';
-import { ContactDetail } from 'src/models/contact-detail';
+import { Address, ContactDetail } from 'src/models/contact-detail';
 import { OrgMember, Remark } from 'src/models/orgs';
 import { Person } from 'src/models/person';
 import useMemberStore from 'src/stores/organization/member';
@@ -68,15 +68,9 @@ export default defineComponent({
   <div class="row">
     <div class="col-12">
       <q-card>
-        <OrgMemberForm
-          :title="'New Member'"
-          v-model:person-model="person"
-          v-model:position-id-model="positionId"
-          v-model:profile-picture-model="profilePictureFile"
-          v-model:remarks-model="remarks"
-          v-model:started-model="started"
-          v-model:ended-model="ended"
-        />
+        <OrgMemberForm :title="'New Member'" v-model:person-model="person" v-model:position-id-model="positionId"
+          v-model:profile-picture-model="profilePictureFile" v-model:remarks-model="remarks"
+          v-model:started-model="started" v-model:ended-model="ended" />
 
         <q-separator />
 

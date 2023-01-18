@@ -4,13 +4,14 @@ import PersonForm from 'src/components/person/person-form.vue';
 import RemarkForm from 'src/components/shared/remark-form.vue';
 import { BankAccount } from 'src/models/bank-account';
 import { Address, ContactDetail } from 'src/models/contact-detail';
-import { Communication, Organization, OrgCustomer, representedByIsOrg } from 'src/models/orgs';
+import { Communication, Organization, OrgCustomer, RepresentedBy, representedByIsOrg } from 'src/models/orgs';
 import { Person } from 'src/models/person';
 import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 const customerStore = useCustomerStore();
 const uploadStore = useUploadStore();
@@ -19,64 +20,46 @@ const orgStore = useOrgsStore();
 const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
-  name: 'NewOrgCustomerPage',
+  name: 'EditOrgCustomerPage',
   components: { OrgForm, PersonForm, RemarkForm },
   computed: {},
   async setup() {
-    const representedByPerson = ref({
-      contactDetail: { address: {} as Address } as ContactDetail,
-      bankAccount: {} as BankAccount,
-    } as Person);
+    const route = useRoute();
 
-    const representedByOrg = ref({
-      primaryContact: { address: {} as Address } as ContactDetail,
-      otherContacts: [] as ContactDetail[],
-      primaryBankAccount: {} as BankAccount,
-      otherBankAccounts: [] as BankAccount[],
-      status: 'ACTIVE'
+    const customerId = route.params.id as string;
+    const customer = ref(await customerStore.findOne(customerId));
 
-    } as Organization);
-    const customerType = ref('PERSON');
+    const representedBy = ref(null as unknown as RepresentedBy);
+    if (customer.value.customerType == 'PERSON') {
+      representedBy.value = await personStore.findOne(customer.value.representedById || '');
+    } else {
+      representedBy.value = await orgStore.findOne(customer.value.representedById || '');
+    }
+    const customerType = ref(customer.value.customerType || 'PERSON');
 
     const pictureFile = ref(null as unknown as File);
-    const started = ref(null as unknown as string);
-    const ended = ref(null as unknown as string);
-    const communications = ref([] as Communication[]);
-    return { communications, representedByPerson, representedByOrg, pictureFile, customerType, started, ended };
+    return { representedBy, pictureFile, customer, customerType };
   },
   methods: {
     async update() {
-      let representedBy: Person | Organization | null = null;
-      if (this.customerType == 'ORGANIZATION') {
-        representedBy = await orgStore.update(this.representedByOrg);
-      } else {
-        representedBy = await personStore.update(this.representedByPerson);
-      }
       if (this.pictureFile) {
+        const representedByPictureId = representedByIsOrg(this.representedBy) ? this.representedBy.logoId : this.representedBy.profilePictureId;
         const upload = await uploadStore.uploadFile(
           this.pictureFile,
-          undefined,
-          representedBy._id
+          representedByPictureId,
+          this.representedBy._id
         );
-        if (representedByIsOrg(representedBy)) {
-          representedBy.logoId = upload._id;
-          representedBy = await orgStore.update(representedBy);
+        if (representedByIsOrg(this.representedBy)) {
+          this.representedBy.logoId = upload._id;
+          this.representedBy = await orgStore.update(this.representedBy);
         } else {
-          representedBy.profilePictureId = upload._id;
-          representedBy = await personStore.update(representedBy);
+          this.representedBy.profilePictureId = upload._id;
+          this.representedBy = await personStore.update(this.representedBy);
         }
         this.pictureFile = null as unknown as File;
       }
-      let customer: OrgCustomer = {
-        customerType: this.customerType,
-        orgId: currentOrg._id,
-        documentIds: [],
-        started: this.started,
-        ended: this.ended,
-        communications: this.communications,
-        representedById: representedBy._id
-      };
-      await customerStore.update(customer);
+
+      await customerStore.update(this.customer);
       this.$router.push({ name: 'org.customers.root' });
     },
     async reset() {
@@ -91,16 +74,16 @@ export default defineComponent({
     <div class="col-12">
       <q-card>
         <q-card-section>
-          <div class="text-h6">New Customer</div>
+          <div class="text-h6">Edit customer</div>
         </q-card-section>
         <q-card-section>
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Started" v-model="started" :rules="['date']">
+              <q-input dense outlined class="q-mr-md-xs" label="Started" v-model="customer.started" :rules="['date']">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
-                      <q-date mask="YYYY-MM-DD" v-model="started">
+                      <q-date mask="YYYY-MM-DD" v-model="customer.started">
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Close" color="primary" flat />
                         </div>
@@ -111,11 +94,11 @@ export default defineComponent({
               </q-input>
             </div>
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Ended" v-model="ended" :rules="['date']">
+              <q-input dense outlined class="q-mr-md-xs" label="Ended" v-model="customer.ended" :rules="['date']">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
-                      <q-date mask="YYYY-MM-DD" v-model="ended">
+                      <q-date mask="YYYY-MM-DD" v-model="customer.ended">
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Close" color="primary" flat />
                         </div>
@@ -127,16 +110,12 @@ export default defineComponent({
             </div>
           </div>
         </q-card-section>
-        <q-card-section>
-          <q-toggle keep-color color="blue" v-model="customerType" true-value="PERSON" false-value="ORGANIZATION"
-            :label="`Customer Type: ${customerType == 'PERSON' ? 'Person' : 'Organization'}`" />
-        </q-card-section>
-        <OrgForm v-if="customerType == 'ORGANIZATION'" v-model:orgModel="representedByOrg" v-model:orgLogo="pictureFile"
+        <OrgForm v-if="customerType == 'ORGANIZATION'" v-model:orgModel="representedBy" v-model:orgLogo="pictureFile"
           title="Organization" />
-        <PersonForm v-if="customerType == 'PERSON'" :title="'Person'" v-model:person-model="representedByPerson"
+        <PersonForm v-if="customerType == 'PERSON'" :title="'Person'" v-model:person-model="representedBy"
           v-model:profile-picture="pictureFile" />
 
-        <RemarkForm v-model="communications" title="Communications" />
+        <RemarkForm v-model="customer.communications" title="Communications" />
 
         <q-separator />
         <q-card-actions>

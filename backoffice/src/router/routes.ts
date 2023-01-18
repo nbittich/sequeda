@@ -67,6 +67,12 @@ const routes: RouteRecordRaw[] = [
               import('pages/organization/customers/NewOrgCustomerPage.vue'),
           },
           {
+            name: 'org.customers.edit',
+            path: 'edit/:id',
+            component: () =>
+              import('pages/organization/customers/EditOrgCustomerPage.vue'),
+          },
+          {
 
             name: 'org.customers.root',
             path: '',

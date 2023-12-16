@@ -1,8 +1,12 @@
 use std::{error::Error, fmt::Display, str::FromStr};
 
-use axum::{headers::HeaderName, http::HeaderValue, http::Request};
+use axum::{
+    body::Body,
+    http::HeaderValue,
+    http::{HeaderName, Request},
+};
 use base64::Engine;
-use hyper::{header::HOST, Body, StatusCode, Uri};
+use hyper::{header::HOST, StatusCode, Uri};
 use regex::Regex;
 use sequeda_service_common::X_USER_INFO_HEADER;
 

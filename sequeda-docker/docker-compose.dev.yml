@@ -22,14 +22,14 @@ services:
       sequeda:
     command: start --optimized --http-port=80
     volumes:
-        - ./config/keycloak-dev/export:/tmp/export
-        - ./config/keycloak-dev/import:/tmp/import
+      - ./config/keycloak-dev/export:/tmp/export
+      - ./config/keycloak-dev/import:/tmp/import
   mongo:
     ports:
       - 27019:27017
   redis:
     ports:
-      - "6380:6379"
+      - "6379:6379"
   tlsproxy:
     image: caddy:2
     networks:

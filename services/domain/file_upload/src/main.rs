@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::{env::var, net::SocketAddr, str::FromStr};
 
-use axum::body::StreamBody;
 use axum::http::{header, StatusCode};
 use axum::response::{AppendHeaders, IntoResponse};
 use axum::routing::get;
@@ -65,9 +64,9 @@ async fn main() {
             .layer(Extension(StoreCollection(collection_name)));
 
         tracing::info!("listening on {:?}", addr);
+        let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
-        axum::Server::bind(&addr)
-            .serve(app.into_make_service())
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     });
@@ -146,7 +145,7 @@ async fn download(
         Some(file) => {
             let file_handle = file.download(&share_drive_path).await.unwrap();
             let stream = ReaderStream::new(file_handle);
-            let body = StreamBody::new(stream);
+            let body = axum::body::Body::from_stream(stream);
 
             let content_header = if file.is_image() {
                 (header::CONTENT_LENGTH, format!("{}", &file.size))
@@ -164,6 +163,7 @@ async fn download(
             let content_type = (header::CONTENT_TYPE, ct);
 
             let headers = AppendHeaders([content_type, content_header]);
+
             (headers, body).into_response()
         }
         None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
@@ -210,7 +210,9 @@ async fn upload(
     }
 
     if uploads.len() == 1 {
-        let Some((_, (mut upl, data))) =  uploads.into_iter().last() else {unreachable!("should never happen")};
+        let Some((_, (mut upl, data))) = uploads.into_iter().last() else {
+            unreachable!("should never happen")
+        };
 
         if let Some(id) = query.remove("id") {
             upl.id = id;

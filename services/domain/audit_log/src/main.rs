@@ -74,8 +74,9 @@ async fn main() {
             .route("/find-all", get(find_all))
             .layer(Extension(StoreCollection(collection_name)))
             .layer(Extension(db_client));
-        axum::Server::bind(&addr)
-            .serve(router.into_make_service())
+        let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+
+        axum::serve(listener, router.into_make_service())
             .await
             .unwrap();
     });
@@ -167,7 +168,9 @@ fn message_consumer(
                                         .await;
                                     repository_cache.insert(tenant.clone(), repository);
                                 }
-                                let Some(repository) = repository_cache.get(&tenant)  else { panic!("repository {tenant} not found")};
+                                let Some(repository) = repository_cache.get(&tenant) else {
+                                    panic!("repository {tenant} not found")
+                                };
                                 let audit_log = AuditLog {
                                     message,
                                     received_date: timestamp,

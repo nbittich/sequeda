@@ -2,23 +2,23 @@ mod config;
 mod constant;
 mod openid;
 mod request_handler;
-use async_redis_session::RedisSessionStore;
-pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};
-
+use async_redis_session_v2::RedisSessionStore;
 use axum::{
-    extract::Extension,
-    headers::ContentType,
+    body::Body,
+    extract::{Extension, State},
     http::{Request, Response},
     response::IntoResponse,
     Router,
 };
+use axum_extra::headers::ContentType;
+pub use constant::{OPENID_ENABLED, SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};
+use http_body_util::Empty;
 use hyper::{
-    client::HttpConnector,
     header::{CONTENT_TYPE, LOCATION},
-    Body, StatusCode,
+    StatusCode,
 };
+use hyper_tls::HttpsConnector;
 
-use hyper_rustls::HttpsConnector;
 use openid::User;
 use sequeda_service_common::setup_tracing;
 use std::{
@@ -35,8 +35,9 @@ use crate::{
     openid::{open_id_router, AuthConfig, OpenIdClient},
     request_handler::RequestHandler,
 };
+use hyper_util::{client::legacy::connect::HttpConnector, rt::TokioExecutor};
 
-type Client = hyper::client::Client<HttpsConnector<HttpConnector>, Body>;
+type Client = hyper_util::client::legacy::Client<HttpsConnector<HttpConnector>, axum::body::Body>;
 
 const DEMO_ACCOUNT: &str = "DEMO_ACCOUNT";
 
@@ -59,17 +60,12 @@ async fn main() {
     let config: Config = Config::from_dir(path_dir.as_path());
     let request_handler: RequestHandler = RequestHandler::from_config(config);
 
-    let https = hyper_rustls::HttpsConnectorBuilder::new()
-        .with_native_roots()
-        .https_or_http()
-        .enable_http1()
-        .build();
-
-    let client: Client = hyper::client::Client::builder().build(https);
-
+    let https = HttpsConnector::new();
+    let client = hyper_util::client::legacy::Client::builder(TokioExecutor::new())
+        .build::<_, axum::body::Body>(https);
     let mut app = Router::new()
         .fallback(handler)
-        .layer(Extension(client))
+        .with_state(client)
         .layer(Extension(Arc::new(request_handler)));
 
     if openid_enabled {
@@ -101,15 +97,15 @@ async fn main() {
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 
     tracing::info!("proxy gateway listening on {}", addr);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }
 
 async fn handler(
-    Extension(client): Extension<Client>,
+    State(client): State<Client>,
     Extension(request_handler): Extension<Arc<RequestHandler>>,
     user: Option<User>,
     mut req: Request<Body>,
@@ -120,8 +116,9 @@ async fn handler(
         Response::builder()
             .status(StatusCode::PERMANENT_REDIRECT)
             .header(LOCATION, "/logout")
-            .body(Default::default())
+            .body(Empty::new())
             .unwrap()
+            .into_response()
     };
     match request_handler.handle(&mut req, user).await {
         Ok(_) => match client.request(req).await {
@@ -132,7 +129,7 @@ async fn handler(
                 handle_forbidden(response.status())
             }
 
-            Ok(response) => response,
+            Ok(response) => response.into_response(),
             Err(er) => {
                 tracing::debug!("error in request {er}");
                 Response::builder()

@@ -70,8 +70,9 @@ async fn main() {
         let port = var(PUB_PORT).unwrap_or_else(|_| String::from("3000"));
         let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
         tracing::info!("listening on {}", addr);
-        axum::Server::bind(&addr)
-            .serve(app.into_make_service())
+        let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+
+        axum::serve(listener, app.into_make_service())
             .await
             .unwrap();
     });

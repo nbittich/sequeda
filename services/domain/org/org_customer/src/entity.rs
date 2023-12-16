@@ -20,16 +20,14 @@ pub struct Customer {
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[derive(Default)]
 pub enum CustomerType {
     Person,
+    #[default]
     Organization,
 }
 
-impl Default for CustomerType {
-    fn default() -> Self {
-        CustomerType::Organization
-    }
-}
+
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

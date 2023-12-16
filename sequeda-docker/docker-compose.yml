@@ -1,18 +1,18 @@
 version: "3.9"
 x-common-variables: &common-variables
-      RUST_LOG: DEBUG
-      SERVICE_CONFIG_VOLUME: /config
-      SERVICE_HOST: 0.0.0.0
-      SERVICE_PORT: 80
-      MONGO_HOST: mongo
-      MONGO_PORT: 27017
-      MONGO_USERNAME: root
-      MONGO_PASSWORD: root
-      MONGO_ADMIN_DATABASE: admin
-      MSG_CONS_HOST: broker
-      MSG_CONS_PORT: 80
-      MSG_CONS_PROTOCOL: ws
-      MSG_CONS_TIMEOUT: 5000 # 5 seconds timeout, maybe must be increased to avoid connection closed
+  RUST_LOG: DEBUG
+  SERVICE_CONFIG_VOLUME: /config
+  SERVICE_HOST: 0.0.0.0
+  SERVICE_PORT: 80
+  MONGO_HOST: mongo
+  MONGO_PORT: 27017
+  MONGO_USERNAME: root
+  MONGO_PASSWORD: root
+  MONGO_ADMIN_DATABASE: admin
+  MSG_CONS_HOST: broker
+  MSG_CONS_PORT: 80
+  MSG_CONS_PROTOCOL: ws
+  MSG_CONS_TIMEOUT: 5000 # 5 seconds timeout, maybe must be increased to avoid connection closed
 services:
   ####### MongoDB #######
   mongo:
@@ -30,7 +30,7 @@ services:
     restart: always
     networks:
       sequeda:
-    image: "postgres"
+    image: postgres:16
     environment:
       ALLOW_EMPTY_PASSWORD: "yes"
       POSTGRES_USER: keycloak
@@ -40,7 +40,7 @@ services:
       - ./data/keycloak_postgresql:/var/lib/postgresql/data
   keycloak:
     restart: always
-    image: nbittich/keycloak:20.0.0
+    image: nbittich/keycloak:23.0.1
     networks:
       sequeda:
     environment:
@@ -71,12 +71,12 @@ services:
     volumes:
       - ./config/gateway:/config
     environment:
-      <<: *common-variables      
+      <<: *common-variables
       OPENID_ENABLED: "true"
       APP_ROOT_URL: "https://api.somehost.org"
-      OPENID_ISSUER_URL: "http://auth.somehost.org/realms/sequeda"
+      OPENID_ISSUER_URL: "http://auth.somehost.org/realms/sequeda-auth"
       OPENID_CLIENT_ID: "sequeda-auth"
-      OPENID_CLIENT_SECRET: "X9quJGCCpBISQt6uNs62gkPeYd4g2gsp"
+      OPENID_CLIENT_SECRET: "yFky5Y72lAAtdXAFcqt65kmfruQI3NGb"
       SESSION_REDIS_URL: "redis://redis"
       DEMO_ACCOUNT: "true" # todo this doesn't go to production
     restart: "always"
@@ -129,7 +129,7 @@ services:
       args:
         CRATE_NAME: sequeda_org_customer
     environment: *common-variables
-    restart: "always" 
+    restart: "always"
     networks:
       sequeda:
   ####### service geo  #######
@@ -196,6 +196,6 @@ services:
     restart: "always"
     networks:
       sequeda:
-      
+
 networks:
   sequeda:

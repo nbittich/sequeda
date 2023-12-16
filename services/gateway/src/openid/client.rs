@@ -36,7 +36,6 @@ impl OpenIdClient {
         env::var(OPENID_SCOPES)
             .unwrap_or_else(|_| "roles, tenant, groups, email, profile".into())
             .split(',')
-            .into_iter()
             .map(|scope| Scope::new(scope.trim().to_string()))
             .collect()
     }

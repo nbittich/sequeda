@@ -178,6 +178,7 @@ mod test {
             .as_bytes(),
             "Animal",
             Some("topic".to_string()),
+            Default::default(),
         );
 
         println!("{}", connect.serialize().unwrap());

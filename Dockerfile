@@ -1,6 +1,8 @@
-FROM rust:1.66 AS chef 
+FROM rust:1.74 AS chef 
 # We only pay the installation cost once, 
 # it will be cached from the second build onwards
+RUN apt update && apt upgrade -y
+RUN apt install -y libssl-dev build-essential cmake
 RUN cargo install cargo-chef 
 WORKDIR /app
 
@@ -20,10 +22,9 @@ COPY . .
 RUN cargo build --release --bin ${CRATE_NAME}
 
 # We do not need the Rust toolchain to run the binary!
-FROM debian:bullseye-slim AS runtime
+FROM debian:bookworm-slim AS runtime
 RUN apt  update && apt upgrade -y
 RUN apt install -y ca-certificates
-
 FROM runtime
 ARG CRATE_NAME
 

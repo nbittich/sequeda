@@ -4,7 +4,7 @@ mod client;
 mod router;
 mod user;
 
-use async_redis_session::RedisSessionStore;
+use async_redis_session_v2::RedisSessionStore;
 use async_session::{Session, SessionStore};
 pub use auth_redirect::LoginPageRedirect;
 pub use client::OpenIdClient;

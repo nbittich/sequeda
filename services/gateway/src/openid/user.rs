@@ -1,21 +1,16 @@
-use crate::{constant::COOKIE_NAME, openid::destroy_session};
-use async_redis_session::RedisSessionStore;
-use async_session::{async_trait, SessionStore};
-use axum::{
-    extract::{rejection::TypedHeaderRejectionReason, FromRequestParts},
-    headers,
-    http::request::Parts,
-    Extension, TypedHeader,
-};
-use hyper::header::{self};
-use openidconnect::{core::CoreGenderClaim, UserInfoClaims};
-use serde::{Deserialize, Serialize};
-
 use super::{
     auth_redirect::LoginPageRedirect,
     client::{OpenIdClient, OpenIdToken},
     AllOtherClaims, AuthConfig, CustomIdTokenClaims,
 };
+use crate::{constant::COOKIE_NAME, openid::destroy_session};
+use async_redis_session_v2::RedisSessionStore;
+use async_session::{async_trait, SessionStore};
+use axum::{extract::FromRequestParts, http::request::Parts, Extension};
+use axum_extra::{headers, typed_header::TypedHeaderRejectionReason, TypedHeader};
+use hyper::header::{self};
+use openidconnect::{core::CoreGenderClaim, UserInfoClaims};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct User {

@@ -12,11 +12,10 @@ struct Country<'a> {
     label: &'a str,
 }
 impl<'a> Country<'a> {
-    const COUNTRIES_STR: &str = include_str!("./countries-codes-filtered.csv");
+    const COUNTRIES_STR: &'static str = include_str!("./countries-codes-filtered.csv");
     fn from_csv() -> Vec<Self> {
         Self::COUNTRIES_STR
             .split('\n')
-            .into_iter()
             .skip(1)
             .filter(|line| !line.is_empty())
             .map(|line| line.split(';').collect::<Vec<&'static str>>())
@@ -39,11 +38,10 @@ struct PostalCode<'a> {
 }
 
 impl<'a> PostalCode<'a> {
-    const POST_CODE_STR: &str = include_str!("./geonames-postal-code-filtered.csv");
+    const POST_CODE_STR: &'static str = include_str!("./geonames-postal-code-filtered.csv");
     fn from_csv() -> HashMap<&'a str, Vec<Self>> {
         Self::POST_CODE_STR
             .split('\n')
-            .into_iter()
             .skip(1)
             .filter(|line| !line.is_empty())
             .map(|line| line.split(';').collect::<Vec<&'static str>>())
@@ -58,7 +56,7 @@ impl<'a> PostalCode<'a> {
                 )
             })
             .fold(HashMap::new(), |mut map, (k, v)| {
-                map.entry(k).or_insert_with(Vec::new).push(v);
+                map.entry(k).or_default().push(v);
                 map
             })
     }
@@ -108,8 +106,8 @@ async fn main() {
         .layer(Extension(postal_codes))
         .layer(Extension(countries));
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }
@@ -154,10 +152,14 @@ mod test {
     fn countries_test() {
         let countries = Country::from_csv();
         let postal_codes = PostalCode::from_csv();
-        let Some(belgium) = PostalCode::filter_by_country_code(&postal_codes, "BE") else {panic!("belgium not found")};
-        let Some(uk) = PostalCode::filter_by_country_code(&postal_codes, "GB") else {panic!("united kingdom not found")};
+        let Some(belgium) = PostalCode::filter_by_country_code(&postal_codes, "BE") else {
+            panic!("belgium not found")
+        };
+        let Some(uk) = PostalCode::filter_by_country_code(&postal_codes, "GB") else {
+            panic!("united kingdom not found")
+        };
         assert_eq!(
-            PostalCode::find_by_postal_code(&belgium, "1083"),
+            PostalCode::find_by_postal_code(belgium, "1083"),
             Some(&PostalCode {
                 country_code: "BE",
                 postal_code: "1083",

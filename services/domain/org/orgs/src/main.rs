@@ -21,9 +21,9 @@ async fn main() {
     let app = router::get_router(client.clone());
 
     tracing::info!("listening on {:?}", addr);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }

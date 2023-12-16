@@ -135,7 +135,7 @@ const execute = async (db, context = {}) => {
   await positionCollection.insertMany(INSERTS);
 };
 
-const rollback = async (db, context = {}) => {
+const rollback = async (db, _context = {}) => {
   const positionCollection = await db.collection("position");
   for (const { name } of INSERTS) {
     await positionCollection.deletOne({ name });

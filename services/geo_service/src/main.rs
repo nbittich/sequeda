@@ -2,6 +2,7 @@ use std::{collections::HashMap, env::var, net::SocketAddr, str::FromStr, sync::A
 
 use axum::{extract::Query, response::IntoResponse, routing::get, Extension, Json, Router};
 use sequeda_service_common::{setup_tracing, SERVICE_HOST, SERVICE_PORT};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 struct Country<'a> {

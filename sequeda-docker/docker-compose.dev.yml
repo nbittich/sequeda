@@ -1,5 +1,9 @@
 version: "3.9"
 services:
+  gateway:
+    environment:
+      DEMO_ACCOUNT: "true" # todo this doesn't go to production
+
   mongo-express:
     image: mongo-express
     networks:
@@ -20,7 +24,7 @@ services:
     user: root
     networks:
       sequeda:
-    command: start --optimized --http-port=80
+    command: start --optimized --http-port=80  --log-level=DEBUG
     volumes:
       - ./config/keycloak-dev/export:/tmp/export
       - ./config/keycloak-dev/import:/tmp/import

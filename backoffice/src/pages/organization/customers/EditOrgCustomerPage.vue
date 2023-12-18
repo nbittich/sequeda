@@ -2,10 +2,7 @@
 import OrgForm from 'src/components/organization/org-form.vue';
 import PersonForm from 'src/components/person/person-form.vue';
 import RemarkForm from 'src/components/shared/remark-form.vue';
-import { BankAccount } from 'src/models/bank-account';
-import { Address, ContactDetail } from 'src/models/contact-detail';
-import { Communication, Organization, OrgCustomer, RepresentedBy, representedByIsOrg } from 'src/models/orgs';
-import { Person } from 'src/models/person';
+import { RepresentedBy, representedByIsOrg } from 'src/models/orgs';
 import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
@@ -17,7 +14,6 @@ const customerStore = useCustomerStore();
 const uploadStore = useUploadStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
-const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
   name: 'EditOrgCustomerPage',
@@ -31,9 +27,13 @@ export default defineComponent({
 
     const representedBy = ref(null as unknown as RepresentedBy);
     if (customer.value.customerType == 'PERSON') {
-      representedBy.value = await personStore.findOne(customer.value.representedById || '');
+      representedBy.value = await personStore.findOne(
+        customer.value.representedById || '',
+      );
     } else {
-      representedBy.value = await orgStore.findOne(customer.value.representedById || '');
+      representedBy.value = await orgStore.findOne(
+        customer.value.representedById || '',
+      );
     }
     const customerType = ref(customer.value.customerType || 'PERSON');
 
@@ -43,11 +43,13 @@ export default defineComponent({
   methods: {
     async update() {
       if (this.pictureFile) {
-        const representedByPictureId = representedByIsOrg(this.representedBy) ? this.representedBy.logoId : this.representedBy.profilePictureId;
+        const representedByPictureId = representedByIsOrg(this.representedBy)
+          ? this.representedBy.logoId
+          : this.representedBy.profilePictureId;
         const upload = await uploadStore.uploadFile(
           this.pictureFile,
           representedByPictureId,
-          this.representedBy._id
+          this.representedBy._id,
         );
         if (representedByIsOrg(this.representedBy)) {
           this.representedBy.logoId = upload._id;
@@ -79,13 +81,30 @@ export default defineComponent({
         <q-card-section>
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Started" v-model="customer.started" :rules="['date']">
+              <q-input
+                dense
+                outlined
+                class="q-mr-md-xs"
+                label="Started"
+                v-model="customer.started"
+                :rules="['date']"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
+                    <q-popup-proxy
+                      cover
+                      :breakpoint="600"
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
                       <q-date mask="YYYY-MM-DD" v-model="customer.started">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Close"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -94,13 +113,30 @@ export default defineComponent({
               </q-input>
             </div>
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Ended" v-model="customer.ended" :rules="['date']">
+              <q-input
+                dense
+                outlined
+                class="q-mr-md-xs"
+                label="Ended"
+                v-model="customer.ended"
+                :rules="['date']"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
+                    <q-popup-proxy
+                      cover
+                      :breakpoint="600"
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
                       <q-date mask="YYYY-MM-DD" v-model="customer.ended">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Close"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -110,10 +146,18 @@ export default defineComponent({
             </div>
           </div>
         </q-card-section>
-        <OrgForm v-if="customerType == 'ORGANIZATION'" v-model:orgModel="representedBy" v-model:orgLogo="pictureFile"
-          title="Organization" />
-        <PersonForm v-if="customerType == 'PERSON'" :title="'Person'" v-model:person-model="representedBy"
-          v-model:profile-picture="pictureFile" />
+        <OrgForm
+          v-if="customerType == 'ORGANIZATION'"
+          v-model:orgModel="representedBy"
+          v-model:orgLogo="pictureFile"
+          title="Organization"
+        />
+        <PersonForm
+          v-if="customerType == 'PERSON'"
+          :title="'Person'"
+          v-model:person-model="representedBy"
+          v-model:profile-picture="pictureFile"
+        />
 
         <RemarkForm v-model="customer.communications" title="Communications" />
 

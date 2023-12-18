@@ -19,12 +19,14 @@ export default defineComponent({
     const memberId = route.params.id as string;
     const member = ref(await memberStore.findOne(memberId));
     const person = ref(
-      await personStore.findOne(member.value.personId as string)
+      await personStore.findOne(member.value.personId as string),
     );
     const profilePictureFile = ref(null as unknown as File);
     const started = ref(member.value.started);
     const ended = ref(member.value.ended);
     const remarks = ref(member.value.remarks);
+    const managedByIds = ref(member.value.managedBy);
+
     const positionId = ref(member.value.positionId);
     return {
       remarks,
@@ -34,6 +36,7 @@ export default defineComponent({
       started,
       ended,
       member,
+      managedByIds,
     };
   },
   methods: {
@@ -43,7 +46,7 @@ export default defineComponent({
         const upload = await uploadStore.uploadFile(
           this.profilePictureFile,
           person.profilePictureId,
-          person._id
+          person._id,
         );
         person.profilePictureId = upload._id;
         this.profilePictureFile = null as unknown as File;
@@ -55,6 +58,7 @@ export default defineComponent({
       this.member.responsibleOf = []; // todo
       this.member.remarks = this.remarks;
 
+      this.member.managedBy = this.managedByIds;
       await memberStore.update(this.member);
       this.$router.push({ name: 'org.members.root' });
     },
@@ -77,6 +81,7 @@ export default defineComponent({
           v-model:remarks-model="remarks"
           v-model:started-model="started"
           v-model:ended-model="ended"
+          v-model:managed-by-ids-model="managedByIds"
         />
 
         <q-separator />

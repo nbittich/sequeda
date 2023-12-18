@@ -81,7 +81,7 @@ module.exports = configure(function(/* ctx */) {
 
     devServer: {
       // https: true
-      open: true, // opens browser window automatically
+      open: false, // opens browser window automatically
 
       proxy: {
         // proxy all requests starting with /api to jsonplaceholder

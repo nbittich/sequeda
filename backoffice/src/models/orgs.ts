@@ -1,5 +1,6 @@
 import { BankAccount } from './bank-account';
-import { ContactDetail, SelectOption } from './contact-detail';
+import { ContactDetail } from './contact-detail';
+import { SelectOption } from './shared';
 import { Person } from './person';
 
 export interface Position {
@@ -10,7 +11,7 @@ export interface Position {
   creationDate?: Date;
   updatedDate?: Date;
 }
-export const positionLevel = [
+export const positionLevel: SelectOption[] = [
   { label: 'Executive', value: 'EXECUTIVE' },
   { label: 'Management', value: 'MANAGEMENT' },
   { label: 'Operational', value: 'OPERATIONAL' },
@@ -72,8 +73,8 @@ export interface OrgMember {
   orgId?: string;
   personId?: string;
   positionId?: string;
-  responsibleOf?: string[];
-  managedBy?: string;
+  responsibleOf: string[];
+  managedBy: string[];
   started?: string;
   ended?: string;
   remarks?: Remark[];

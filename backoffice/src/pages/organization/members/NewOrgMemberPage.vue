@@ -29,8 +29,18 @@ export default defineComponent({
     const started = ref(null as unknown as string);
     const ended = ref(null as unknown as string);
     const remarks = ref([] as Remark[]);
+    const managedByIds = ref([] as string[]);
     const positionId = ref(null as unknown as string);
-    return { remarks, person, profilePictureFile, positionId, started, ended };
+
+    return {
+      remarks,
+      person,
+      profilePictureFile,
+      managedByIds,
+      positionId,
+      started,
+      ended,
+    };
   },
   methods: {
     async update() {
@@ -39,7 +49,7 @@ export default defineComponent({
         const upload = await uploadStore.uploadFile(
           this.profilePictureFile,
           person.profilePictureId,
-          person._id
+          person._id,
         );
         person.profilePictureId = upload._id;
         this.profilePictureFile = null as unknown as File;
@@ -51,7 +61,8 @@ export default defineComponent({
         ended: this.ended,
         personId: person._id,
         positionId: this.positionId,
-        responsibleOf: [], // todo
+        responsibleOf: [],
+        managedBy: this.managedByIds,
         remarks: this.remarks,
       };
       await memberStore.update(member);
@@ -68,9 +79,16 @@ export default defineComponent({
   <div class="row">
     <div class="col-12">
       <q-card>
-        <OrgMemberForm :title="'New Member'" v-model:person-model="person" v-model:position-id-model="positionId"
-          v-model:profile-picture-model="profilePictureFile" v-model:remarks-model="remarks"
-          v-model:started-model="started" v-model:ended-model="ended" />
+        <OrgMemberForm
+          :title="'New Member'"
+          v-model:person-model="person"
+          v-model:position-id-model="positionId"
+          v-model:profile-picture-model="profilePictureFile"
+          v-model:remarks-model="remarks"
+          v-model:started-model="started"
+          v-model:managed-by-ids-model="managedByIds"
+          v-model:ended-model="ended"
+        />
 
         <q-separator />
 

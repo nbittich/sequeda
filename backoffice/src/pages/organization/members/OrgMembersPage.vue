@@ -23,7 +23,7 @@ const columns: QTableColumn[] = [
     align: 'left',
     label: 'Name',
     sortable: false,
-    field: (row) => row.name
+    field: (row) => row.name,
   },
   {
     name: 'position',
@@ -73,7 +73,7 @@ export default defineComponent({
       pageRequest.value.limit = rowsPerPage || pageRequest.value.limit;
       members.value = await memberStore.fetchMembers(
         currentOrg._id as string,
-        pageRequest.value
+        pageRequest.value,
       );
       if (members.value?.content?.length) {
         const personIds = members.value.content
@@ -111,12 +111,24 @@ export default defineComponent({
 <template>
   <div class="row">
     <div class="col-12">
-      <q-table title="Members" dense :rows="members.content" :columns="columns" row-key="name"
-        @request="fetchPageMembers" v-model:pagination="pagination">
+      <q-table
+        title="Members"
+        dense
+        :rows="members.content"
+        :columns="columns"
+        row-key="name"
+        @request="fetchPageMembers"
+        v-model:pagination="pagination"
+      >
         <template v-slot:top>
           <div class="row full-width justify-between">
             <div class="text-h6">Members</div>
-            <q-btn color="primary" icon="add" label="New member" @click="newMember" />
+            <q-btn
+              color="primary"
+              icon="add"
+              label="New member"
+              @click="newMember"
+            />
           </div>
         </template>
         <template v-slot:body="props">
@@ -136,7 +148,12 @@ export default defineComponent({
               {{ props.row.ended }}
             </q-td>
             <q-td key="action" :props="props">
-              <q-btn round icon="edit" color="primary" :to="'/org/members/edit/' + props.row._id"></q-btn>
+              <q-btn
+                round
+                icon="edit"
+                color="primary"
+                :to="'/org/members/edit/' + props.row._id"
+              ></q-btn>
             </q-td>
           </q-tr>
         </template>

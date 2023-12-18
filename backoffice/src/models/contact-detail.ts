@@ -1,5 +1,3 @@
-export type SelectOption = { label: string; value: string | null };
-
 export interface ContactDetail {
   emailAddress1?: string;
   emailAddress2?: string;

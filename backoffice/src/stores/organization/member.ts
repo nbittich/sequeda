@@ -11,16 +11,22 @@ const useMemberStore = defineStore('memberStore', {
   actions: {
     async fetchMembers(
       orgId: string,
-      pageable: Pageable = { page: 0, limit: 20 }
+      pageable: Pageable = { page: 0, limit: 20 },
     ): Promise<Page<OrgMemberDetail>> {
       const response = await api.get<Page<OrgMemberDetail>>(
-        `/orgs/members/find-by-org/${orgId}?${toQueryString(pageable)}`
+        `/orgs/members/find-by-org/${orgId}?${toQueryString(pageable)}`,
       );
       return response.data;
     },
+    async findByOrg(orgId: string): Promise<OrgMemberDetail[]> {
+      const response = await api.get<Page<OrgMemberDetail>>(
+        `/orgs/members/find-by-org/${orgId}`,
+      );
+      return response.data.content;
+    },
     async findOne(memberId: string): Promise<OrgMember> {
       const response = await api.get<OrgMember>(
-        `/orgs/members/find-one/${memberId}`
+        `/orgs/members/find-one/${memberId}`,
       );
       return response.data;
     },

@@ -11,21 +11,21 @@ const useCustomerStore = defineStore('customerStore', {
   actions: {
     async fetchCustomers(
       orgId: string,
-      pageable: Pageable = { page: 0, limit: 20 }
+      pageable: Pageable = { page: 0, limit: 20 },
     ): Promise<Page<OrgCustomerDetail>> {
       const response = await api.get<Page<OrgCustomerDetail>>(
-        `/orgs/customers/find-by-org/${orgId}?${toQueryString(pageable)}`
+        `/orgs/customers/find-by-org/${orgId}?${toQueryString(pageable)}`,
       );
       return response.data;
     },
-    async findOne(memberId: string): Promise<OrgCustomer> {
+    async findOne(customerId: string): Promise<OrgCustomer> {
       const response = await api.get<OrgCustomer>(
-        `/orgs/customers/find-one/${memberId}`
+        `/orgs/customers/find-one/${customerId}`,
       );
       return response.data;
     },
-    async update(member: OrgCustomer) {
-      const response = await api.post<OrgCustomer>('/orgs/customers', member);
+    async update(customer: OrgCustomer) {
+      const response = await api.post<OrgCustomer>('/orgs/customers', customer);
       return response.data;
     },
   },

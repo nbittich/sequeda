@@ -13,7 +13,7 @@ pub struct Member {
     pub responsible_of: Vec<String>,
     pub managed_by: Option<String>,
     pub started: NaiveDate,
-    pub ended: NaiveDate,
+    pub ended: Option<NaiveDate>,
     pub remarks: Vec<Remark>,
     pub creation_date: NaiveDateTime,
     pub updated_date: Option<NaiveDateTime>,
@@ -59,6 +59,6 @@ pub struct MemberUpsert {
     pub responsible_of: Vec<String>,
     pub managed_by: Option<String>,
     pub started: NaiveDate,
-    pub ended: NaiveDate,
+    pub ended: Option<NaiveDate>,
     pub remarks: Vec<Remark>,
 }

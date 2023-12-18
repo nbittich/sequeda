@@ -17,8 +17,12 @@ const useOrgPositionStore = defineStore('org-position', {
     },
     async findPositionById(id: string): Promise<Position | null> {
       const response = await api.get<Position | null>(
-        `orgs/position/find-one/${id}`
+        `orgs/position/find-one/${id}`,
       );
+      return response.data;
+    },
+    async update(position: Position) {
+      const response = await api.post<Position>('/orgs/position', position);
       return response.data;
     },
   },

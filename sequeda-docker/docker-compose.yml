@@ -176,7 +176,7 @@ services:
     volumes:
       - ./config/migrations:/migrations
     environment: *common-variables
-    restart: unless-stopped
+    restart: "no"
     networks:
       sequeda:
   ####### service broker  #######

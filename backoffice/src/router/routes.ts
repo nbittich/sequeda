@@ -32,7 +32,27 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'positions',
-        component: () => import('pages/organization/OrgPositionPage.vue'),
+        children: [
+          {
+            name: 'org.positions.new',
+            path: 'new',
+            component: () =>
+              import('pages/organization/positions/NewOrgPositionPage.vue'),
+          },
+          {
+            name: 'org.positions.edit',
+            path: 'edit/:id',
+            component: () =>
+              import('pages/organization/positions/EditOrgPositionPage.vue'),
+          },
+          {
+            name: 'org.positions.root',
+            path: '',
+
+            component: () =>
+              import('pages/organization/positions/OrgPositionPage.vue'),
+          },
+        ],
       },
       {
         path: 'members',
@@ -73,13 +93,13 @@ const routes: RouteRecordRaw[] = [
               import('pages/organization/customers/EditOrgCustomerPage.vue'),
           },
           {
-
             name: 'org.customers.root',
             path: '',
-            component: () => import('pages/organization/customers/OrgCustomersPage.vue')
-          }
-        ]
-      }
+            component: () =>
+              import('pages/organization/customers/OrgCustomersPage.vue'),
+          },
+        ],
+      },
     ],
   },
 

@@ -9,7 +9,7 @@ pub struct Position {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
-    pub level: PositionLevel,
+    pub level: Option<PositionLevel>,
     pub creation_date: NaiveDateTime,
     pub updated_date: Option<NaiveDateTime>,
 }
@@ -21,7 +21,7 @@ pub struct PositionUpsert {
     pub id: Option<String>,
     pub name: String,
     pub description: Option<String>,
-    pub level: PositionLevel,
+    pub level: Option<PositionLevel>,
 }
 
 impl Default for Position {
@@ -30,7 +30,7 @@ impl Default for Position {
             id: IdGenerator.get(),
             name: Default::default(),
             description: Default::default(),
-            level: PositionLevel::Operational,
+            level: Some(PositionLevel::Operational),
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
         }
@@ -46,6 +46,9 @@ pub enum PositionLevel {
     // industry for entry-level or new employee
     Operational,
     Management,
+    Junior,
+    Medior,
+    Senior,
 }
 
 #[cfg(test)]

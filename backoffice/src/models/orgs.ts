@@ -6,11 +6,18 @@ export interface Position {
   _id?: string;
   name: string;
   description?: string;
-  level: string;
+  level?: string;
   creationDate?: Date;
   updatedDate?: Date;
 }
-export const LEVEL = ['EXECUTIVE', 'MANAGEMENT', 'OPERATIONAL'];
+export const positionLevel = [
+  { label: 'Executive', value: 'EXECUTIVE' },
+  { label: 'Management', value: 'MANAGEMENT' },
+  { label: 'Operational', value: 'OPERATIONAL' },
+  { label: 'Junior', value: 'JUNIOR' },
+  { label: 'Medior', value: 'MEDIOR' },
+  { label: 'Senior', value: 'SENIOR' },
+];
 
 export const orgStatuses: SelectOption[] = [
   {
@@ -34,12 +41,12 @@ export const orgStatuses: SelectOption[] = [
 export const customerTypes: SelectOption[] = [
   {
     label: 'Person',
-    value: 'PERSON'
+    value: 'PERSON',
   },
   {
     label: 'Organization',
-    value: 'ORGANIZATION'
-  }
+    value: 'ORGANIZATION',
+  },
 ];
 
 export interface Organization {
@@ -99,7 +106,7 @@ export interface OrgCustomerDetail extends OrgCustomer {
   representedBy?: RepresentedBy;
 }
 
-export type Communication = Remark
+export type Communication = Remark;
 
 export interface Remark {
   id?: string;

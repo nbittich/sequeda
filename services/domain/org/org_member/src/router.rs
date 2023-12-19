@@ -69,7 +69,23 @@ async fn find_one(
     .await;
 
     match repository.find_by_id(&member_id).await {
-        Ok(member) => (StatusCode::OK, Json(member)).into_response(),
+        Ok(mut member) => {
+            let mut res = None;
+            if let Some(mut member) = member.take() {
+                let responsible_of = repository
+                    .find_by_query(doc! {"managedBy": &member.id})
+                    .await;
+
+                tracing::debug!("responsible of {responsible_of:?}");
+
+                if let Ok(responsible_of) = responsible_of {
+                    member.responsible_of =
+                        Some(responsible_of.into_iter().map(|m| m.id).collect());
+                }
+                res = Some(member);
+            }
+            (StatusCode::OK, Json(res)).into_response()
+        }
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
@@ -127,7 +143,7 @@ async fn delete_by_id(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
+            })),
         );
     };
     let repository: StoreRepository<Member> =
@@ -165,8 +181,9 @@ async fn upsert(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
-        ).into_response();
+            })),
+        )
+            .into_response();
     };
     let repository: StoreRepository<Member> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -187,7 +204,6 @@ async fn upsert(
         ended,
         started,
         managed_by,
-        responsible_of,
         mut remarks,
         person_id,
         position_id,
@@ -222,7 +238,6 @@ async fn upsert(
         ended,
         started,
         managed_by,
-        responsible_of,
         remarks,
         person_id,
         position_id,

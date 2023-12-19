@@ -73,7 +73,7 @@ export interface OrgMember {
   orgId?: string;
   personId?: string;
   positionId?: string;
-  responsibleOf: string[];
+  responsibleOf?: string[];
   managedBy: string[];
   started?: string;
   ended?: string;

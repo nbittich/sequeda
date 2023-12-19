@@ -27,6 +27,10 @@ persons = persons.filter((p) => !members.some((m) => m.personId === p._id));
 export default defineComponent({
   name: 'OrgMemberForm',
   props: {
+    responsibleOf: {
+      type: Object,
+      default: () => [] as string[],
+    },
     title: {
       type: String,
       default: () => 'Member',
@@ -113,6 +117,9 @@ export default defineComponent({
       set: (value) => context.emit('update:profilePictureModel', value),
     });
 
+    const managerOf = members.filter(
+      (m) => props.responsibleOf?.includes(m._id),
+    );
     const managedByIds = ref(managedByIdsComputed);
     const person = ref(personComputed);
     const started = ref(startedComputed);
@@ -122,6 +129,7 @@ export default defineComponent({
     const picture = ref(profilePictureFile);
 
     return {
+      managerOf,
       person,
       remarks,
       started,
@@ -170,6 +178,7 @@ export default defineComponent({
           const needle = val.toLocaleLowerCase();
           memberOptions.value = members
             .filter((m) => m.personId !== person.value?._id)
+            .filter((m) => !props.responsibleOf?.includes(m._id))
             .filter(
               (v) =>
                 v?.person?.firstName?.toLocaleLowerCase().includes(needle) ||
@@ -183,7 +192,15 @@ export default defineComponent({
       },
     };
   },
-  methods: {},
+  methods: {
+    async navigateToManager(id: string) {
+      await this.$router.push({
+        name: 'org.members.edit',
+        params: { id },
+      });
+      //this.$router.go(0);
+    },
+  },
   components: { PersonForm, RemarkForm },
 });
 </script>
@@ -347,7 +364,17 @@ export default defineComponent({
     </q-card-section>
     <q-card-section>
       <div class="text-h6 q-mb-md">Manager of</div>
-      <p>todo!</p>
+      <q-chip
+        :key="r"
+        color="teal"
+        text-color="white"
+        icon="star"
+        clickable
+        @click="navigateToManager(r._id)"
+        v-for="r in managerOf"
+      >
+        {{ r.person?.firstName }} {{ r.person?.lastName }}
+      </q-chip>
     </q-card-section>
   </q-card>
 </template>

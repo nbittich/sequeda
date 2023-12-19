@@ -61,7 +61,6 @@ export default defineComponent({
         ended: this.ended,
         personId: person._id,
         positionId: this.positionId,
-        responsibleOf: [],
         managedBy: this.managedByIds,
         remarks: this.remarks,
       };

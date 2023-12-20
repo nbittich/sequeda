@@ -20,11 +20,11 @@ export default defineComponent({
     },
     personModel: {
       type: Object,
-      default: () => ({} as Person),
+      default: () => ({}) as Person,
     },
     profilePicture: {
       type: Object,
-      default: () => ({} as File),
+      default: () => ({}) as File,
     },
   },
   emits: ['update:personModel', 'update:profilePicture'],

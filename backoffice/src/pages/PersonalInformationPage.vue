@@ -15,10 +15,12 @@ export default defineComponent({
     const current = ref(personStore.current);
     const profilePictureFile = ref(null as unknown as File);
     return {
+      tab: ref('general'), // in case adding more tabs, see PersonalOrgPage.vue for an example
+
       current,
       profilePictureFile,
       title: computed(
-        () => `${current.value.firstName} ${current.value.lastName}`
+        () => `${current.value.firstName} ${current.value.lastName}`,
       ),
     };
   },
@@ -28,7 +30,7 @@ export default defineComponent({
         const upload = await uploadStore.uploadFile(
           this.profilePictureFile,
           this.current.profilePictureId,
-          this.current._id
+          this.current._id,
         );
         this.current.profilePictureId = upload._id;
         this.profilePictureFile = null as unknown as File;
@@ -45,24 +47,38 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="row">
-    <div class="col-12">
-      <q-card v-if="current">
+  <q-tabs
+    v-model="tab"
+    class="text-teal"
+    inline-label
+    outside-arrows
+    mobile-arrows
+  >
+    <q-route-tab
+      to="/personal-info"
+      name="general"
+      icon="perm_identity"
+      label="General"
+    />
+  </q-tabs>
+  <q-separator />
+
+  <q-tab-panels v-model="tab" v-if="current" animated>
+    <q-tab-panel name="general">
+      <q-card>
         <PersonForm
           v-model:personModel="current"
           v-model:profilePicture="profilePictureFile"
           :title="title"
         />
-
         <q-separator />
-
         <q-card-actions>
           <q-btn color="primary" @click="update">Save</q-btn>
           <q-btn color="deep-orange" @click="reset">Cancel</q-btn>
         </q-card-actions>
       </q-card>
-    </div>
-  </div>
+    </q-tab-panel>
+  </q-tab-panels>
 </template>
 
 <style lang="sass" scoped></style>

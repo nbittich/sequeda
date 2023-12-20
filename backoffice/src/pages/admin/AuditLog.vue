@@ -8,7 +8,7 @@ const auditLogStore = useAuditLogStore();
 const columns: QTableColumn[] = [
   {
     name: 'receivedDate',
-    align: 'center',
+    align: 'left',
     label: 'Date',
     field: 'receivedDate',
     sortable: false,
@@ -16,7 +16,7 @@ const columns: QTableColumn[] = [
   {
     name: 'message',
     label: 'Message',
-    align: 'center',
+    align: 'left',
     field: 'message',
     sortable: false,
   },

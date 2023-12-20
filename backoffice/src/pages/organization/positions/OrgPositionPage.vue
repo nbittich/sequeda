@@ -6,14 +6,14 @@ const positionStore = useOrgPositionStore();
 const columns: QTableColumn[] = [
   {
     name: 'level',
-    align: 'center',
+    align: 'left',
     label: 'Level',
     field: 'level',
     sortable: true,
   },
   {
     name: 'name',
-    align: 'center',
+    align: 'left',
     label: 'Name',
     field: 'name',
     sortable: true,
@@ -66,7 +66,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <q-table :rows="positions" :columns="columns" row-key="_id">
+  <q-table dense :rows="positions" :columns="columns" row-key="_id">
     <template v-slot:top>
       <div class="row full-width justify-between">
         <div class="text-h6">Positions</div>
@@ -94,7 +94,7 @@ export default defineComponent({
             round
             icon="edit"
             color="primary"
-            :to="'/org/positions/edit/' + props.row._id"
+            :to="'/org/positions/' + props.row._id + '/edit'"
           ></q-btn>
         </q-td>
       </q-tr>

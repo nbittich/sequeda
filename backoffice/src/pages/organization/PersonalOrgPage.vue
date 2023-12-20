@@ -3,6 +3,7 @@ import OrgForm from 'src/components/organization/org-form.vue';
 import useOrgsStore from 'src/stores/organization/orgs';
 import useUploadStore from 'src/stores/uploads';
 import { computed, defineComponent, ref } from 'vue';
+import { useRoute } from 'vue-router';
 const uploadStore = useUploadStore();
 const orgStore = useOrgsStore();
 await orgStore.fetchCurrent();
@@ -11,16 +12,26 @@ export default defineComponent({
   components: { OrgForm },
   computed: {},
   async setup() {
+    const route = useRoute();
+    const path = route.path;
+    const tab = path.includes('members')
+      ? 'members'
+      : path.includes('positions')
+        ? 'positions'
+        : path.includes('customers')
+          ? 'customers'
+          : 'general';
     const logoFile = ref(null as unknown as File);
     const current = ref(orgStore.current);
     return {
+      tab: ref(tab),
       logoFile,
       current,
       title: computed(
         () =>
           `${current.value.name} ${
             current.value.vatNumber ? '(' + current.value.vatNumber + ')' : ''
-          }`
+          }`,
       ),
     };
   },
@@ -31,7 +42,7 @@ export default defineComponent({
         const upload = await uploadStore.uploadFile(
           this.logoFile,
           this.current.logoId,
-          this.current._id
+          this.current._id,
         );
         this.current.logoId = upload._id;
         this.logoFile = null as unknown as File;
@@ -48,9 +59,38 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="row">
-    <div class="col-12">
-      <q-card v-if="current">
+  <q-tabs
+    v-model="tab"
+    class="text-teal"
+    inline-label
+    outside-arrows
+    mobile-arrows
+  >
+    <q-route-tab to="/org" name="general" icon="store" label="General" />
+    <q-route-tab
+      to="/org/positions"
+      name="positions"
+      icon="school"
+      label="Positions"
+    />
+    <q-route-tab
+      to="/org/members"
+      name="members"
+      icon="badge"
+      label="Members"
+    />
+
+    <q-route-tab
+      to="/org/customers"
+      name="customers"
+      icon="recent_actors"
+      label="Customers"
+    />
+  </q-tabs>
+  <q-separator />
+  <q-tab-panels v-model="tab" v-if="current" animated>
+    <q-tab-panel name="general">
+      <q-card>
         <OrgForm
           v-model:orgModel="current"
           v-model:orgLogo="logoFile"
@@ -64,8 +104,18 @@ export default defineComponent({
           <q-btn color="deep-orange" @click="reset">Cancel</q-btn>
         </q-card-actions>
       </q-card>
-    </div>
-  </div>
+    </q-tab-panel>
+    <q-tab-panel name="positions">
+      <router-view :key="$route.params.id as string" />
+    </q-tab-panel>
+
+    <q-tab-panel name="customers">
+      <router-view :key="$route.params.id as string" />
+    </q-tab-panel>
+    <q-tab-panel name="members">
+      <router-view :key="$route.params.id as string" />
+    </q-tab-panel>
+  </q-tab-panels>
 </template>
 
 <style lang="sass" scoped></style>

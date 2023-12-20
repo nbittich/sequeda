@@ -17,86 +17,100 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: '/audit',
+    path: '/admin',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/AuditLog.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/admin/AdminPage.vue'),
+        children: [
+          { path: 'logs', component: () => import('pages/admin/AuditLog.vue') },
+        ],
+      },
+    ],
   },
 
   {
     path: '/org',
+    name: 'org.root',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: 'current',
+        path: '',
         component: () => import('pages/organization/PersonalOrgPage.vue'),
-      },
-      {
-        path: 'positions',
         children: [
           {
-            name: 'org.positions.new',
-            path: 'new',
-            component: () =>
-              import('pages/organization/positions/NewOrgPositionPage.vue'),
-          },
-          {
-            name: 'org.positions.edit',
-            path: 'edit/:id',
-            component: () =>
-              import('pages/organization/positions/EditOrgPositionPage.vue'),
-          },
-          {
-            name: 'org.positions.root',
-            path: '',
+            path: 'positions',
+            children: [
+              {
+                name: 'org.positions.new',
+                path: 'new',
+                component: () =>
+                  import('pages/organization/positions/NewOrgPositionPage.vue'),
+              },
+              {
+                name: 'org.positions.edit',
+                path: ':id/edit',
+                component: () =>
+                  import(
+                    'pages/organization/positions/EditOrgPositionPage.vue'
+                  ),
+              },
+              {
+                name: 'org.positions.root',
+                path: '',
 
-            component: () =>
-              import('pages/organization/positions/OrgPositionPage.vue'),
-          },
-        ],
-      },
-      {
-        path: 'members',
-        children: [
-          {
-            name: 'org.members.new',
-            path: 'new',
-            component: () =>
-              import('pages/organization/members/NewOrgMemberPage.vue'),
+                component: () =>
+                  import('pages/organization/positions/OrgPositionPage.vue'),
+              },
+            ],
           },
           {
-            name: 'org.members.edit',
-            path: 'edit/:id',
-            component: () =>
-              import('pages/organization/members/EditOrgMemberPage.vue'),
+            path: 'members',
+            children: [
+              {
+                name: 'org.members.new',
+                path: 'new',
+                component: () =>
+                  import('pages/organization/members/NewOrgMemberPage.vue'),
+              },
+              {
+                name: 'org.members.edit',
+                path: ':id/edit',
+                component: () =>
+                  import('pages/organization/members/EditOrgMemberPage.vue'),
+              },
+              {
+                path: '',
+                component: () =>
+                  import('pages/organization/members/OrgMembersPage.vue'),
+              },
+            ],
           },
           {
-            name: 'org.members.root',
-            path: '',
-            component: () =>
-              import('pages/organization/members/OrgMembersPage.vue'),
-          },
-        ],
-      },
-      {
-        path: 'customers',
-        children: [
-          {
-            name: 'org.customers.new',
-            path: 'new',
-            component: () =>
-              import('pages/organization/customers/NewOrgCustomerPage.vue'),
-          },
-          {
-            name: 'org.customers.edit',
-            path: 'edit/:id',
-            component: () =>
-              import('pages/organization/customers/EditOrgCustomerPage.vue'),
-          },
-          {
-            name: 'org.customers.root',
-            path: '',
-            component: () =>
-              import('pages/organization/customers/OrgCustomersPage.vue'),
+            path: 'customers',
+            children: [
+              {
+                name: 'org.customers.new',
+                path: 'new',
+                component: () =>
+                  import('pages/organization/customers/NewOrgCustomerPage.vue'),
+              },
+              {
+                name: 'org.customers.edit',
+                path: ':id/edit',
+                component: () =>
+                  import(
+                    'pages/organization/customers/EditOrgCustomerPage.vue'
+                  ),
+              },
+              {
+                name: 'org.customers.root',
+                path: '',
+                component: () =>
+                  import('pages/organization/customers/OrgCustomersPage.vue'),
+              },
+            ],
           },
         ],
       },

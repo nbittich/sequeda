@@ -30,7 +30,7 @@
             icon="corporate_fare"
             label="Organization"
           >
-            <q-item clickable v-ripple to="/org/current">
+            <q-item clickable v-ripple to="/org">
               <q-item-section avatar>
                 <q-icon name="store" />
               </q-item-section>
@@ -55,11 +55,11 @@
               <q-item-section> Customers </q-item-section>
             </q-item>
           </q-expansion-item>
-          <q-item clickable v-ripple to="/audit">
+          <q-item clickable v-ripple to="/admin">
             <q-item-section avatar>
-              <q-icon name="history" />
+              <q-icon name="admin_panel_settings" />
             </q-item-section>
-            <q-item-section> Logs </q-item-section>
+            <q-item-section> Admin </q-item-section>
           </q-item>
         </q-list>
       </q-scroll-area>
@@ -82,10 +82,10 @@
     </q-drawer>
 
     <q-page-container>
-      <q-page class="q-px-lg q-py-md">
+      <q-page>
         <Suspense>
           <template #default>
-            <router-view :key="$route.params.id" />
+            <router-view :key="$route.params.id as string" />
           </template>
           <template #fallback>
             <div>Loading...</div>

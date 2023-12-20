@@ -152,7 +152,7 @@ export default defineComponent({
                 round
                 icon="edit"
                 color="primary"
-                :to="'/org/members/edit/' + props.row._id"
+                :to="'/org/members/' + props.row._id + '/edit'"
               ></q-btn>
             </q-td>
           </q-tr>

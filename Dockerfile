@@ -5,18 +5,6 @@ RUN apt update && apt upgrade -y
 RUN apt install -y libssl-dev build-essential cmake
 RUN cargo install cargo-chef 
 
-# just to build
-ENV MAGICK_VERSION 7.1
-
-RUN apt -y install curl build-essential clang pkg-config libjpeg-turbo-progs libpng-dev \
-  && curl https://imagemagick.org/archive/ImageMagick.tar.gz | tar xz \
-  && cd ImageMagick-${MAGICK_VERSION}* \
-  && ./configure --with-magick-plus-plus=no --with-perl=no \
-  && make \
-  && make install \
-  && cd .. \
-  && rm -r ImageMagick-${MAGICK_VERSION}* && ldconfig /usr/local/lib
-
 WORKDIR /app
 
 FROM chef AS planner
@@ -41,19 +29,11 @@ RUN apt install -y ca-certificates
 
 FROM runtime
 ARG CRATE_NAME
-ENV MAGICK_VERSION 7.1
 ARG WITH_MAGICK
-RUN if [ $WITH_MAGICK = "yes" ]; then \
-  apt update && apt upgrade -y && apt -y install curl build-essential clang pkg-config libjpeg-turbo-progs libpng-dev \
-  && curl https://imagemagick.org/archive/ImageMagick.tar.gz | tar xz \
-  && cd ImageMagick-${MAGICK_VERSION}* \
-  && ./configure --with-magick-plus-plus=no --with-perl=no \
-  && make \
-  && make install \
-  && cd .. \
-  && rm -r ImageMagick-${MAGICK_VERSION}* && ldconfig /usr/local/lib;fi
 
-RUN if [ $WITH_MAGICK = "yes" ]; then apt install -y ghostscript;fi
+
+RUN if [ $WITH_MAGICK = "yes" ]; then apt update && apt upgrade -y && \
+  apt install  --no-install-recommends -y libreoffice libreofficekit-dev;fi
 
 RUN rm -rfv /var/lib/apt/lists/*
 

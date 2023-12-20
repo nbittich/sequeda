@@ -25,7 +25,3 @@ futures = { workspace = true }
 tokio-util = { workspace = true }
 image = { workspace = true }
 http-body-util = { workspace = true }
-
-# this uses a build.rs script, this is why it's separated from workspace.
-# make sure to check what has changed before updating, or fork it
-magick_rust = "0.19.1"

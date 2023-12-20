@@ -7,12 +7,12 @@ use std::{
 
 use chrono::{Local, NaiveDateTime};
 use image::{EncodableLayout, ImageFormat};
-use magick_rust::MagickWand;
-use mime_guess::mime::IMAGE_PNG;
 use sequeda_service_common::IdGenerator;
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
+
+use crate::soffice::convert_to;
 
 pub const SHARE_DRIVE_PATH: &str = "SHARE_DRIVE_PATH";
 
@@ -135,8 +135,25 @@ impl FileUpload {
         store: &StoreRepository<FileUpload>,
         share_drive_path: &str,
     ) -> Result<Option<String>, ServiceError> {
-        let (extension, thumb) = if self.is_image() {
-            let image = image::load_from_memory(file_handle).map_err(|e| ServiceError::from(&e))?;
+        let (extension, thumb) = {
+            let image = if !self.is_image() {
+                match convert_to(
+                    self.get_physical_path(share_drive_path),
+                    crate::soffice::ConvertType::Png,
+                )
+                .await
+                {
+                    Ok(bytes) => {
+                        image::load_from_memory(&bytes).map_err(|e| ServiceError::from(&e))
+                    }
+                    Err(e) => {
+                        tracing::error!("error converting file {}: {} ", self.original_filename, e);
+                        return Ok(None);
+                    }
+                }
+            } else {
+                image::load_from_memory(file_handle).map_err(|e| ServiceError::from(&e))
+            }?;
             let thumb = image.thumbnail(THUMB_WIDTH, THUMB_HEIGHT);
 
             let Some(ct) = &self.content_type else {
@@ -166,28 +183,6 @@ impl FileUpload {
                 .read_to_end(&mut thumb)
                 .map_err(|e| ServiceError(format!("{e}")))?;
             (self.extension.clone(), thumb)
-        } else {
-            let wand = MagickWand::new();
-            if let Err(err) = wand.read_image_blob(file_handle) {
-                tracing::warn!(
-                    "ERR::MAGICK_READ_IMAGE: could not generate a thumbnail from {}, err: {}",
-                    self.original_filename,
-                    err
-                );
-                return Ok(None);
-            }
-            wand.fit(THUMB_WIDTH as usize, THUMB_HEIGHT as usize);
-            match wand.write_image_blob("png") {
-                Ok(thumb) => (Some(IMAGE_PNG.to_string()), thumb),
-                Err(e) => {
-                    tracing::warn!(
-                        "ERR::MAGICK_WRITE_IMAGE: could not generate a thumbnail from {}, err: {}",
-                        self.original_filename,
-                        e
-                    );
-                    return Ok(None);
-                }
-            }
         };
         let thumbnail = Self {
             content_type: self.content_type.clone(),
@@ -216,9 +211,12 @@ impl FileUpload {
     }
 
     pub async fn download(&self, share_drive_path: &str) -> Result<File, ServiceError> {
-        tokio::fs::File::open(PathBuf::from(share_drive_path).join(&self.internal_name))
+        tokio::fs::File::open(self.get_physical_path(share_drive_path))
             .await
             .map_err(|e| ServiceError::from(&e))
+    }
+    pub fn get_physical_path(&self, share_drive_path: &str) -> PathBuf {
+        PathBuf::from(share_drive_path).join(&self.internal_name)
     }
 }
 

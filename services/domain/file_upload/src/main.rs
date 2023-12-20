@@ -23,7 +23,9 @@ use tokio_util::io::ReaderStream;
 use tower_http::limit::RequestBodyLimitLayer;
 
 use crate::file_upload::{FileUpload, SHARE_DRIVE_PATH};
-
+use magick_rust::magick_wand_genesis;
+use std::sync::Once;
+static START: Once = Once::new();
 mod file_upload;
 #[derive(Clone, Debug)]
 struct ShareDrive(String);
@@ -33,6 +35,10 @@ const TOPIC: &str = "TOPIC_UPLOAD";
 #[tokio::main]
 async fn main() {
     setup_tracing();
+    tracing::info!("init image magick...");
+    START.call_once(|| {
+        magick_wand_genesis();
+    });
     let share_drive_path: String = std::env::var(SHARE_DRIVE_PATH).unwrap();
     let host = var(SERVICE_HOST).unwrap_or_else(|_| String::from("127.0.0.1"));
     let body_size_limit = (var(BODY_SIZE_LIMIT).unwrap_or_else(|_| "1024".into()))

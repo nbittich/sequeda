@@ -9,7 +9,7 @@ export default defineComponent({
   props: {
     modelValue: {
       type: Object,
-      default: () => ({} as File),
+      default: () => ({}) as File,
     },
     pictureId: {
       type: String,
@@ -38,11 +38,11 @@ export default defineComponent({
       } else {
         if (pictureId.value) {
           const pictureMetadata = await uploadStore.getMetadata(
-            pictureId.value
+            pictureId.value,
           );
 
           pictureUrl.value = uploadStore.getDownloadUrl(
-            pictureMetadata.thumbnailId
+            pictureMetadata.thumbnailId,
           );
         } else {
           pictureUrl.value = 'images/unknown.png';
@@ -63,18 +63,8 @@ export default defineComponent({
 });
 </script>
 <template>
-  <q-img
-    class="border-fluid rounded-borders"
-    :src="pictureUrl"
-    spinner-color="white"
-    @click="selectFile()"
-    style="height: 140px; max-width: 150px"
-  />
-  <q-file
-    ref="fileRef"
-    style="display: none"
-    v-model="pictureFile"
-    @update:model-value="pictureUrlChange()"
-    accept="image/*"
-  />
+  <q-img class="border-fluid rounded-borders" :src="pictureUrl" spinner-color="white" @click="selectFile()"
+    style="height: 140px; max-width: 150px" />
+  <q-file ref="fileRef" style="display: none" v-model="pictureFile" @update:model-value="pictureUrlChange()"
+    accept="image/*" />
 </template>

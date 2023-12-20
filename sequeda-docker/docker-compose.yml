@@ -148,6 +148,7 @@ services:
       context: ../
       args:
         CRATE_NAME: sequeda_file_upload
+        WITH_MAGICK: "yes"
     volumes:
       - ./data/share:/share
     environment:

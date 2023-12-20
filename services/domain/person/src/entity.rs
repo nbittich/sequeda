@@ -21,6 +21,7 @@ pub struct Person {
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
     pub bank_account: Option<BankAccount>,
+    pub signature_id: Option<String>,
 }
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -39,6 +40,7 @@ pub struct PersonUpsert {
     pub academic_title: Option<AcademicTitle>,
     pub contact_detail: ContactDetail,
     pub bank_account: Option<BankAccount>,
+    pub signature_id: Option<String>,
 }
 
 impl Default for Person {
@@ -59,6 +61,7 @@ impl Default for Person {
             contact_detail: Default::default(),
             middle_name: Default::default(),
             bank_account: Default::default(),
+            signature_id: Default::default(),
         }
     }
 }
@@ -118,7 +121,7 @@ mod test {
             },
             bank_account: Some(BankAccount {
                 number: "BEXXX XXX XXX XXX".into(),
-                bic: "GEBABAB".into(),
+                bic: Some("GEBABAB".into()),
             }),
             ..Default::default()
         };

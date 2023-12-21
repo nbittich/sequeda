@@ -32,11 +32,11 @@ const routes: RouteRecordRaw[] = [
 
   {
     path: '/org',
-    name: 'org.root',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
+        name: 'org.root',
         component: () => import('pages/organization/PersonalOrgPage.vue'),
         children: [
           {
@@ -82,6 +82,7 @@ const routes: RouteRecordRaw[] = [
               },
               {
                 path: '',
+                name: 'org.members.root',
                 component: () =>
                   import('pages/organization/members/OrgMembersPage.vue'),
               },

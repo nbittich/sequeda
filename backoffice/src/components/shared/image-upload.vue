@@ -33,7 +33,11 @@ export default defineComponent({
 
     const pictureUrlChange = async () => {
       if (pictureFile.value) {
-        pictureUrl.value = URL.createObjectURL(pictureFile.value);
+        if (pictureFile.value.type?.startsWith('image')) {
+          pictureUrl.value = URL.createObjectURL(pictureFile.value);
+        } else {
+          pictureUrl.value = 'images/question.png';
+        }
         context.emit('update:modelValue', pictureFile.value);
       } else {
         if (pictureId.value) {
@@ -63,8 +67,17 @@ export default defineComponent({
 });
 </script>
 <template>
-  <q-img class="border-fluid rounded-borders" :src="pictureUrl" spinner-color="white" @click="selectFile()"
-    style="height: 140px; max-width: 150px" />
-  <q-file ref="fileRef" style="display: none" v-model="pictureFile" @update:model-value="pictureUrlChange()"
-    accept="image/*" />
+  <q-img
+    class="border-fluid rounded-borders"
+    :src="pictureUrl"
+    spinner-color="white"
+    @click="selectFile()"
+    style="height: 140px; max-width: 150px"
+  />
+  <q-file
+    ref="fileRef"
+    style="display: none"
+    v-model="pictureFile"
+    @update:model-value="pictureUrlChange()"
+  />
 </template>

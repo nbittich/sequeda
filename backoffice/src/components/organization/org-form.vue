@@ -9,17 +9,21 @@ import ImageUpload from '../shared/image-upload.vue';
 export default defineComponent({
   name: 'OrgForm',
   props: {
+    imageKey: {
+      type: Number,
+      default: () => ref(0),
+    },
     title: {
       type: String,
       default: () => 'Organization',
     },
     orgModel: {
       type: Object,
-      default: () => ({} as Organization),
+      default: () => ({}) as Organization,
     },
     orgLogo: {
       type: Object,
-      default: () => ({} as File),
+      default: () => ({}) as File,
     },
   },
   emits: ['update:orgModel', 'update:orgLogo'],
@@ -83,7 +87,7 @@ export default defineComponent({
     </q-card-section>
 
     <q-card-section class="q-mb-none q-pb-none column items-center">
-      <ImageUpload v-model="logoFile" :pictureId="org.logoId" />
+      <ImageUpload :key="imageKey" v-model="logoFile" :pictureId="org.logoId" />
     </q-card-section>
     <q-card-section class="q-mb-none q-pb-none">
       <div class="row q-mb-xs-none q-mb-md-xs">

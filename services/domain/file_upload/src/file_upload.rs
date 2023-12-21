@@ -83,9 +83,13 @@ impl FileUpload {
                 self.updated_date = Some(Local::now().naive_local());
                 // override file
                 tracing::info!("removing old file {}", old_internal_name);
-                tokio::fs::remove_file(PathBuf::from(&share_drive_path).join(&old_internal_name))
-                    .await
-                    .map_err(|e| ServiceError::from(&e))?;
+                if let Err(e) = tokio::fs::remove_file(
+                    PathBuf::from(&share_drive_path).join(&old_internal_name),
+                )
+                .await
+                {
+                    tracing::error!("could not remove old file: {e}");
+                }
                 if let Some(old_thumbnail_id) = old_thumbnail_id {
                     store
                         .delete_by_id(&old_thumbnail_id)
@@ -93,11 +97,13 @@ impl FileUpload {
                         .map_err(|e| ServiceError::from(&e))?;
 
                     tracing::info!("removing old thumbnail {}", old_thumbnail_id);
-                    tokio::fs::remove_file(
+                    if let Err(e) = tokio::fs::remove_file(
                         PathBuf::from(&share_drive_path).join(format!("thumb-{old_internal_name}")),
                     )
                     .await
-                    .map_err(|e| ServiceError::from(&e))?;
+                    {
+                        tracing::error!("could not remove old thumbnail: {e}");
+                    }
                 }
             }
 

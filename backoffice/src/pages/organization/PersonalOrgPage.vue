@@ -7,6 +7,11 @@ import { useRoute } from 'vue-router';
 const uploadStore = useUploadStore();
 const orgStore = useOrgsStore();
 await orgStore.fetchCurrent();
+
+const imageKey = ref(0);
+const reload = () => {
+  imageKey.value += 1;
+};
 export default defineComponent({
   name: 'PersonalOrg',
   components: { OrgForm },
@@ -26,6 +31,7 @@ export default defineComponent({
     return {
       tab: ref(tab),
       logoFile,
+      imageKey,
       current,
       title: computed(
         () =>
@@ -48,11 +54,15 @@ export default defineComponent({
         this.logoFile = null as unknown as File;
       }
       this.current = await orgStore.update(this.current);
+      reload();
     },
     async reset(e: Event) {
       e.preventDefault();
       await orgStore.fetchCurrent();
+      this.logoFile = null as unknown as File;
+
       this.current = orgStore.current;
+      reload();
     },
   },
 });
@@ -92,6 +102,7 @@ export default defineComponent({
     <q-tab-panel name="general">
       <q-card>
         <OrgForm
+          :image-key="imageKey"
           v-model:orgModel="current"
           v-model:orgLogo="logoFile"
           :title="title"

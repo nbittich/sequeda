@@ -7,16 +7,21 @@ import PersonForm from 'src/components/person/person-form.vue';
 const personStore = usePersonStore();
 const uploadStore = useUploadStore();
 await personStore.fetchCurrent();
+
+const imageKey = ref(0);
+const reload = () => {
+  imageKey.value += 1;
+};
+const current = ref(personStore.current);
+const profilePictureFile = ref(null as unknown as File);
 export default defineComponent({
   name: 'PersonalInformation',
   components: { PersonForm },
 
   async setup() {
-    const current = ref(personStore.current);
-    const profilePictureFile = ref(null as unknown as File);
     return {
       tab: ref('general'), // in case adding more tabs, see PersonalOrgPage.vue for an example
-
+      imageKey,
       current,
       profilePictureFile,
       title: computed(
@@ -36,11 +41,13 @@ export default defineComponent({
         this.profilePictureFile = null as unknown as File;
       }
       this.current = await personStore.update(this.current);
+      reload();
     },
     async reset(e: Event) {
       e.preventDefault();
       await personStore.fetchCurrent();
       this.current = personStore.current;
+      reload();
     },
   },
 });
@@ -67,6 +74,7 @@ export default defineComponent({
     <q-tab-panel name="general">
       <q-card>
         <PersonForm
+          :image-key="imageKey"
           v-model:personModel="current"
           v-model:profilePicture="profilePictureFile"
           :title="title"

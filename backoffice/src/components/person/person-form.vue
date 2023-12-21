@@ -1,5 +1,5 @@
 <script lang="ts">
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
   Person,
   genders,
@@ -17,6 +17,10 @@ export default defineComponent({
     title: {
       type: String,
       default: () => 'Personal Information',
+    },
+    imageKey: {
+      type: Number,
+      default: () => ref(0),
     },
     personModel: {
       type: Object,
@@ -54,9 +58,9 @@ export default defineComponent({
     </q-card-section>
     <q-card-section class="q-mb-none q-pb-none column items-center">
       <ImageUpload
-        :key="person._id"
+        :key="imageKey"
         v-model="profilePictureFile"
-        :pictureId="person.profilePictureId"
+        :picture-id="person.profilePictureId"
       />
     </q-card-section>
     <q-card-section class="q-mb-none q-pb-none">

@@ -18,6 +18,10 @@ export default defineComponent({
       type: String,
       default: () => 'Personal Information',
     },
+    withSignature: {
+      type: Boolean,
+      default: () => false,
+    },
     imageKey: {
       type: Number,
       default: () => ref(0),
@@ -30,8 +34,13 @@ export default defineComponent({
       type: Object,
       default: () => ({}) as File,
     },
+
+    signature: {
+      type: Object,
+      default: () => ({}) as File,
+    },
   },
-  emits: ['update:personModel', 'update:profilePicture'],
+  emits: ['update:personModel', 'update:profilePicture', 'update:signature'],
   async setup(props, context) {
     const person = computed({
       get: () => props.personModel,
@@ -41,9 +50,15 @@ export default defineComponent({
       get: () => props.profilePicture,
       set: (value) => context.emit('update:profilePicture', value),
     });
+
+    const signatureFile = computed({
+      get: () => props.signature,
+      set: (value) => context.emit('update:signature', value),
+    });
     return {
       person,
       profilePictureFile,
+      signatureFile,
       academicTitles,
       maritalStatuses,
       genders,
@@ -56,13 +71,29 @@ export default defineComponent({
     <q-card-section>
       <div class="text-h6">{{ title }}</div>
     </q-card-section>
-    <q-card-section class="q-mb-none q-pb-none column items-center">
-      <ImageUpload
-        :key="imageKey"
-        v-model="profilePictureFile"
-        :picture-id="person.profilePictureId"
-      />
+    <q-card-section class="row justify-center">
+      <div class="col">
+        <div class="text-h6 q-ml-xs-sm">Picture Profile</div>
+        <ImageUpload
+          :key="imageKey"
+          v-model="profilePictureFile"
+          :picture-id="person.profilePictureId"
+        />
+      </div>
+      <template v-if="withSignature">
+        <div class="col">
+          <div class="text-h6 q-ml-xs-sm">Signature</div>
+
+          <ImageUpload
+            :key="imageKey"
+            v-model="signatureFile"
+            :picture-id="person.signatureId"
+          />
+        </div>
+      </template>
     </q-card-section>
+    <q-separator />
+
     <q-card-section class="q-mb-none q-pb-none">
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-lg-6 col-12 q-mb-xs-sm q-mb-lg-none">

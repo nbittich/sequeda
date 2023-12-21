@@ -14,6 +14,7 @@ const reload = () => {
 };
 const current = ref(personStore.current);
 const profilePictureFile = ref(null as unknown as File);
+const signatureFile = ref(null as unknown as File);
 export default defineComponent({
   name: 'PersonalInformation',
   components: { PersonForm },
@@ -23,6 +24,7 @@ export default defineComponent({
       tab: ref('general'), // in case adding more tabs, see PersonalOrgPage.vue for an example
       imageKey,
       current,
+      signatureFile,
       profilePictureFile,
       title: computed(
         () => `${current.value.firstName} ${current.value.lastName}`,
@@ -39,6 +41,16 @@ export default defineComponent({
         );
         this.current.profilePictureId = upload._id;
         this.profilePictureFile = null as unknown as File;
+      }
+
+      if (this.signatureFile) {
+        const upload = await uploadStore.uploadFile(
+          this.signatureFile,
+          this.current.signatureId,
+          this.current._id,
+        );
+        this.current.signatureId = upload._id;
+        this.signatureFile = null as unknown as File;
       }
       this.current = await personStore.update(this.current);
       reload();
@@ -77,7 +89,9 @@ export default defineComponent({
           :image-key="imageKey"
           v-model:personModel="current"
           v-model:profilePicture="profilePictureFile"
+          v-model:signature="signatureFile"
           :title="title"
+          :with-signature="true"
         />
         <q-separator />
         <q-card-actions>

@@ -69,6 +69,7 @@ export interface Person {
   middleName?: string;
   lastName?: string;
   profilePictureId?: string;
+  signatureId?: string;
   dateOfBirth?: string;
   creationDate?: Date;
   updatedDate?: Date;

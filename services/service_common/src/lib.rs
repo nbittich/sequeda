@@ -70,7 +70,7 @@ pub struct Address {
 #[serde(rename_all = "camelCase")]
 pub struct BankAccount {
     pub number: String,
-    pub bic: String,
+    pub bic: Option<String>,
 }
 
 pub struct IdGenerator;

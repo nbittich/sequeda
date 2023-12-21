@@ -4,6 +4,7 @@ FROM rust:1.74 AS chef
 RUN apt update && apt upgrade -y
 RUN apt install -y libssl-dev build-essential cmake
 RUN cargo install cargo-chef 
+
 WORKDIR /app
 
 FROM chef AS planner
@@ -25,11 +26,20 @@ RUN cargo build --release --bin ${CRATE_NAME}
 FROM debian:bookworm-slim AS runtime
 RUN apt  update && apt upgrade -y
 RUN apt install -y ca-certificates
+ARG WITH_LIBREOFFICE
+RUN if [ $WITH_LIBREOFFICE = "yes" ]; then apt update && apt upgrade -y && \
+  apt install  --no-install-recommends -y libreoffice;fi
+
 FROM runtime
 ARG CRATE_NAME
 
+RUN rm -rfv /var/lib/apt/lists/*
+
 WORKDIR /app
+
 COPY --from=builder /app/target/release/${CRATE_NAME} /app
+
 ENV CRATE=${CRATE_NAME}
 ENV RUST_LOG=INFO
+
 ENTRYPOINT  "/app/${CRATE}"

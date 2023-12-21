@@ -46,8 +46,9 @@ async fn current(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
-        ).into_response();
+            })),
+        )
+            .into_response();
     };
     tracing::debug!("tenant is {}", &tenant);
 
@@ -163,7 +164,7 @@ async fn delete_by_id(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
+            })),
         );
     };
     let repository: StoreRepository<Person> =
@@ -201,8 +202,9 @@ async fn upsert(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
-        ).into_response();
+            })),
+        )
+            .into_response();
     };
     let repository: StoreRepository<Person> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -230,6 +232,7 @@ async fn upsert(
         contact_detail,
         marital_status,
         bank_account,
+        signature_id,
     } = payload;
 
     let person = Person {
@@ -244,6 +247,7 @@ async fn upsert(
         marital_status,
         contact_detail,
         bank_account,
+        signature_id,
         ..person
     };
 

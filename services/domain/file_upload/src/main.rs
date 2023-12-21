@@ -25,6 +25,8 @@ use tower_http::limit::RequestBodyLimitLayer;
 use crate::file_upload::{FileUpload, SHARE_DRIVE_PATH};
 
 mod file_upload;
+mod soffice;
+
 #[derive(Clone, Debug)]
 struct ShareDrive(String);
 
@@ -33,6 +35,7 @@ const TOPIC: &str = "TOPIC_UPLOAD";
 #[tokio::main]
 async fn main() {
     setup_tracing();
+
     let share_drive_path: String = std::env::var(SHARE_DRIVE_PATH).unwrap();
     let host = var(SERVICE_HOST).unwrap_or_else(|_| String::from("127.0.0.1"));
     let body_size_limit = (var(BODY_SIZE_LIMIT).unwrap_or_else(|_| "1024".into()))

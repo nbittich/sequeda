@@ -7,10 +7,13 @@ use std::{
 
 use chrono::{Local, NaiveDateTime};
 use image::{EncodableLayout, ImageFormat};
+use mime_guess::mime::IMAGE_PNG;
 use sequeda_service_common::IdGenerator;
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
 use tokio::fs::File;
+
+use crate::soffice::convert_to;
 
 pub const SHARE_DRIVE_PATH: &str = "SHARE_DRIVE_PATH";
 
@@ -133,16 +136,37 @@ impl FileUpload {
         store: &StoreRepository<FileUpload>,
         share_drive_path: &str,
     ) -> Result<Option<String>, ServiceError> {
-        if self.is_image() {
-            let image = image::load_from_memory(file_handle).map_err(|e| ServiceError::from(&e))?;
+        let (extension, thumb) = {
+            let (ct, image) = if !self.is_image() {
+                match convert_to(
+                    self.get_physical_path(share_drive_path, internal_name),
+                    crate::soffice::ConvertType::Png,
+                )
+                .await
+                {
+                    Ok(bytes) => image::load_from_memory(&bytes)
+                        .map_err(|e| ServiceError::from(&e))
+                        .map(|im| (Some(IMAGE_PNG.to_string()), im)),
+                    Err(e) => {
+                        tracing::error!("error converting file {}: {} ", self.original_filename, e);
+                        return Ok(None);
+                    }
+                }
+            } else {
+                image::load_from_memory(file_handle)
+                    .map_err(|e| ServiceError::from(&e))
+                    .map(|im| (self.content_type.clone(), im))
+            }?;
             let thumb = image.thumbnail(THUMB_WIDTH, THUMB_HEIGHT);
 
-            let Some(ct) = &self.content_type  else {
-                return Err(ServiceError("No Content type! Should not happen".into()))
+            let Some(ct) = ct else {
+                return Err(ServiceError("No Content type! Should not happen".into()));
             };
 
             let Some(image_format) = ImageFormat::from_mime_type(ct) else {
-                return Err(ServiceError("Format cannot be transformed to thumbnail".into()))
+                return Err(ServiceError(
+                    "Format cannot be transformed to thumbnail".into(),
+                ));
             };
 
             tracing::debug!("generate thumbnail...");
@@ -161,40 +185,41 @@ impl FileUpload {
             cursor
                 .read_to_end(&mut thumb)
                 .map_err(|e| ServiceError(format!("{e}")))?;
+            (self.extension.clone(), thumb)
+        };
+        let thumbnail = Self {
+            content_type: self.content_type.clone(),
+            thumbnail_id: None,
+            original_filename: format!("thumb-{internal_name}"),
+            internal_name: format!("thumb-{internal_name}"),
+            extension,
+            size: thumb.len(),
+            public_resource: self.public_resource,
+            correlation_id: Some(self.id.clone()),
+            ..Default::default()
+        };
+        tracing::debug!("save thumbnail...");
 
-            let thumbnail = Self {
-                content_type: self.content_type.clone(),
-                thumbnail_id: None,
-                original_filename: format!("thumb-{internal_name}"),
-                internal_name: format!("thumb-{internal_name}"),
-                extension: self.extension.clone(),
-                size: thumb.len(),
-                public_resource: self.public_resource,
-                correlation_id: Some(self.id.clone()),
-                ..Default::default()
-            };
-            tracing::debug!("save thumbnail...");
+        let path_buf = PathBuf::from(&share_drive_path).join(&thumbnail.internal_name);
 
-            let path_buf = PathBuf::from(&share_drive_path).join(&thumbnail.internal_name);
+        tokio::fs::write(path_buf, thumb.as_bytes())
+            .await
+            .map_err(|e| ServiceError::from(&e))?;
 
-            tokio::fs::write(path_buf, thumb.as_bytes())
-                .await
-                .map_err(|e| ServiceError::from(&e))?;
-
-            store
-                .update(&thumbnail.id, &thumbnail)
-                .await
-                .map_err(|e| ServiceError::from(&e))?;
-            Ok(Some(thumbnail.id))
-        } else {
-            Ok(None)
-        }
+        store
+            .update(&thumbnail.id, &thumbnail)
+            .await
+            .map_err(|e| ServiceError::from(&e))?;
+        Ok(Some(thumbnail.id))
     }
 
     pub async fn download(&self, share_drive_path: &str) -> Result<File, ServiceError> {
-        tokio::fs::File::open(PathBuf::from(share_drive_path).join(&self.internal_name))
+        tokio::fs::File::open(self.get_physical_path(share_drive_path, &self.internal_name))
             .await
             .map_err(|e| ServiceError::from(&e))
+    }
+    pub fn get_physical_path(&self, share_drive_path: &str, internal_name: &str) -> PathBuf {
+        PathBuf::from(share_drive_path).join(internal_name)
     }
 }
 

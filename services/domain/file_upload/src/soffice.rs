@@ -7,6 +7,7 @@ pub async fn convert_to(
     to: ConvertType,
 ) -> Result<Vec<u8>, Box<dyn Error>> {
     let input_path: PathBuf = input_path.into();
+    tracing::debug!("convert file {input_path:?}");
     let input_path_str = &input_path.display().to_string();
     let temp_dir = &std::env::temp_dir().display().to_string();
     let output = Command::new("soffice")

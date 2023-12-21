@@ -26,14 +26,12 @@ RUN cargo build --release --bin ${CRATE_NAME}
 FROM debian:bookworm-slim AS runtime
 RUN apt  update && apt upgrade -y
 RUN apt install -y ca-certificates
+ARG WITH_LIBREOFFICE
+RUN if [ $WITH_LIBREOFFICE = "yes" ]; then apt update && apt upgrade -y && \
+  apt install  --no-install-recommends -y libreoffice;fi
 
 FROM runtime
 ARG CRATE_NAME
-ARG WITH_MAGICK
-
-
-RUN if [ $WITH_MAGICK = "yes" ]; then apt update && apt upgrade -y && \
-  apt install  --no-install-recommends -y libreoffice libreofficekit-dev;fi
 
 RUN rm -rfv /var/lib/apt/lists/*
 

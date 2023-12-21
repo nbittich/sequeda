@@ -7,6 +7,7 @@ use std::{
 
 use chrono::{Local, NaiveDateTime};
 use image::{EncodableLayout, ImageFormat};
+use mime_guess::mime::IMAGE_PNG;
 use sequeda_service_common::IdGenerator;
 use sequeda_store::{Repository, StoreRepository};
 use serde::{Deserialize, Serialize};
@@ -136,27 +137,29 @@ impl FileUpload {
         share_drive_path: &str,
     ) -> Result<Option<String>, ServiceError> {
         let (extension, thumb) = {
-            let image = if !self.is_image() {
+            let (ct, image) = if !self.is_image() {
                 match convert_to(
-                    self.get_physical_path(share_drive_path),
+                    self.get_physical_path(share_drive_path, internal_name),
                     crate::soffice::ConvertType::Png,
                 )
                 .await
                 {
-                    Ok(bytes) => {
-                        image::load_from_memory(&bytes).map_err(|e| ServiceError::from(&e))
-                    }
+                    Ok(bytes) => image::load_from_memory(&bytes)
+                        .map_err(|e| ServiceError::from(&e))
+                        .map(|im| (Some(IMAGE_PNG.to_string()), im)),
                     Err(e) => {
                         tracing::error!("error converting file {}: {} ", self.original_filename, e);
                         return Ok(None);
                     }
                 }
             } else {
-                image::load_from_memory(file_handle).map_err(|e| ServiceError::from(&e))
+                image::load_from_memory(file_handle)
+                    .map_err(|e| ServiceError::from(&e))
+                    .map(|im| (self.content_type.clone(), im))
             }?;
             let thumb = image.thumbnail(THUMB_WIDTH, THUMB_HEIGHT);
 
-            let Some(ct) = &self.content_type else {
+            let Some(ct) = ct else {
                 return Err(ServiceError("No Content type! Should not happen".into()));
             };
 
@@ -211,12 +214,12 @@ impl FileUpload {
     }
 
     pub async fn download(&self, share_drive_path: &str) -> Result<File, ServiceError> {
-        tokio::fs::File::open(self.get_physical_path(share_drive_path))
+        tokio::fs::File::open(self.get_physical_path(share_drive_path, &self.internal_name))
             .await
             .map_err(|e| ServiceError::from(&e))
     }
-    pub fn get_physical_path(&self, share_drive_path: &str) -> PathBuf {
-        PathBuf::from(share_drive_path).join(&self.internal_name)
+    pub fn get_physical_path(&self, share_drive_path: &str, internal_name: &str) -> PathBuf {
+        PathBuf::from(share_drive_path).join(internal_name)
     }
 }
 

@@ -5,6 +5,7 @@ members = [
     "services/domain/person",
     "services/domain/org/org_member",
     "services/domain/org/org_customer",
+    "services/domain/org/org_customer_invoice",
     "services/domain/org/org_position",
     "services/domain/org/orgs",
     "services/domain/file_upload",
@@ -25,7 +26,7 @@ http-body-util = "0.1.0"
 serde = "1.0.193"
 serde_json = "1.0.108"
 bincode = "1.3.3"
-tokio = "1.35.0"
+tokio = "1.35.1"
 uuid = "1.6.1"
 mongodb = "2.8.0"
 chrono = "0.4.31"
@@ -34,17 +35,17 @@ tracing-subscriber = "0.3.18"
 axum = "0.7.2"
 tower-http = "0.5.0"
 futures-util = "0.3.29"
-async-trait = "0.1.74"
+async-trait = "0.1.75"
 dirs = "5.0.1"
 tower = "0.4.13"
 queue-file = "1.4.10"
-reqwest = "0.11.22"
+reqwest = "0.11.23"
 tokio-tungstenite = "0.21.0"
 futures = "0.3.29"
 axum-core = "0.4.1"
-hyper = "1.0.1"
+hyper = "1.1.0"
 toml = "0.8.8"
-serde_yaml = "0.9"
+serde_yaml = "0.9.29"
 regex = "1.10.2"
 hyper-rustls = "0.24.2"
 rustls = "0.22.1"
@@ -60,7 +61,7 @@ mime_guess = "2.0.4"
 multipart = "0.18.0"
 tokio-util = "0.7.10"
 image = "0.24.7"
-hyper-util = "0.1.1"
+hyper-util = "0.1.2"
 hyper-tls = "0.6.0"
 bytes = "1.5.0"
 

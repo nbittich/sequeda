@@ -1,5 +1,8 @@
 use chrono::{Local, NaiveDate, NaiveDateTime};
-use sequeda_service_common::{BankAccount, ContactDetail, IdGenerator};
+use sequeda_service_common::{
+    common_domain_types::{BankAccount, ContactDetail},
+    IdGenerator,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]

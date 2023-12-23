@@ -1,6 +1,6 @@
+pub mod common_domain_types;
 mod constants;
 pub mod user_header;
-
 pub use constants::{
     BODY_SIZE_LIMIT, CORS_ALLOW_ORIGIN, PUBLIC_TENANT, SERVICE_APPLICATION_NAME,
     SERVICE_COLLECTION_NAME, SERVICE_CONFIG_VOLUME, SERVICE_DATA_VOLUME, SERVICE_HOST,
@@ -42,36 +42,6 @@ pub fn to_json_string<T: Serialize + core::fmt::Debug>(data: T) -> String {
 
 #[derive(Debug, Clone)]
 pub struct StoreCollection(pub String);
-
-#[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ContactDetail {
-    pub email_address_1: String,
-    pub email_address_2: Option<String>,
-    pub phone_number_1: String,
-    pub phone_number_2: Option<String>,
-    pub website: Option<String>,
-    pub address: Address,
-}
-
-#[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Address {
-    pub street: String,
-    pub number: String,
-    pub box_number: Option<String>,
-    pub post_code: String,
-    pub municipality: String,
-    pub province: Option<String>,
-    pub country: String,
-}
-
-#[derive(Debug, Default, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BankAccount {
-    pub number: String,
-    pub bic: Option<String>,
-}
 
 pub struct IdGenerator;
 

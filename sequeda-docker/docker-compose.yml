@@ -92,6 +92,17 @@ services:
     restart: "always"
     networks:
       sequeda:
+
+  ####### service product  #######
+  product:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_product
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
   ####### service org_position  #######
   org-position:
     build:

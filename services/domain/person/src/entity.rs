@@ -1,5 +1,8 @@
 use chrono::{Local, NaiveDate, NaiveDateTime};
-use sequeda_service_common::{BankAccount, ContactDetail, IdGenerator};
+use sequeda_service_common::{
+    common_domain_types::{BankAccount, ContactDetail, Gender},
+    IdGenerator,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -68,14 +71,6 @@ impl Default for Person {
 
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum Gender {
-    Male,
-    Female,
-    Unknown,
-}
-
-#[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AcademicTitle {
     Dr,
     Professor,
@@ -95,7 +90,7 @@ pub enum MaritalStatus {
 #[cfg(test)]
 mod test {
     use chrono::NaiveDate;
-    use sequeda_service_common::{Address, BankAccount};
+    use sequeda_service_common::common_domain_types::{Address, BankAccount};
 
     use super::{Gender, Person};
     #[test]

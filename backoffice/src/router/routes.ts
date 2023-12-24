@@ -29,6 +29,17 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/product',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'product.root',
+        component: () => import('pages/product/ProductPage.vue'),
+      },
+    ],
+  },
 
   {
     path: '/org',

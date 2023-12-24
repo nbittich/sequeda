@@ -42,3 +42,17 @@ routes:
       - !rewrite_path
         source: /product/find-all/**
         dest: /find-all
+  - id: product_tag_search
+    uri: http://product
+    predicates:
+      - !path /product/tag/search/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /product/tag/search/**
+        dest: /tag/search

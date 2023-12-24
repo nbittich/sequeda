@@ -1,6 +1,6 @@
 import { BankAccount } from './bank-account';
 import { ContactDetail } from './contact-detail';
-import { SelectOption } from './shared.ts';
+import { SelectOption } from './shared';
 export const genders: SelectOption[] = [
   {
     label: 'Male',

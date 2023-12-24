@@ -1,7 +1,7 @@
 use std::env::var;
 
 use axum::{
-    extract::{self, Path},
+    extract::{self, Path, Query},
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
@@ -9,12 +9,14 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, QueryIds, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, IdGenerator, QueryIds, StoreCollection, PUBLIC_TENANT,
+    SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{Repository, StoreClient, StoreRepository};
+use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
+use serde::Deserialize;
 use serde_json::json;
 
-use crate::entity::{ProductItem, ProductItemUpsert};
+use crate::entity::{ProductItem, ProductItemUpsert, ProductTag};
 
 pub fn get_router(client: StoreClient) -> Router {
     let collection_name: String =
@@ -22,6 +24,7 @@ pub fn get_router(client: StoreClient) -> Router {
 
     Router::new()
         .route("/find-all", get(find_all))
+        .route("/tag/search", get(search_tag))
         .route("/find-by-ids", post(find_by_ids))
         .route("/find-one/:product_id", get(find_one))
         .route("/delete/:product_id", delete(delete_by_id))
@@ -137,6 +140,51 @@ async fn delete_by_id(
     }
 }
 
+#[derive(Deserialize)]
+struct TagQuery {
+    tag: String,
+}
+async fn search_tag(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    Query(tag): Query<TagQuery>,
+) -> impl IntoResponse {
+    tracing::debug!("Search product tag route entered!");
+    let Some(tenant) = x_user_info.tenant else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "result": "tenant is missing"
+            })),
+        )
+            .into_response();
+    };
+    let repository: StoreRepository<ProductTag> =
+        StoreRepository::get_repository(client, "product_tag", &tenant).await;
+    match find_tag(&repository, &tag.tag, false).await {
+        Ok(p) => Json(p.into_iter().map(|p| p.name).collect::<Vec<_>>()).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": e.to_string() })),
+        )
+            .into_response(),
+    }
+}
+
+async fn find_tag(
+    repository: &StoreRepository<ProductTag>,
+    tag: &str,
+    exact: bool,
+) -> Result<Vec<ProductTag>, sequeda_store::StoreError> {
+    if exact {
+        repository.find_by_query(doc! {"name": tag}).await
+    } else {
+        repository
+            .find_by_query(doc! {"name": &format!("/${tag}/i")})
+            .await
+    }
+}
+
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
@@ -154,7 +202,7 @@ async fn upsert(
             .into_response();
     };
     let repository: StoreRepository<ProductItem> =
-        StoreRepository::get_repository(client, &collection.0, &tenant).await;
+        StoreRepository::get_repository(client.clone(), &collection.0, &tenant).await;
     let product = async {
         if let Some(id) = &payload.id {
             let p = repository.find_by_id(id).await;
@@ -178,13 +226,35 @@ async fn upsert(
 
     let product = ProductItem {
         name,
-        tags,
+        tags: tags
+            .as_ref()
+            .map(|t| t.iter().map(|l| l.to_lowercase()).collect()),
         unit_type,
         description,
         price_per_unit,
         main_picture_id,
         ..product
     };
+
+    // persist the tag
+    tokio::spawn(async move {
+        let repository: StoreRepository<ProductTag> =
+            StoreRepository::get_repository(client, "product_tag", &tenant).await;
+        for tag in tags.iter().flatten() {
+            if find_tag(&repository, tag, true)
+                .await
+                .is_ok_and(|pt| pt.is_empty())
+            {
+                let pt = ProductTag {
+                    name: tag.to_lowercase(),
+                    id: IdGenerator.get(),
+                };
+                if let Err(e) = repository.update(&pt.id, &pt).await {
+                    tracing::error!("could not write tage {tag:?}: {e}");
+                }
+            }
+        }
+    });
 
     let result = repository.update(&product.id, &product).await;
     match result {

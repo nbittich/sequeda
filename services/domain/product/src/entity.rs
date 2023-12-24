@@ -17,6 +17,14 @@ pub struct ProductItem {
     pub unit_type: ProductUnitType,
 }
 
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductTag {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub name: String,
+}
+
 impl Default for ProductItem {
     fn default() -> Self {
         Self {

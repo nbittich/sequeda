@@ -13,7 +13,7 @@ async fn main() {
     let host = var(SERVICE_HOST).unwrap_or_else(|_| String::from("127.0.0.1"));
     let port = var(SERVICE_PORT).unwrap_or_else(|_| String::from("0"));
     let app_name =
-        var(SERVICE_APPLICATION_NAME).unwrap_or_else(|_| String::from("sequeda-person-service"));
+        var(SERVICE_APPLICATION_NAME).unwrap_or_else(|_| String::from("sequeda-product-service"));
 
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 

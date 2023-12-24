@@ -41,25 +41,58 @@ export default defineComponent({
   async setup() {
     const products = ref(await productStore.findAll());
 
-    return { columns, products };
+    return {
+      columns,
+      products,
+      tab: ref('general'), // in case adding more tabs, see PersonalOrgPage.vue for an example
+    };
   },
   methods: {
     newProduct() {
-      this.$router.push({ name: 'org.products.new' });
+      this.$router.push({ name: 'products.new' });
     },
   },
 });
 </script>
 
 <template>
-  <q-table dense :rows="products" :columns="columns" row-key="_id">
-    <template v-slot:top>
-      <div class="row full-width justify-between">
-        <div class="text-h6">Products</div>
-        <q-btn color="primary" icon="add" label="New position" @click="newProduct" />
-      </div>
-    </template>
-  </q-table>
+  <q-tabs
+    v-model="tab"
+    class="text-teal"
+    inline-label
+    outside-arrows
+    mobile-arrows
+  >
+    <q-route-tab
+      to="/product"
+      name="general"
+      icon="perm_identity"
+      label="General"
+    />
+  </q-tabs>
+  <q-separator />
+
+  <q-tab-panels v-model="tab" v-if="products" animated>
+    <q-tab-panel name="general" v-if="$route.name === 'products.root'">
+      <q-table dense :rows="products" :columns="columns" row-key="_id">
+        <template v-slot:top>
+          <div class="row full-width justify-between">
+            <div class="text-h6">Products</div>
+            <q-btn
+              color="primary"
+              icon="add"
+              label="New product"
+              @click="newProduct"
+            />
+          </div>
+        </template>
+      </q-table>
+    </q-tab-panel>
+
+    <q-tab-panel name="general" v-if="$route.name !== 'products.root'">
+      <router-view :key="$route.params.id as string" />
+    </q-tab-panel>
+  </q-tab-panels>
 </template>
 
 <style lang="sass" scoped></style>

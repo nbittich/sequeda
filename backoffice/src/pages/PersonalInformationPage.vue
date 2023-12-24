@@ -66,33 +66,16 @@ export default defineComponent({
 </script>
 
 <template>
-  <q-tabs
-    v-model="tab"
-    class="text-teal"
-    inline-label
-    outside-arrows
-    mobile-arrows
-  >
-    <q-route-tab
-      to="/personal-info"
-      name="general"
-      icon="perm_identity"
-      label="General"
-    />
+  <q-tabs v-model="tab" class="text-teal" inline-label outside-arrows mobile-arrows>
+    <q-route-tab to="/personal-info" name="general" icon="perm_identity" label="General" />
   </q-tabs>
   <q-separator />
 
   <q-tab-panels v-model="tab" v-if="current" animated>
     <q-tab-panel name="general">
       <q-card>
-        <PersonForm
-          :image-key="imageKey"
-          v-model:personModel="current"
-          v-model:profilePicture="profilePictureFile"
-          v-model:signature="signatureFile"
-          :title="title"
-          :with-signature="true"
-        />
+        <PersonForm :image-key="imageKey" v-model:personModel="current" v-model:profilePicture="profilePictureFile"
+          v-model:signature="signatureFile" :title="title" :with-signature="true" />
         <q-separator />
         <q-card-actions>
           <q-btn color="primary" @click="update">Save</q-btn>

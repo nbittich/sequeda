@@ -46,7 +46,7 @@
 
           <q-item clickable v-ripple to="/product">
             <q-item-section avatar>
-              <q-icon name="store" />
+              <q-icon name="local_mall" />
             </q-item-section>
             <q-item-section> Products </q-item-section>
           </q-item>

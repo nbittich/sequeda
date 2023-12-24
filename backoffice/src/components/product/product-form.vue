@@ -24,19 +24,27 @@ export default defineComponent({
     });
     const product = ref(productComputed);
     let tagOptions = ref([] as string[]);
+    let productTagsUpdated = ref(0);
+    let unitUpdated = ref(0);
 
     return {
       product,
+      unitUpdated,
+      productTagsUpdated,
       productUnitTypes,
       tagOptions,
       async filterTags(val: string, update: (arg0: () => void) => void) {
-        let tags: string[] = [];
+        let tags: string[] = [val.trim()];
         if (val.trim().length) {
           tags = await productStore.searchTags(val.trim());
         }
         update(() => {
           tagOptions.value = tags;
         });
+      },
+      removeTag({ index }: { index: number; value: string }) {
+        product.value.tags.splice(index, 1);
+        productTagsUpdated.value += 1;
       },
     };
   },
@@ -83,21 +91,23 @@ export default defineComponent({
           <q-input
             dense
             outlined
-            type="textarea"
+            type="number"
             class="q-mr-md-xs"
             label="Price Per Unit"
-            v-model="product.pricePerUnit"
+            v-model.number="product.pricePerUnit"
           >
           </q-input>
         </div>
         <div class="col-6">
           <q-select
+            :key="unitUpdated"
             dense
             outlined
             label="Unit Type"
             :options="productUnitTypes"
             option-label="label"
             option-value="value"
+            @update:model-value="unitUpdated += 1"
             emit-value
             map-options
             v-model="product.unitType"
@@ -106,28 +116,30 @@ export default defineComponent({
         </div>
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
-        <q-select
-          class="q-mr-md-xs"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="tagOptions"
-          v-model="product.tags"
-          multiple
-          use-chips
-          use-input
-          input-debounce="0"
-          new-value-mode="add-unique"
-          @filter="filterTags"
-          label="Choose existing tags"
-        >
-          <template v-slot:no-option>
-            <q-item>
-              <q-item-section class="text-grey"> No results </q-item-section>
-            </q-item>
-          </template>
-        </q-select>
+        <div class="col-12">
+          <q-select
+            :key="productTagsUpdated"
+            class="q-mr-md-xs"
+            dense
+            outlined
+            :options="tagOptions"
+            v-model="product.tags"
+            multiple
+            use-chips
+            use-input
+            input-debounce="0"
+            new-value-mode="add-unique"
+            @filter="filterTags"
+            @remove="removeTag"
+            label="Choose existing tags"
+          >
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey"> No results </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+        </div>
       </div>
     </q-card-section>
   </q-card>

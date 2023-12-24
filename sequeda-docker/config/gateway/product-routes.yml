@@ -56,3 +56,18 @@ routes:
       - !rewrite_path
         source: /product/tag/search/**
         dest: /tag/search
+  - id: product_upsert
+    uri: http://product
+    filters:
+      - !rewrite_path
+        source: /product/**
+        dest: /
+    predicates:
+      - !path /product/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo

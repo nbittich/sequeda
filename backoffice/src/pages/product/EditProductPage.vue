@@ -3,7 +3,7 @@ import useUploadStore from 'src/stores/uploads';
 import useProductStore from 'src/stores/product';
 import { defineComponent, ref } from 'vue';
 import ProductForm from 'src/components/product/product-form.vue';
-import { Product } from 'src/models/product';
+import { useRoute } from 'vue-router';
 const uploadStore = useUploadStore();
 
 const imageKey = ref(0);
@@ -12,11 +12,12 @@ const reload = () => {
 };
 const productStore = useProductStore();
 export default defineComponent({
-  name: 'NewProductPage',
+  name: 'EditProductPage',
   components: { ProductForm },
   computed: {},
   async setup() {
-    const product = ref({ pricePerUnit: 0, tags: [] as string[] } as Product);
+    const route = useRoute();
+    const product = ref(await productStore.findOne(route.params.id as string));
     const pictureFile = ref(null as unknown as File);
     return {
       pictureFile,
@@ -60,7 +61,7 @@ export default defineComponent({
           v-model:product-model="product"
           v-model:main-picture="pictureFile"
           :image-key="imageKey"
-          :title="'New Product'"
+          :title="'Edit Product'"
         />
 
         <q-separator />

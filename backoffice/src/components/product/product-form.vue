@@ -2,7 +2,7 @@
 import { Product, productUnitTypes } from 'src/models/product';
 import useProductStore from 'src/stores/product';
 import { computed, defineComponent, ref } from 'vue';
-
+import ImageUpload from 'src/components/shared/image-upload.vue';
 const productStore = useProductStore();
 export default defineComponent({
   name: 'ProductForm',
@@ -11,12 +11,21 @@ export default defineComponent({
       type: String,
       default: () => '',
     },
+
+    imageKey: {
+      type: Number,
+      default: () => ref(0),
+    },
+    mainPicture: {
+      type: Object,
+      default: () => ({}) as File,
+    },
     productModel: {
       type: Object,
       default: () => ({}) as Product,
     },
   },
-  emits: ['update:productModel'],
+  emits: ['update:productModel', 'update:mainPicture'],
   async setup(props, context) {
     const productComputed = computed({
       get: () => props.productModel,
@@ -26,10 +35,15 @@ export default defineComponent({
     let tagOptions = ref([] as string[]);
     let productTagsUpdated = ref(0);
     let unitUpdated = ref(0);
+    const mainPictureFile = computed({
+      get: () => props.mainPicture,
+      set: (value) => context.emit('update:mainPicture', value),
+    });
 
     return {
       product,
       unitUpdated,
+      mainPictureFile,
       productTagsUpdated,
       productUnitTypes,
       tagOptions,
@@ -50,7 +64,7 @@ export default defineComponent({
     };
   },
   methods: {},
-  components: {},
+  components: { ImageUpload },
 });
 </script>
 <template>
@@ -60,6 +74,17 @@ export default defineComponent({
         <div class="text-h6">{{ title }}</div>
       </div>
     </q-card-section>
+    <q-card-section class="row justify-center">
+      <div class="col">
+        <div class="text-h6 q-ml-xs-sm">Picture Product</div>
+        <ImageUpload
+          :key="imageKey"
+          v-model="mainPictureFile"
+          :picture-id="product.mainPictureId"
+        />
+      </div>
+    </q-card-section>
+    <q-separator />
 
     <q-card-section>
       <div class="row q-mb-xs-none q-mb-md-xs">

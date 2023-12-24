@@ -7,8 +7,16 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="drawer" show-if-above :mini="!drawer || miniState" @click.capture="drawerClick" :width="200"
-      :breakpoint="200" bordered class="bg-grey-3">
+    <q-drawer
+      v-model="drawer"
+      show-if-above
+      :mini="!drawer || miniState"
+      @click.capture="drawerClick"
+      :width="200"
+      :breakpoint="200"
+      bordered
+      class="bg-grey-3"
+    >
       <q-scroll-area class="fit">
         <q-list padding class="menu-list">
           <q-item clickable v-ripple to="/personal-info">
@@ -17,7 +25,11 @@
             </q-item-section>
             <q-item-section> Profile </q-item-section>
           </q-item>
-          <q-expansion-item expand-separator icon="corporate_fare" label="Organization">
+          <q-expansion-item
+            expand-separator
+            icon="corporate_fare"
+            label="Organization"
+          >
             <q-item clickable v-ripple to="/org">
               <q-item-section avatar>
                 <q-icon name="store" />
@@ -65,7 +77,14 @@
           to mini-mode
         -->
       <div class="q-mini-drawer-hide absolute" style="top: 15px; right: -17px">
-        <q-btn dense round unelevated color="accent" icon="chevron_left" @click="miniState = true" />
+        <q-btn
+          dense
+          round
+          unelevated
+          color="accent"
+          icon="chevron_left"
+          @click="miniState = true"
+        />
       </div>
     </q-drawer>
 
@@ -73,7 +92,9 @@
       <q-page>
         <Suspense>
           <template #default>
-            <router-view :key="$route.params.id as string" />
+            <router-view
+              :key="($route.params.id as string) || $route.query.t?.toString()"
+            />
           </template>
           <template #fallback>
             <div>Loading...</div>

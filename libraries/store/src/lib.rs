@@ -7,7 +7,7 @@ use std::fmt::Display;
 
 pub use client::StoreClient;
 pub use constants::{MONGO_ADMIN_DATABASE, MONGO_HOST, MONGO_PASSWORD, MONGO_PORT, MONGO_USERNAME};
-pub use mongodb::bson::{doc, oid::ObjectId, to_document, Document};
+pub use mongodb::bson::{doc, oid::ObjectId, to_document, Document, Regex};
 pub use mongodb::{options::ClientOptions, Client, Collection, Database};
 pub use mongodb::{
     options::FindOptions, results::DeleteResult, results::InsertManyResult,

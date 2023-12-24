@@ -62,7 +62,10 @@ export default defineComponent({
       }
 
       await customerStore.update(this.customer);
-      this.$router.push({ name: 'org.customers.root' });
+      this.$router.push({
+        name: 'org.customers.root',
+        query: { t: new Date().getTime() },
+      });
     },
     async reset() {
       this.$router.push({ name: 'org.customers.root' });

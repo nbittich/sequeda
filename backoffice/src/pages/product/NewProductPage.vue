@@ -22,7 +22,10 @@ export default defineComponent({
   methods: {
     async update() {
       await productStore.update(this.product);
-      this.$router.push({ name: 'products.root' });
+      this.$router.push({
+        name: 'products.root',
+        query: { t: new Date().getTime() },
+      });
     },
     async reset() {
       this.$router.push({ name: 'products.root' });

@@ -4,7 +4,12 @@ import PersonForm from 'src/components/person/person-form.vue';
 import RemarkForm from 'src/components/shared/remark-form.vue';
 import { BankAccount } from 'src/models/bank-account';
 import { Address, ContactDetail } from 'src/models/contact-detail';
-import { Communication, Organization, OrgCustomer, representedByIsOrg } from 'src/models/orgs';
+import {
+  Communication,
+  Organization,
+  OrgCustomer,
+  representedByIsOrg,
+} from 'src/models/orgs';
 import { Person } from 'src/models/person';
 import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
@@ -33,8 +38,7 @@ export default defineComponent({
       otherContacts: [] as ContactDetail[],
       primaryBankAccount: {} as BankAccount,
       otherBankAccounts: [] as BankAccount[],
-      status: 'ACTIVE'
-
+      status: 'ACTIVE',
     } as Organization);
     const customerType = ref('PERSON');
 
@@ -42,7 +46,15 @@ export default defineComponent({
     const started = ref(null as unknown as string);
     const ended = ref(null as unknown as string);
     const communications = ref([] as Communication[]);
-    return { communications, representedByPerson, representedByOrg, pictureFile, customerType, started, ended };
+    return {
+      communications,
+      representedByPerson,
+      representedByOrg,
+      pictureFile,
+      customerType,
+      started,
+      ended,
+    };
   },
   methods: {
     async update() {
@@ -56,7 +68,7 @@ export default defineComponent({
         const upload = await uploadStore.uploadFile(
           this.pictureFile,
           undefined,
-          representedBy._id
+          representedBy._id,
         );
         if (representedByIsOrg(representedBy)) {
           representedBy.logoId = upload._id;
@@ -74,10 +86,13 @@ export default defineComponent({
         started: this.started,
         ended: this.ended,
         communications: this.communications,
-        representedById: representedBy._id
+        representedById: representedBy._id,
       };
       await customerStore.update(customer);
-      this.$router.push({ name: 'org.customers.root' });
+      this.$router.push({
+        name: 'org.customers.root',
+        query: { t: new Date().getTime() },
+      });
     },
     async reset() {
       this.$router.push({ name: 'org.customers.root' });
@@ -96,13 +111,30 @@ export default defineComponent({
         <q-card-section>
           <div class="row q-mb-xs-none q-mb-md-xs">
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Started" v-model="started" :rules="['date']">
+              <q-input
+                dense
+                outlined
+                class="q-mr-md-xs"
+                label="Started"
+                v-model="started"
+                :rules="['date']"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
+                    <q-popup-proxy
+                      cover
+                      :breakpoint="600"
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
                       <q-date mask="YYYY-MM-DD" v-model="started">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Close"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -111,13 +143,30 @@ export default defineComponent({
               </q-input>
             </div>
             <div class="col-lg-6 col-12">
-              <q-input dense outlined class="q-mr-md-xs" label="Ended" v-model="ended" :rules="['date']">
+              <q-input
+                dense
+                outlined
+                class="q-mr-md-xs"
+                label="Ended"
+                v-model="ended"
+                :rules="['date']"
+              >
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover :breakpoint="600" transition-show="scale" transition-hide="scale">
+                    <q-popup-proxy
+                      cover
+                      :breakpoint="600"
+                      transition-show="scale"
+                      transition-hide="scale"
+                    >
                       <q-date mask="YYYY-MM-DD" v-model="ended">
                         <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Close" color="primary" flat />
+                          <q-btn
+                            v-close-popup
+                            label="Close"
+                            color="primary"
+                            flat
+                          />
                         </div>
                       </q-date>
                     </q-popup-proxy>
@@ -128,13 +177,29 @@ export default defineComponent({
           </div>
         </q-card-section>
         <q-card-section>
-          <q-toggle keep-color color="blue" v-model="customerType" true-value="PERSON" false-value="ORGANIZATION"
-            :label="`Customer Type: ${customerType == 'PERSON' ? 'Person' : 'Organization'}`" />
+          <q-toggle
+            keep-color
+            color="blue"
+            v-model="customerType"
+            true-value="PERSON"
+            false-value="ORGANIZATION"
+            :label="`Customer Type: ${
+              customerType == 'PERSON' ? 'Person' : 'Organization'
+            }`"
+          />
         </q-card-section>
-        <OrgForm v-if="customerType == 'ORGANIZATION'" v-model:orgModel="representedByOrg" v-model:orgLogo="pictureFile"
-          title="Organization" />
-        <PersonForm v-if="customerType == 'PERSON'" :title="'Person'" v-model:person-model="representedByPerson"
-          v-model:profile-picture="pictureFile" />
+        <OrgForm
+          v-if="customerType == 'ORGANIZATION'"
+          v-model:orgModel="representedByOrg"
+          v-model:orgLogo="pictureFile"
+          title="Organization"
+        />
+        <PersonForm
+          v-if="customerType == 'PERSON'"
+          :title="'Person'"
+          v-model:person-model="representedByPerson"
+          v-model:profile-picture="pictureFile"
+        />
 
         <RemarkForm v-model="communications" title="Communications" />
 

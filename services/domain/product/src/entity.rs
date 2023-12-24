@@ -1,5 +1,5 @@
 use chrono::{Local, NaiveDateTime};
-use sequeda_service_common::common_domain_types::ProductUnitType;
+use sequeda_service_common::{common_domain_types::ProductUnitType, IdGenerator};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -28,7 +28,7 @@ pub struct ProductTag {
 impl Default for ProductItem {
     fn default() -> Self {
         Self {
-            id: Default::default(),
+            id: IdGenerator.get(),
             name: Default::default(),
             main_picture_id: Default::default(),
             description: Default::default(),

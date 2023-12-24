@@ -90,13 +90,17 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     }
 
     async fn find_by_ids(&self, ids: Vec<String>) -> Result<Vec<T>, StoreError> {
-        self.find_by_query(doc! {"_id": {"$in": ids}}).await
+        self.find_by_query(doc! {"_id": {"$in": ids}}, None).await
     }
 
-    async fn find_by_query(&self, query: Document) -> Result<Vec<T>, StoreError> {
+    async fn find_by_query(
+        &self,
+        query: Document,
+        options: impl Into<Option<FindOptions>> + Send,
+    ) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection
-            .find(query, None)
+            .find(query, options)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         cursor

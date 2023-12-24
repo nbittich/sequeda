@@ -34,13 +34,14 @@ export default defineComponent({
       productUnitTypes,
       tagOptions,
       async filterTags(val: string, update: (arg0: () => void) => void) {
-        let tags: string[] = [val.trim()];
         if (val.trim().length) {
+          let tags: string[] = [val.trim()];
+
           tags = await productStore.searchTags(val.trim());
+          update(() => {
+            tagOptions.value = tags;
+          });
         }
-        update(() => {
-          tagOptions.value = tags;
-        });
       },
       removeTag({ index }: { index: number; value: string }) {
         product.value.tags.splice(index, 1);
@@ -127,6 +128,7 @@ export default defineComponent({
             multiple
             use-chips
             use-input
+            emit-value
             input-debounce="0"
             new-value-mode="add-unique"
             @filter="filterTags"

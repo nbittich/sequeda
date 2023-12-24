@@ -90,7 +90,9 @@ export default defineComponent({
     </q-tab-panel>
 
     <q-tab-panel name="general" v-if="$route.name !== 'products.root'">
-      <router-view :key="$route.params.id as string" />
+      <router-view
+        :key="($route.params.id as string) || $route.query.t?.toString()"
+      />
     </q-tab-panel>
   </q-tab-panels>
 </template>

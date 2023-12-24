@@ -73,7 +73,7 @@ async fn find_one(
             let mut res = None;
             if let Some(mut member) = member.take() {
                 let responsible_of = repository
-                    .find_by_query(doc! {"managedBy": &member.id})
+                    .find_by_query(doc! {"managedBy": &member.id}, None)
                     .await;
 
                 tracing::debug!("responsible of {responsible_of:?}");

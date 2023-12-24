@@ -12,7 +12,7 @@ use sequeda_service_common::{
     user_header::ExtractUserInfo, IdGenerator, QueryIds, StoreCollection, PUBLIC_TENANT,
     SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
+use sequeda_store::{doc, Regex, Repository, StoreClient, StoreRepository};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -177,10 +177,15 @@ async fn find_tag(
     exact: bool,
 ) -> Result<Vec<ProductTag>, sequeda_store::StoreError> {
     if exact {
-        repository.find_by_query(doc! {"name": tag}).await
+        repository.find_by_query(doc! {"name": tag}, None).await
     } else {
+        tracing::debug!("search for tag {tag}");
+        let regex_pattern = Regex {
+            pattern: format!(".*{tag}.*"),
+            options: "i".to_string(),
+        };
         repository
-            .find_by_query(doc! {"name": &format!("/${tag}/i")})
+            .find_by_query(doc! {"name": regex_pattern}, None)
             .await
     }
 }

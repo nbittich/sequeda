@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct ProductItem {
     #[serde(rename = "_id")]
     pub id: String,
+    pub label: String,
     pub name: String,
     pub main_picture_id: Option<String>,
     pub description: Option<String>,
@@ -29,6 +30,7 @@ impl Default for ProductItem {
     fn default() -> Self {
         Self {
             id: IdGenerator.get(),
+            label: Default::default(),
             name: Default::default(),
             main_picture_id: Default::default(),
             description: Default::default(),
@@ -47,6 +49,7 @@ pub struct ProductItemUpsert {
     #[serde(rename = "_id")]
     pub id: Option<String>,
     pub name: String,
+    pub label: String,
     pub main_picture_id: Option<String>,
     pub description: Option<String>,
     pub tags: Option<Vec<String>>,

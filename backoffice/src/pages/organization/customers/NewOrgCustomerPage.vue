@@ -14,6 +14,7 @@ import { Person } from 'src/models/person';
 import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
+import useProductStore from 'src/stores/product';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
 
@@ -21,6 +22,8 @@ const customerStore = useCustomerStore();
 const uploadStore = useUploadStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
+const productStore = useProductStore();
+const products = await productStore.findAll();
 const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
@@ -41,7 +44,7 @@ export default defineComponent({
       status: 'ACTIVE',
     } as Organization);
     const customerType = ref('PERSON');
-
+    const recurringProducts = ref([] as string[]);
     const pictureFile = ref(null as unknown as File);
     const started = ref(null as unknown as string);
     const ended = ref(null as unknown as string);
@@ -51,7 +54,9 @@ export default defineComponent({
       representedByPerson,
       representedByOrg,
       pictureFile,
+      recurringProducts,
       customerType,
+      products,
       started,
       ended,
     };
@@ -84,6 +89,7 @@ export default defineComponent({
         orgId: currentOrg._id,
         documentIds: [],
         started: this.started,
+        recurringProductIds: this.recurringProducts,
         ended: this.ended,
         communications: this.communications,
         representedById: representedBy._id,
@@ -107,9 +113,8 @@ export default defineComponent({
       <q-card>
         <q-card-section>
           <div class="text-h6">New Customer</div>
-        </q-card-section>
-        <q-card-section>
-          <div class="row q-mb-xs-none q-mb-md-xs">
+
+          <div class="row">
             <div class="col-lg-6 col-12">
               <q-input
                 dense
@@ -175,6 +180,26 @@ export default defineComponent({
               </q-input>
             </div>
           </div>
+
+          <div class="row">
+            <div class="col-12">
+              <q-select
+                dense
+                class="q-mr-md-xs"
+                multiple
+                use-chips
+                use-input
+                outlined
+                v-model="recurringProducts"
+                :options="products"
+                option-label="label"
+                option-value="_id"
+                emit-value
+                map-options
+                label="Recurring products"
+              />
+            </div>
+          </div>
         </q-card-section>
         <q-card-section>
           <q-toggle
@@ -196,7 +221,6 @@ export default defineComponent({
         />
         <PersonForm
           v-if="customerType == 'PERSON'"
-          :title="'Person'"
           v-model:person-model="representedByPerson"
           v-model:profile-picture="pictureFile"
         />

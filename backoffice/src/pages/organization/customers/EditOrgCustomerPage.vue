@@ -6,6 +6,7 @@ import { RepresentedBy, representedByIsOrg } from 'src/models/orgs';
 import useCustomerStore from 'src/stores/organization/customer';
 import useOrgsStore from 'src/stores/organization/orgs';
 import usePersonStore from 'src/stores/person';
+import useProductStore from 'src/stores/product';
 import useUploadStore from 'src/stores/uploads';
 import { defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
@@ -14,6 +15,9 @@ const customerStore = useCustomerStore();
 const uploadStore = useUploadStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
+const productStore = useProductStore();
+
+const products = await productStore.findAll();
 
 export default defineComponent({
   name: 'EditOrgCustomerPage',
@@ -36,9 +40,19 @@ export default defineComponent({
       );
     }
     const customerType = ref(customer.value.customerType || 'PERSON');
+    const recurringProducts = ref(
+      customer.value.recurringProductIds || ([] as string[]),
+    );
 
     const pictureFile = ref(null as unknown as File);
-    return { representedBy, pictureFile, customer, customerType };
+    return {
+      representedBy,
+      pictureFile,
+      customer,
+      recurringProducts,
+      customerType,
+      products,
+    };
   },
   methods: {
     async update() {
@@ -60,6 +74,7 @@ export default defineComponent({
         }
         this.pictureFile = null as unknown as File;
       }
+      this.customer.recurringProductIds = this.recurringProducts;
 
       await customerStore.update(this.customer);
       this.$router.push({
@@ -79,10 +94,9 @@ export default defineComponent({
     <div class="col-12">
       <q-card>
         <q-card-section>
-          <div class="text-h6">Edit customer</div>
-        </q-card-section>
-        <q-card-section>
-          <div class="row q-mb-xs-none q-mb-md-xs">
+          <div class="text-h6 q-mb-md-xs">Edit customer</div>
+
+          <div class="row">
             <div class="col-lg-6 col-12">
               <q-input
                 dense
@@ -148,6 +162,25 @@ export default defineComponent({
               </q-input>
             </div>
           </div>
+          <div class="row">
+            <div class="col-12">
+              <q-select
+                dense
+                class="q-mr-md-xs"
+                multiple
+                use-chips
+                use-input
+                outlined
+                v-model="recurringProducts"
+                :options="products"
+                option-label="label"
+                option-value="_id"
+                emit-value
+                map-options
+                label="Recurring products"
+              />
+            </div>
+          </div>
         </q-card-section>
         <OrgForm
           v-if="customerType == 'ORGANIZATION'"
@@ -157,7 +190,6 @@ export default defineComponent({
         />
         <PersonForm
           v-if="customerType == 'PERSON'"
-          :title="'Person'"
           v-model:person-model="representedBy"
           v-model:profile-picture="pictureFile"
         />

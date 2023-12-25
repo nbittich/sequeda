@@ -16,6 +16,7 @@ export const productUnitTypes: SelectOption[] = [
 ];
 export interface Product {
   _id?: string;
+  label: string;
   name: string;
   mainPictureId?: string;
   description?: string;

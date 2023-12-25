@@ -220,6 +220,7 @@ async fn upsert(
     }
     .await;
     let ProductItemUpsert {
+        label,
         name,
         tags,
         unit_type,
@@ -230,6 +231,7 @@ async fn upsert(
     } = payload;
 
     let product = ProductItem {
+        label,
         name,
         tags: tags
             .as_ref()

@@ -12,6 +12,13 @@ const columns: QTableColumn[] = [
     sortable: true,
   },
   {
+    name: 'label',
+    align: 'left',
+    label: 'Label',
+    field: 'label',
+    sortable: true,
+  },
+  {
     name: 'price',
     align: 'left',
     label: 'Price',
@@ -72,6 +79,10 @@ export default defineComponent({
         </template>
         <template v-slot:body="props">
           <q-tr :props="props">
+            <q-td key="label" :props="props">
+              {{ props.row.label }}
+            </q-td>
+
             <q-td key="name" :props="props">
               {{ props.row.name }}
             </q-td>

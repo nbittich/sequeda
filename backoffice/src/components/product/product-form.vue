@@ -77,89 +77,45 @@ export default defineComponent({
     <q-card-section class="row justify-center">
       <div class="col">
         <div class="text-h6 q-ml-xs-sm">Picture Product</div>
-        <ImageUpload
-          :key="imageKey"
-          v-model="mainPictureFile"
-          :picture-id="product.mainPictureId"
-        />
+        <ImageUpload :key="imageKey" v-model="mainPictureFile" :picture-id="product.mainPictureId" />
       </div>
     </q-card-section>
     <q-separator />
 
     <q-card-section>
       <div class="row q-mb-xs-none q-mb-md-xs">
-        <div class="col-12">
-          <q-input
-            dense
-            outlined
-            class="q-mr-md-xs"
-            label="Name"
-            v-model="product.name"
-          >
+        <div class="col-6">
+          <q-input dense outlined class="q-mr-md-xs" label="Label" v-model="product.label">
+          </q-input>
+        </div>
+        <div class="col-6">
+          <q-input dense outlined class="q-mr-md-xs" label="Name" v-model="product.name">
           </q-input>
         </div>
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-12">
-          <q-input
-            dense
-            outlined
-            type="textarea"
-            class="q-mr-md-xs"
-            label="description"
-            v-model="product.description"
-          >
+          <q-input dense outlined type="textarea" class="q-mr-md-xs" label="description" v-model="product.description">
           </q-input>
         </div>
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-6">
-          <q-input
-            dense
-            outlined
-            type="number"
-            class="q-mr-md-xs"
-            label="Price Per Unit"
-            v-model.number="product.pricePerUnit"
-          >
+          <q-input dense outlined type="number" class="q-mr-md-xs" label="Price Per Unit"
+            v-model.number="product.pricePerUnit">
           </q-input>
         </div>
         <div class="col-6">
-          <q-select
-            :key="unitUpdated"
-            dense
-            outlined
-            label="Unit Type"
-            :options="productUnitTypes"
-            option-label="label"
-            option-value="value"
-            @update:model-value="unitUpdated += 1"
-            emit-value
-            map-options
-            v-model="product.unitType"
-          >
+          <q-select :key="unitUpdated" dense outlined label="Unit Type" :options="productUnitTypes" option-label="label"
+            option-value="value" @update:model-value="unitUpdated += 1" emit-value map-options v-model="product.unitType">
           </q-select>
         </div>
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
         <div class="col-12">
-          <q-select
-            :key="productTagsUpdated"
-            class="q-mr-md-xs"
-            dense
-            outlined
-            :options="tagOptions"
-            v-model="product.tags"
-            multiple
-            use-chips
-            use-input
-            emit-value
-            input-debounce="0"
-            new-value-mode="add-unique"
-            @filter="filterTags"
-            @remove="removeTag"
-            label="Choose existing tags"
-          >
+          <q-select :key="productTagsUpdated" class="q-mr-md-xs" dense outlined :options="tagOptions"
+            v-model="product.tags" multiple use-chips use-input emit-value input-debounce="0" new-value-mode="add-unique"
+            @filter="filterTags" @remove="removeTag" label="Choose existing tags">
             <template v-slot:no-option>
               <q-item>
                 <q-item-section class="text-grey"> No results </q-item-section>

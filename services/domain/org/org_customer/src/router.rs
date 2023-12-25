@@ -127,7 +127,7 @@ async fn delete_by_id(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
+            })),
         );
     };
     let repository: StoreRepository<Customer> =
@@ -165,8 +165,9 @@ async fn upsert(
             StatusCode::FORBIDDEN,
             Json(json!({
                 "result": "tenant is missing"
-            }))
-        ).into_response();
+            })),
+        )
+            .into_response();
     };
     let repository: StoreRepository<Customer> =
         StoreRepository::get_repository(client, &collection.0, &tenant).await;
@@ -183,6 +184,7 @@ async fn upsert(
     .await;
     let CustomerUpsert {
         id: _,
+        recurring_product_ids,
         org_id,
         represented_by_id,
         customer_type,
@@ -224,6 +226,7 @@ async fn upsert(
         org_id,
         ended,
         started,
+        recurring_product_ids,
         customer_type,
         represented_by_id,
         communications,

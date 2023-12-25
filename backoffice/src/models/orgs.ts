@@ -91,6 +91,7 @@ export interface OrgCustomer {
   orgId?: string;
   representedById?: string;
   customerType: string;
+  recurringProductIds?: string[];
   started?: string;
   ended?: string;
   documentIds?: string[];

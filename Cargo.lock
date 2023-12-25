@@ -3078,6 +3078,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "sequeda_invoice"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "axum-extra",
+ "chrono",
+ "sequeda_service_common",
+ "sequeda_store",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.6.1",
+]
+
+[[package]]
 name = "sequeda_message_broker"
 version = "0.1.0"
 dependencies = [

@@ -1,5 +1,5 @@
 use chrono::{Local, NaiveDateTime};
-use sequeda_service_common::{common_domain_types::ProductUnitType, IdGenerator};
+use sequeda_service_common::{common_domain_types::UnitType, IdGenerator};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -15,7 +15,8 @@ pub struct ProductItem {
     pub creation_date: NaiveDateTime,
     pub updated_date: Option<NaiveDateTime>,
     pub price_per_unit: f64,
-    pub unit_type: ProductUnitType,
+    pub vat: usize,
+    pub unit_type: UnitType,
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -38,7 +39,8 @@ impl Default for ProductItem {
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
             price_per_unit: Default::default(),
-            unit_type: ProductUnitType::Hour,
+            vat: 21,
+            unit_type: UnitType::Hour,
         }
     }
 }
@@ -54,5 +56,6 @@ pub struct ProductItemUpsert {
     pub description: Option<String>,
     pub tags: Option<Vec<String>>,
     pub price_per_unit: f64,
-    pub unit_type: ProductUnitType,
+    pub vat: Option<usize>,
+    pub unit_type: UnitType,
 }

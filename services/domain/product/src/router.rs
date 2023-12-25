@@ -222,6 +222,7 @@ async fn upsert(
     let ProductItemUpsert {
         label,
         name,
+        vat,
         tags,
         unit_type,
         description,
@@ -233,6 +234,7 @@ async fn upsert(
     let product = ProductItem {
         label,
         name,
+        vat: vat.unwrap_or(21),
         tags: tags
             .as_ref()
             .map(|t| t.iter().map(|l| l.to_lowercase()).collect()),

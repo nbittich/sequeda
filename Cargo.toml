@@ -9,6 +9,7 @@ members = [
     "services/domain/org/org_position",
     "services/domain/org/orgs",
     "services/domain/file_upload",
+    "services/domain/invoice",
     "services/domain/audit_log",
     "services/service_common",
     "services/message_broker",

@@ -100,9 +100,14 @@ export default defineComponent({
         </div>
       </div>
       <div class="row q-mb-xs-none q-mb-md-xs">
-        <div class="col-6">
+        <div class="col-3">
           <q-input dense outlined type="number" class="q-mr-md-xs" label="Price Per Unit"
             v-model.number="product.pricePerUnit">
+          </q-input>
+        </div>
+        <div class="col-3">
+          <q-input dense outlined type="number" class="q-mr-md-xs" min="0" , max="100" label="VAT"
+            v-model.number="product.vat">
           </q-input>
         </div>
         <div class="col-6">

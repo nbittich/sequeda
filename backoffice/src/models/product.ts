@@ -22,6 +22,7 @@ export interface Product {
   description?: string;
   tags?: string[];
   pricePerUnit: number;
+  vat: number;
   unitType?: string;
   creationDate?: Date;
   updatedDate?: Date;

@@ -29,7 +29,7 @@ mod test {
         env::set_var("RUST_LOG", "INFO");
         let store_client = StoreClient::new(String::from("test")).await.unwrap();
         let repository: StoreRepository<Book> =
-            StoreRepository::from_collection_name(&store_client, "test", "book").await;
+            StoreRepository::get_repository(store_client, "test", "book").await;
 
         repository.delete_many(None).await.unwrap();
         let books = vec![

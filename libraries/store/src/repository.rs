@@ -22,14 +22,20 @@ pub struct Page<T: Serialize + DeserializeOwned> {
 
 pub struct StoreRepository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     collection: Collection<T>,
+    _db_name: String,
+    _collection_name: String,
 }
 
 impl<T> StoreRepository<T>
 where
     T: Serialize + DeserializeOwned + Unpin + Send + Sync,
 {
-    pub fn new(collection: Collection<T>) -> Self {
-        StoreRepository { collection }
+    pub fn new(collection: Collection<T>, collection_name: &str, tenant_id: &str) -> Self {
+        StoreRepository {
+            collection,
+            _db_name: tenant_id.to_string(),
+            _collection_name: collection_name.to_string(),
+        }
     }
 }
 
@@ -42,17 +48,15 @@ where
         collection_name: &str,
         tenant_id: &str,
     ) -> Self {
-        StoreRepository::from_collection_name(&client, tenant_id, collection_name).await
-    }
-
-    pub async fn from_collection_name(
-        client: &StoreClient,
-        db_name: &str,
-        collection_name: &str,
-    ) -> Self {
-        let db = client.get_db(db_name);
+        let db = client.get_db(tenant_id);
         let collection = db.collection::<T>(collection_name);
-        StoreRepository::new(collection)
+        StoreRepository::new(collection, collection_name, tenant_id)
+    }
+    pub fn get_collection_name(&self) -> &str {
+        &self._collection_name
+    }
+    pub fn get_db_name(&self) -> &str {
+        &self._db_name
     }
 }
 
@@ -68,6 +72,7 @@ where
 #[async_trait::async_trait]
 pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     fn get_collection(&self) -> &Collection<T>;
+
     async fn find_all(&self) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection

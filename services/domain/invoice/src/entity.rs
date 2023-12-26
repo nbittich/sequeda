@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{Local, NaiveDateTime};
 use sequeda_service_common::common_domain_types::{BankAccount, ContactDetail, UnitType};
 
 use serde::{Deserialize, Serialize};
@@ -17,6 +17,36 @@ pub struct Invoice {
     pub customer: Customer,
     pub invoicer: Invoicer,
     pub notes: Vec<String>,
+    pub locked: bool,
+    pub processed: bool,
+}
+
+impl Invoice {
+    pub fn new(customer: Customer, invoicer: Invoicer) -> Self {
+        Self {
+            id: Default::default(),
+            creation_date: Local::now().naive_local(),
+            updated_date: Default::default(),
+            number: Default::default(),
+            reference: Default::default(),
+            date_of_invoice: Default::default(),
+            items: Default::default(),
+            customer,
+            invoicer,
+            notes: Default::default(),
+            locked: false,
+            processed: false,
+        }
+    }
+    pub fn get_sub_total(&self) -> f64 {
+        round(self.items.iter().map(|i| i.get_sub_total()).sum(), 2)
+    }
+    pub fn get_total(&self) -> f64 {
+        round(self.items.iter().map(|i| i.get_total()).sum(), 2)
+    }
+    pub fn get_total_vat(&self) -> f64 {
+        round(self.items.iter().map(|i| i.get_total_vat()).sum(), 2)
+    }
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]

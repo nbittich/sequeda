@@ -1,19 +1,14 @@
 use std::env::var;
 
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{delete, get, post},
-    Extension, Json, Router,
-};
+use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
 use chrono::Local;
 use sequeda_service_common::{
     user_header::ExtractUserInfo, StoreCollection, SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{StoreClient, StoreRepository};
+use sequeda_store::{doc, FindOneAndReplaceOptions, MongoError, StoreClient};
 use serde_json::json;
 
-use crate::entity::Invoice;
+use crate::entity::{Invoice, InvoiceSeq, InvoiceUpsert, INVOICE_SEQ_ROW_ID};
 
 pub fn get_router(client: StoreClient) -> Router {
     let collection_name: String =
@@ -28,14 +23,18 @@ pub fn get_router(client: StoreClient) -> Router {
         .layer(Extension(client))
         .layer(Extension(StoreCollection(collection_name)))
 }
-
 async fn upsert(
     Extension(client): Extension<StoreClient>,
-    StoreCollection(collection): StoreCollection,
+    Extension(StoreCollection(collection)): Extension<StoreCollection>,
     ExtractUserInfo(x_user_info): ExtractUserInfo,
-    Json(invoice): Json<Invoice>,
+    Json(invoice): Json<InvoiceUpsert>,
 ) -> impl IntoResponse {
-    tracing::debug!("Upsert invoice route entered!");
+    tracing::debug!("Upsert invoice route entered! payload: {invoice:?}");
+
+    let handle_err = |e: MongoError| {
+        tracing::error!("could not proceed upsert invoice. err: {e:?}");
+        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
+    };
     let Some(tenant) = x_user_info.tenant else {
         return (
             StatusCode::FORBIDDEN,
@@ -45,26 +44,118 @@ async fn upsert(
         )
             .into_response();
     };
-    let repository: StoreRepository<Invoice> =
-        StoreRepository::get_repository(client, &collection, &tenant).await;
-    // let maybe_invoice = async {
-    //     if let Some(id) = &invoice.id {
-    //         let i = repository.find_by_id(id).await;
-    //         if let Ok(Some(mut i)) = i {
-    //             i.updated_date = Some(Local::now().naive_local());
-    //             return i;
-    //         }
-    //     }
-    //     Default::default()
-    // }
-    // .await;
-    if invoice.processed {
+    let client = client.get_raw_client(); // todo, maybe make a SessionStoreRepository or something
+    let mut session = match client.start_session(None).await {
+        Ok(session) => session,
+        Err(e) => return handle_err(e),
+    };
+
+    if let Err(e) = session.start_transaction(None).await {
+        return handle_err(e);
+    }
+    let invoice_collection = session
+        .client()
+        .database(&tenant)
+        .collection::<Invoice>(&collection);
+    let maybe_invoice = {
+        if let Some(id) = &invoice.id {
+            let i = invoice_collection
+                .find_one_with_session(doc! {"_id": id}, None, &mut session)
+                .await;
+            match i {
+                Ok(Some(mut i)) => {
+                    i.updated_date = Some(Local::now().naive_local());
+                    i
+                }
+                Err(e) => return handle_err(e),
+                _ => Default::default(),
+            }
+        } else {
+            Default::default()
+        }
+    };
+    if maybe_invoice.locked {
         // we cannot change a locked invoice.
         return (
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": "You cannot modify a processed invoice"})),
+            Json(json!({"error": "You cannot modify a locked invoice"})),
         )
             .into_response();
     }
-    todo!()
+    let InvoiceUpsert {
+        id: _,
+        date_of_invoice,
+        items,
+        customer,
+        invoicer,
+        notes,
+        locked,
+    } = invoice;
+
+    let mut invoice = Invoice {
+        date_of_invoice,
+        items,
+        customer,
+        invoicer,
+        notes,
+        locked,
+        ..maybe_invoice
+    };
+    let options = FindOneAndReplaceOptions::builder()
+        .upsert(Some(true))
+        .build();
+
+    // if this happens there will be no way to delete or modify the invoice anymore
+    if maybe_invoice.locked {
+        let invoice_seq_collection = session
+            .client()
+            .database(&tenant)
+            .collection::<InvoiceSeq>("invoice_seq");
+
+        let seq = match invoice_seq_collection
+            .find_one_with_session(doc! {"_id": INVOICE_SEQ_ROW_ID}, None, &mut session)
+            .await
+        {
+            Ok(Some(mut seq)) => {
+                seq.seq += 1;
+                seq
+            }
+            Ok(None) => InvoiceSeq {
+                id: INVOICE_SEQ_ROW_ID.to_string(),
+                seq: 1,
+            },
+            Err(e) => return handle_err(e),
+        };
+
+        invoice.number = Some(format!("{}-{:03}", Local::now().format("%m%Y"), seq.seq));
+
+        if let Err(e) = invoice_seq_collection
+            .find_one_and_replace_with_session(
+                doc! {"_id": INVOICE_SEQ_ROW_ID},
+                &seq,
+                options.clone(),
+                &mut session,
+            )
+            .await
+        {
+            return handle_err(e);
+        }
+    }
+    if let Err(e) = invoice_collection
+        .find_one_and_replace_with_session(
+            doc! {"_id": &invoice.id},
+            &invoice,
+            options,
+            &mut session,
+        )
+        .await
+    {
+        return handle_err(e);
+    }
+
+    if let Err(e) = session.commit_transaction().await {
+        return handle_err(e);
+    }
+
+    (StatusCode::OK, Json(invoice)).into_response()
 }

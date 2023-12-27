@@ -19,3 +19,5 @@ tower-http = { workspace = true, features = ["cors"] }
 sequeda_store = { path = "../../../libraries/store" }
 sequeda_service_common = { path = "../../service_common" }
 axum-extra = { workspace = true }
+rand = { workspace = true }
+futures-util = { workspace = true }

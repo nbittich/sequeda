@@ -20,12 +20,12 @@ impl StoreClient {
         Ok(StoreClient { client })
     }
 
-    pub fn get_client(&self) -> Client {
+    pub fn get_raw_client(&self) -> Client {
         self.client.clone()
     }
 
     pub fn get_db(&self, database_name: &str) -> Database {
-        let client = self.get_client();
+        let client = self.get_raw_client();
         client.database(database_name)
     }
 

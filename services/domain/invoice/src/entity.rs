@@ -1,7 +1,21 @@
 use chrono::{Local, NaiveDateTime};
-use sequeda_service_common::common_domain_types::{BankAccount, ContactDetail, UnitType};
+use rand::{distributions::Alphanumeric, Rng};
+use sequeda_service_common::{
+    common_domain_types::{BankAccount, ContactDetail, UnitType},
+    IdGenerator,
+};
 
 use serde::{Deserialize, Serialize};
+
+pub const INVOICE_SEQ_ROW_ID: &str = "1a6b5960-f531-4327-b529-a655b11e38f8";
+
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvoiceSeq {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub seq: u64,
+}
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,7 +24,7 @@ pub struct Invoice {
     pub id: String,
     pub creation_date: NaiveDateTime,
     pub updated_date: Option<NaiveDateTime>,
-    pub number: String,
+    pub number: Option<String>,
     pub reference: String,
     pub date_of_invoice: NaiveDateTime,
     pub items: Vec<InvoiceItem>,
@@ -18,26 +32,48 @@ pub struct Invoice {
     pub invoicer: Invoicer,
     pub notes: Vec<String>,
     pub locked: bool,
-    pub processed: bool,
 }
 
-impl Invoice {
-    pub fn new(customer: Customer, invoicer: Invoicer) -> Self {
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InvoiceUpsert {
+    #[serde(rename = "_id")]
+    pub id: Option<String>,
+    pub date_of_invoice: NaiveDateTime,
+    pub items: Vec<InvoiceItem>,
+    pub customer: Customer,
+    pub invoicer: Invoicer,
+    pub notes: Vec<String>,
+    pub locked: bool,
+}
+
+impl Default for Invoice {
+    fn default() -> Self {
         Self {
-            id: Default::default(),
+            id: IdGenerator.get(),
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
             number: Default::default(),
-            reference: Default::default(),
+            reference: format!(
+                "{}-{}",
+                Local::now().format("%m%Y"),
+                rand::thread_rng()
+                    .sample_iter(&Alphanumeric)
+                    .take(5)
+                    .map(char::from)
+                    .map(|c| c.to_ascii_uppercase())
+                    .collect::<String>()
+            ),
             date_of_invoice: Default::default(),
             items: Default::default(),
-            customer,
-            invoicer,
+            customer: Default::default(),
+            invoicer: Default::default(),
             notes: Default::default(),
             locked: false,
-            processed: false,
         }
     }
+}
+impl Invoice {
     pub fn get_sub_total(&self) -> f64 {
         round(self.items.iter().map(|i| i.get_sub_total()).sum(), 2)
     }
@@ -49,7 +85,7 @@ impl Invoice {
     }
 }
 
-#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Invoicer {
     pub invoicer_id: Option<String>,
@@ -60,7 +96,7 @@ pub struct Invoicer {
     pub bank_accounts: Vec<BankAccount>,
 }
 
-#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Customer {
     pub customer_id: Option<String>,
@@ -69,7 +105,7 @@ pub struct Customer {
     pub contact_detail: ContactDetail,
 }
 
-#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct InvoiceItem {
     pub name: String,

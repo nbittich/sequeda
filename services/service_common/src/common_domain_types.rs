@@ -8,9 +8,10 @@ pub struct Displayable<'a> {
     pub i18n_key: Option<&'a str>,
 }
 
-#[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum UnitType {
+    #[default]
     Hour,
     Day,
     Unit,

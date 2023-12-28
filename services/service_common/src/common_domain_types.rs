@@ -1,3 +1,5 @@
+use std::{error::Error, fmt::Display};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, Default, PartialOrd, Serialize, Deserialize)]
@@ -78,4 +80,20 @@ pub struct Address {
 pub struct BankAccount {
     pub number: String,
     pub bic: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct ServiceError(pub String);
+
+impl Display for ServiceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+impl Error for ServiceError {}
+
+impl ServiceError {
+    pub fn from(e: &dyn Error) -> Self {
+        ServiceError(e.to_string())
+    }
 }

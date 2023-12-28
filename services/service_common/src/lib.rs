@@ -1,5 +1,6 @@
 pub mod common_domain_types;
 mod constants;
+pub mod file_upload_common;
 pub mod user_header;
 pub use constants::{
     BODY_SIZE_LIMIT, CORS_ALLOW_ORIGIN, PUBLIC_TENANT, SERVICE_APPLICATION_NAME,

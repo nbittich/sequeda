@@ -41,7 +41,7 @@ async fn main() {
 
     let config_file_name = var(CONFIG_FILE_NAME).unwrap_or_else(|_| String::from("auditlog.json"));
 
-    let path_config = PathBuf::new().join(&config_volume).join(config_file_name);
+    let path_config = PathBuf::from(config_volume).join(config_file_name);
 
     if !path_config.exists() {
         panic!("Missing config `{path_config:?}`");

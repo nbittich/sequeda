@@ -7,7 +7,7 @@ use axum::{
     Extension, Router,
 };
 use futures_util::StreamExt;
-use sequeda_common::TextMessage;
+use sequeda_message_common::TextMessage;
 use tokio::{sync::Mutex, task, time};
 use tracing::Level;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};

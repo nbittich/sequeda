@@ -1,4 +1,4 @@
-FROM rust:1.74 AS chef 
+FROM rust:1.75 AS chef 
 # We only pay the installation cost once, 
 # it will be cached from the second build onwards
 RUN apt update && apt upgrade -y

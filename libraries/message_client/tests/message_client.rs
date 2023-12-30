@@ -3,8 +3,8 @@ mod test {
 
     use std::collections::HashMap;
 
-    use sequeda_common::exchange::Exchange;
     use sequeda_message_client::MessageClient;
+    use sequeda_message_common::exchange::Exchange;
     use tracing::Level;
     use tracing_subscriber::FmtSubscriber;
 

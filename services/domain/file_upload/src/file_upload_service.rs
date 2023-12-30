@@ -3,18 +3,15 @@ use std::{
     path::PathBuf,
 };
 
-use axum::async_trait;
 use chrono::Local;
 use image::{EncodableLayout, ImageFormat};
 use mime_guess::mime::IMAGE_PNG;
-use sequeda_service_common::{
-    common_domain_types::ServiceError,
-    file_upload_common::{FileUpload, IFileService},
-};
+use sequeda_file_upload_common::FileUpload;
+use sequeda_service_common::common_domain_types::ServiceError;
 use sequeda_store::{Repository, StoreRepository};
 use tokio::fs::File;
 
-use crate::soffice::convert_to;
+use crate::{make_default_file_upload, soffice::convert_to};
 
 pub const SHARE_DRIVE_PATH: &str = "SHARE_DRIVE_PATH";
 
@@ -97,7 +94,7 @@ impl FileService<'_> {
             size: thumb.len(),
             public_resource: upl.public_resource,
             correlation_id: Some(upl.id.clone()),
-            ..Default::default()
+            ..make_default_file_upload()
         };
         tracing::debug!("save thumbnail...");
 
@@ -114,9 +111,8 @@ impl FileService<'_> {
         Ok(Some(thumbnail.id))
     }
 }
-#[async_trait]
-impl IFileService for FileService<'_> {
-    async fn upload(
+impl FileService<'_> {
+    pub async fn upload(
         &self,
         mut upl: FileUpload,
         bytes: Option<&[u8]>,
@@ -188,7 +184,7 @@ impl IFileService for FileService<'_> {
             .map_err(|e| ServiceError::from(&e))?;
         Ok(upl)
     }
-    async fn download(&self, upl: &FileUpload) -> Result<File, ServiceError> {
+    pub async fn download(&self, upl: &FileUpload) -> Result<File, ServiceError> {
         tokio::fs::File::open(self.get_physical_path(&upl.internal_name))
             .await
             .map_err(|e| ServiceError::from(&e))

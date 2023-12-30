@@ -37,7 +37,10 @@ pub fn get_router(client: StoreClient) -> Router {
 
 async fn find_all(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("ProductItem list route entered!");
@@ -58,7 +61,10 @@ async fn find_all(
 }
 async fn find_by_ids(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
     extract::Json(QueryIds(query_ids)): extract::Json<QueryIds>,
 ) -> impl IntoResponse {
@@ -81,7 +87,10 @@ async fn find_by_ids(
 async fn find_one(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(product_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("ProductItem find one route entered!");
@@ -105,7 +114,10 @@ async fn find_one(
 async fn delete_by_id(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(product_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("ProductItem delete one route entered!");
@@ -146,7 +158,10 @@ struct TagQuery {
 }
 async fn search_tag(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Query(tag): Query<TagQuery>,
 ) -> impl IntoResponse {
     tracing::debug!("Search product tag route entered!");
@@ -193,7 +208,10 @@ async fn find_tag(
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     extract::Json(payload): extract::Json<ProductItemUpsert>,
 ) -> impl IntoResponse {
     tracing::debug!("Upsert ProductItem route entered!");

@@ -93,7 +93,10 @@ async fn main() {
 async fn find_all(
     pagination: Option<Query<Pageable>>,
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("Audit log page route entered!");

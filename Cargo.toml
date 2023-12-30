@@ -15,9 +15,9 @@ members = [
     "services/message_broker",
     "services/geo_service",
     "services/gateway",
-    "libraries/common",
+    "libraries/message_common",
     "libraries/store",
-    "libraries/message_client",
+    "libraries/message_client", "libraries/file_upload_common", "libraries/file_upload_client",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -33,7 +33,7 @@ mongodb = "2.8.0"
 chrono = "0.4.31"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-axum = "0.7.2"
+axum = "0.7.3"
 tower-http = "0.5.0"
 futures-util = "0.3.30"
 async-trait = "0.1.75"
@@ -43,7 +43,7 @@ queue-file = "1.4.10"
 reqwest = "0.11.23"
 tokio-tungstenite = "0.21.0"
 futures = "0.3.30"
-axum-core = "0.4.1"
+axum-core = "0.4.2"
 hyper = "1.1.0"
 toml = "0.8.8"
 serde_yaml = "0.9.29"
@@ -54,7 +54,7 @@ openidconnect = "3.4.0"
 async-redis-session-v2 = "0.2.3"
 async-session = "3.0.0"
 axum-sessions = "0.6.1"
-axum-extra = "0.9.0"
+axum-extra = "0.9.1"
 rand = "0.8.5"
 base64 = "0.21.5"
 jsonwebtoken = "9.2.0"

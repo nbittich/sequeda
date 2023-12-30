@@ -9,15 +9,16 @@ use axum::Json;
 use axum::{routing::post, Extension, Router};
 
 use axum::extract::{Multipart, Query};
+use chrono::Local;
 use mime_guess::mime::APPLICATION_OCTET_STREAM;
-use sequeda_message_client::{Exchange, MessageClient};
-use sequeda_service_common::file_upload_common::{
-    DownloadFileRequestUriParams, FileUpload, IFileService, UploadFileRequestUriParams,
+use sequeda_file_upload_common::{
+    DownloadFileRequestUriParams, FileUpload, UploadFileRequestUriParams,
 };
+use sequeda_message_client::{Exchange, MessageClient};
 use sequeda_service_common::user_header::ExtractUserInfo;
 use sequeda_service_common::{
-    setup_tracing, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
-    SERVICE_HOST, SERVICE_PORT,
+    setup_tracing, IdGenerator, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT,
+    SERVICE_COLLECTION_NAME, SERVICE_HOST, SERVICE_PORT,
 };
 use sequeda_store::{Repository, StoreClient, StoreRepository};
 use serde_json::json;
@@ -124,7 +125,7 @@ async fn get_file_upload(
         Some((public_repository, fu))
     } else if let Some(tenant) = x_user_info
         .as_ref()
-        .map(|u| &u.0)
+        .map(|u| &u.user_info)
         .and_then(|u| u.tenant.clone())
     {
         let private_repository: StoreRepository<FileUpload> =
@@ -187,7 +188,10 @@ async fn upload(
     Extension(message_sender): Extension<Sender<Exchange>>,
     Extension(collection): Extension<StoreCollection>,
     Extension(ShareDrive(share_drive_path)): Extension<ShareDrive>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Query(mut query): Query<UploadFileRequestUriParams>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
@@ -209,7 +213,7 @@ async fn upload(
                 .extension()
                 .map(|s| s.to_string_lossy().to_string()),
             original_filename: file_name.to_string(),
-            ..Default::default()
+            ..make_default_file_upload()
         };
 
         let data = field.bytes().await.unwrap();
@@ -288,5 +292,20 @@ async fn upload(
             uploads_resp.push(upl);
         }
         (StatusCode::OK, Json(uploads_resp)).into_response()
+    }
+}
+fn make_default_file_upload() -> FileUpload {
+    FileUpload {
+        id: IdGenerator.get(),
+        content_type: Default::default(),
+        original_filename: Default::default(),
+        internal_name: Default::default(),
+        extension: Default::default(),
+        creation_date: Local::now().naive_local(),
+        updated_date: Default::default(),
+        thumbnail_id: Default::default(),
+        size: Default::default(),
+        public_resource: Default::default(),
+        correlation_id: Default::default(),
     }
 }

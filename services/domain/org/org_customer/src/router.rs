@@ -35,7 +35,10 @@ pub fn get_router(client: StoreClient) -> Router {
 
 async fn find_all(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("customer list route entered!");
@@ -57,7 +60,10 @@ async fn find_all(
 async fn find_one(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(customer_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("customer find one route entered!");
@@ -81,7 +87,10 @@ async fn find_by_org(
     pagination: Option<Query<Pageable>>,
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(org_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("customer find by org route entered!");
@@ -118,7 +127,10 @@ async fn find_by_org(
 async fn delete_by_id(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(customer_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("customer delete one route entered!");
@@ -156,7 +168,10 @@ async fn delete_by_id(
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     extract::Json(payload): extract::Json<CustomerUpsert>,
 ) -> impl IntoResponse {
     tracing::debug!("Upsert customer route entered!");

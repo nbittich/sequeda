@@ -26,7 +26,10 @@ pub fn get_router(client: StoreClient) -> Router {
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(StoreCollection(collection)): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Json(invoice): Json<InvoiceUpsert>,
 ) -> impl IntoResponse {
     tracing::debug!("Upsert invoice route entered! payload: {invoice:?}");

@@ -13,7 +13,7 @@ pub struct FileUpload {
     pub original_filename: String,
     pub internal_name: String,
     pub extension: Option<String>,
-    pub size: usize,
+    pub size: u64,
     pub public_resource: bool,
     pub correlation_id: Option<String>,
 }

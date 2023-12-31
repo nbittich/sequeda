@@ -32,16 +32,11 @@ impl FileService<'_> {
         &self,
         upl: &FileUpload,
         internal_name: &str,
-        file_handle: &[u8],
+        temp_file_path: &PathBuf,
     ) -> Result<Option<String>, ServiceError> {
         let (extension, thumb) = {
             let (ct, image) = if !upl.is_image() {
-                match convert_to(
-                    self.get_physical_path(internal_name),
-                    crate::soffice::ConvertType::Png,
-                )
-                .await
-                {
+                match convert_to(temp_file_path, crate::soffice::ConvertType::Png).await {
                     Ok(bytes) => image::load_from_memory(&bytes)
                         .map_err(|e| ServiceError::from(&e))
                         .map(|im| (Some(IMAGE_PNG.to_string()), im)),
@@ -51,7 +46,11 @@ impl FileService<'_> {
                     }
                 }
             } else {
-                image::load_from_memory(file_handle)
+                let bytes = tokio::fs::read(temp_file_path)
+                    .await
+                    .map_err(|e| ServiceError::from(&e))?;
+
+                image::load_from_memory(&bytes)
                     .map_err(|e| ServiceError::from(&e))
                     .map(|im| (upl.content_type.clone(), im))
             }?;
@@ -91,14 +90,14 @@ impl FileService<'_> {
             original_filename: format!("thumb-{internal_name}"),
             internal_name: format!("thumb-{internal_name}"),
             extension,
-            size: thumb.len(),
+            size: thumb.len() as u64,
             public_resource: upl.public_resource,
             correlation_id: Some(upl.id.clone()),
             ..make_default_file_upload()
         };
-        tracing::debug!("save thumbnail...");
 
         let path_buf = PathBuf::from(&self.share_drive_path).join(&thumbnail.internal_name);
+        tracing::debug!("save thumbnail... {path_buf:?}");
 
         tokio::fs::write(path_buf, thumb.as_bytes())
             .await
@@ -115,9 +114,9 @@ impl FileService<'_> {
     pub async fn upload(
         &self,
         mut upl: FileUpload,
-        bytes: Option<&[u8]>,
+        temp_file_path: Option<&PathBuf>,
     ) -> Result<FileUpload, ServiceError> {
-        if let Some(file_handle) = bytes {
+        if let Some(temp_file_path) = temp_file_path {
             let upload = self
                 .store
                 .find_by_id(&upl.id)
@@ -164,17 +163,16 @@ impl FileService<'_> {
                 }
             }
 
-            tokio::fs::write(
+            upl.thumbnail_id = self
+                .make_thumbnail(&upl, &internal_name, temp_file_path)
+                .await?;
+
+            tokio::fs::rename(
+                temp_file_path,
                 PathBuf::from(&self.share_drive_path).join(&internal_name),
-                file_handle,
             )
             .await
             .map_err(|e| ServiceError::from(&e))?;
-
-            upl.thumbnail_id = self
-                .make_thumbnail(&upl, &internal_name, file_handle)
-                .await?;
-
             upl.internal_name = internal_name;
         }
 

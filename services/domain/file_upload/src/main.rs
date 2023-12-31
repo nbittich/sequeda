@@ -66,7 +66,7 @@ async fn main() {
         let app = Router::new()
             .route("/upload", post(upload))
             .route("/download", get(download))
-            .route("/metadata/:id", get(metadata))
+            .route("/metadata", get(metadata))
             .layer(RequestBodyLimitLayer::new(body_size_limit))
             .layer(Extension(client))
             .layer(Extension(sender))
@@ -94,7 +94,7 @@ async fn metadata(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
     x_user_info: Option<ExtractUserInfo>,
-    axum::extract::Path(id): axum::extract::Path<String>,
+    Query(DownloadFileRequestUriParams { id }): Query<DownloadFileRequestUriParams>,
 ) -> impl IntoResponse {
     tracing::debug!("Metadata route entered!");
 

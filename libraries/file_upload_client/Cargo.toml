@@ -12,4 +12,7 @@ license.workspace = true
 
 [dependencies]
 sequeda_file_upload_common = { path = "../file_upload_common" }
-reqwest.workspace = true
+reqwest = { workspace = true, features = ["multipart", "json", "stream"] }
+tokio = { workspace = true, features = ["fs"] }
+tokio-util = { workspace = true, features = ["codec"] }
+mime_guess = { workspace = true }

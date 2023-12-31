@@ -39,7 +39,7 @@ const useUploadStore = defineStore('upload', {
       return `/api/uploads/download?id=${id}`;
     },
     async getMetadata(id: string): Promise<FileUpload> {
-      const resp = await api.get<FileUpload>(`/uploads/metadata/${id}`);
+      const resp = await api.get<FileUpload>(`/uploads/metadata?id=${id}`);
       return resp.data;
     },
   },

@@ -112,7 +112,7 @@ impl FileUploadClient {
             Ok(resp.to_vec())
         } else {
             let error_msg: Box<dyn Error> = format!(
-                "could not extract metadata. status code {}, error {:?}",
+                "could not download file. status code {}, error {:?}",
                 resp.status(),
                 resp.error_for_status()
             )

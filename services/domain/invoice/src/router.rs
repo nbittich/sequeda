@@ -109,7 +109,7 @@ async fn upsert(
         .build();
 
     // if this happens there will be no way to delete or modify the invoice anymore
-    if maybe_invoice.locked {
+    if invoice.locked {
         let invoice_seq_collection = session
             .client()
             .database(&tenant)

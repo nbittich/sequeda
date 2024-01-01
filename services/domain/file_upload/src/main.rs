@@ -11,7 +11,6 @@ use axum::{routing::post, Extension, Router};
 
 use axum::extract::{Multipart, Query};
 use chrono::Local;
-use image::EncodableLayout;
 use mime_guess::mime::APPLICATION_OCTET_STREAM;
 use sequeda_file_upload_common::{
     DownloadFileRequestUriParams, FileUpload, UploadFileRequestUriParams,
@@ -213,7 +212,7 @@ async fn write_field_to_temp_file<'a>(
     .unwrap();
 
     while let Ok(Some(chunk)) = field.chunk().await {
-        temp_file.write_all(chunk.as_bytes()).await.unwrap();
+        temp_file.write_all(&chunk).await.unwrap();
     }
     let metadata = temp_file.metadata().await.unwrap();
     (temp_file_path, metadata.len())

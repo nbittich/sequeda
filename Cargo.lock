@@ -344,6 +344,7 @@ dependencies = [
  "http-body 1.0.0",
  "http-body-util",
  "mime",
+ "multer",
  "pin-project-lite",
  "serde",
  "tower",
@@ -3307,6 +3308,26 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid 1.6.1",
+]
+
+[[package]]
+name = "sequeda_template"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "axum-extra",
+ "chrono",
+ "mime_guess",
+ "sequeda_file_upload_client",
+ "sequeda_service_common",
+ "sequeda_store",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
  "uuid 1.6.1",

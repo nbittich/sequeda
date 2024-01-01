@@ -1,13 +1,13 @@
 use std::{env, error::Error, path::Path};
 
 use reqwest::{Body, StatusCode};
-use sequeda_file_upload_common::{
+pub use sequeda_file_upload_common::{
     DownloadFileRequestUriParams, FileUpload, UploadFileRequestUriParams,
 };
 use tokio_util::codec::{BytesCodec, FramedRead};
-
 const X_USER_INFO_HEADER: &str = "X-USER-INFO";
 pub const FILE_UPLOAD_ENDPOINT: &str = "FILE_UPLOAD_ENDPOINT";
+#[derive(Clone)]
 pub struct FileUploadClient {
     url: String,
     client: reqwest::Client,
@@ -19,7 +19,7 @@ impl FileUploadClient {
         FileUploadClient { url, client }
     }
 
-    pub async fn upload(
+    pub async fn upload_file(
         &self,
         x_user_info_header: &str,
         params: UploadFileRequestUriParams,

@@ -23,6 +23,7 @@ pub struct Invoice {
     #[serde(rename = "_id")]
     pub id: String,
     pub creation_date: NaiveDateTime,
+    pub template_id: String,
     pub updated_date: Option<NaiveDateTime>,
     pub number: Option<String>,
     pub reference: String,
@@ -39,6 +40,7 @@ pub struct Invoice {
 pub struct InvoiceUpsert {
     #[serde(rename = "_id")]
     pub id: Option<String>,
+    pub template_id: Option<String>,
     pub date_of_invoice: NaiveDateTime,
     pub items: Vec<InvoiceItem>,
     pub customer: Customer,
@@ -54,6 +56,7 @@ impl Default for Invoice {
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),
             number: Default::default(),
+            template_id: Default::default(),
             reference: format!(
                 "{}-{}",
                 Local::now().format("%m%Y"),

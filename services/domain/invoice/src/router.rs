@@ -92,6 +92,7 @@ async fn upsert(
         customer,
         invoicer,
         notes,
+        template_id: maybe_template_id,
         locked,
     } = invoice;
 
@@ -108,8 +109,19 @@ async fn upsert(
         .upsert(Some(true))
         .build();
 
+    if let Some(template_id) = maybe_template_id.filter(|t| !t.trim().is_empty()) {
+        invoice.template_id = template_id;
+    }
+
     // if this happens there will be no way to delete or modify the invoice anymore
     if invoice.locked {
+        if invoice.template_id.is_empty() {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "template id is empty!!!"})),
+            )
+                .into_response();
+        }
         let invoice_seq_collection = session
             .client()
             .database(&tenant)
@@ -144,6 +156,7 @@ async fn upsert(
             return handle_err(e);
         }
     }
+
     if let Err(e) = invoice_collection
         .find_one_and_replace_with_session(
             doc! {"_id": &invoice.id},

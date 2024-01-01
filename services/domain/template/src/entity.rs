@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use chrono::{Local, NaiveDateTime};
 use sequeda_service_common::IdGenerator;
 use serde::{Deserialize, Serialize};
@@ -37,6 +39,16 @@ pub enum TemplateType {
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Context {
     Invoice,
+}
+impl Display for Context {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        serde_json::to_string(self)
+            .map(|s| write!(f, "{s}"))
+            .unwrap_or_else(|e| {
+                tracing::error!("could not fmt enum {e}");
+                Err(std::fmt::Error::default())
+            })
+    }
 }
 
 impl Default for Template {

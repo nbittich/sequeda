@@ -51,7 +51,7 @@ async fn find_all(
     )
     .await;
     match repository.find_all().await {
-        Ok(people) => (StatusCode::OK, Json(people)).into_response(),
+        Ok(products) => (StatusCode::OK, Json(products)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),
@@ -76,7 +76,7 @@ async fn find_by_ids(
     )
     .await;
     match repository.find_by_ids(query_ids).await {
-        Ok(people) => (StatusCode::OK, Json(people)).into_response(),
+        Ok(products) => (StatusCode::OK, Json(products)).into_response(),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({"error": e.to_string()})),

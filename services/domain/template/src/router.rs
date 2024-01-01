@@ -1,37 +1,99 @@
 use std::env::var;
 
 use axum::{
-    extract::{Multipart, Query},
+    extract::{self, Multipart, Path, Query},
     http::StatusCode,
     response::IntoResponse,
-    routing::post,
+    routing::{delete, get, post},
     Extension, Json, Router,
 };
 use axum_extra::headers::ContentType;
 use chrono::Local;
 use sequeda_file_upload_client::{FileUploadClient, UploadFileRequestUriParams};
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, StoreCollection, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, QueryIds, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{doc, FindOneAndReplaceOptions, MongoError, StoreClient};
+use sequeda_store::{
+    doc, FindOneAndReplaceOptions, MongoError, Repository, StoreClient, StoreRepository,
+};
+use serde::Deserialize;
 use serde_json::json;
 use tokio::io::AsyncWriteExt;
 
-use crate::entity::{Template, TemplateUpsert};
+use crate::entity::{Context, Template, TemplateUpsert};
 
 pub fn get_router(store_client: StoreClient, file_upload_client: FileUploadClient) -> Router {
     let collection_name: String =
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("invoice"));
 
     Router::new()
-        // .route("/find-all", get(find_all))
-        // .route("/find-by-ids", post(find_by_ids))
-        // .route("/find-one/:person_id", get(find_one))
-        // .route("/delete/:person_id", delete(delete_by_id))
+        .route("/find-all", get(find_all))
+        .route("/find-by-ids", post(find_by_ids))
+        .route("/find-by-context", get(find_by_context))
+        .route("/find-one/:templ_id", get(find_one))
+        .route("/delete/:templ_id", delete(delete_by_id))
         .route("/", post(upsert))
         .layer(Extension(store_client))
         .layer(Extension(file_upload_client))
         .layer(Extension(StoreCollection(collection_name)))
+}
+
+#[derive(Deserialize)]
+pub struct ContextQuery {
+    context: Context,
+}
+async fn find_by_context(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+    Query(context): Query<ContextQuery>,
+) -> impl IntoResponse {
+    tracing::debug!("Template find by context route entered!");
+    let repository: StoreRepository<Template> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository
+        .find_by_query(doc! {"template_context": context.context.to_string()}, None)
+        .await
+    {
+        Ok(resp) => (StatusCode::OK, Json(resp)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+async fn find_by_ids(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+    extract::Json(QueryIds(query_ids)): extract::Json<QueryIds>,
+) -> impl IntoResponse {
+    tracing::debug!("Template list by ids route entered!");
+    let repository: StoreRepository<Template> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_by_ids(query_ids).await {
+        Ok(templs) => (StatusCode::OK, Json(templs)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
 }
 async fn upsert(
     Extension(client): Extension<StoreClient>,
@@ -177,4 +239,95 @@ async fn upsert(
     }
 
     (StatusCode::OK, Json(template)).into_response()
+}
+async fn delete_by_id(
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Path(templ_id): Path<String>,
+) -> impl IntoResponse {
+    tracing::debug!("Template delete one route entered!");
+    let Some(tenant) = x_user_info.tenant else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "result": "tenant is missing"
+            })),
+        );
+    };
+    let repository: StoreRepository<Template> =
+        StoreRepository::get_repository(client, &collection.0, &tenant).await;
+
+    match repository.delete_by_id(&templ_id).await {
+        Ok(Some(templ)) => (
+            StatusCode::OK,
+            Json(json!({
+                "result": format!("templ with id {} deleted", &templ.id)
+            })),
+        ),
+        Ok(None) => (
+            StatusCode::NO_CONTENT,
+            Json(json!({
+                "result": format!("templ with id {} not found", &templ_id)
+            })),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": e.to_string() })),
+        ),
+    }
+}
+
+async fn find_all(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+) -> impl IntoResponse {
+    tracing::debug!("Template list route entered!");
+    let repository: StoreRepository<Template> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_all().await {
+        Ok(templ) => (StatusCode::OK, Json(templ)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+async fn find_one(
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Path(templ_id): Path<String>,
+) -> impl IntoResponse {
+    tracing::debug!("Template find one route entered!");
+    let repository: StoreRepository<Template> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+
+    match repository.find_by_id(&templ_id).await {
+        Ok(templ) => (StatusCode::OK, Json(templ)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
 }

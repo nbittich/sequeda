@@ -1,7 +1,7 @@
 use std::env::var;
 
 use axum::{
-    extract::{self, Multipart, Path, Query},
+    extract::{Multipart, Path, Query},
     http::StatusCode,
     response::IntoResponse,
     routing::{delete, get, post},
@@ -77,7 +77,7 @@ async fn find_by_ids(
         ..
     }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
-    extract::Json(QueryIds(query_ids)): extract::Json<QueryIds>,
+    Json(QueryIds(query_ids)): Json<QueryIds>,
 ) -> impl IntoResponse {
     tracing::debug!("Template list by ids route entered!");
     let repository: StoreRepository<Template> = StoreRepository::get_repository(

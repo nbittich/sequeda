@@ -5,6 +5,7 @@ use sequeda_service_common::{setup_tracing, SERVICE_APPLICATION_NAME, SERVICE_HO
 use sequeda_store::StoreClient;
 
 mod entity;
+mod render;
 mod router;
 #[tokio::main]
 async fn main() {
@@ -21,6 +22,8 @@ async fn main() {
     let file_client = FileUploadClient::new();
     let app = router::get_router(store_client, file_client);
 
+    tracing::info!("starting template engines...");
+    render::init().unwrap(); // init templates, chromium etc at startup
     tracing::info!("listening on {:?}", addr);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 

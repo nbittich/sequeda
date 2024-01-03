@@ -1,4 +1,9 @@
-use std::{env, error::Error, path::Path};
+use std::{
+    env,
+    error::Error,
+    path::Path,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use reqwest::{Body, StatusCode};
 pub use sequeda_file_upload_common::{
@@ -17,6 +22,30 @@ impl FileUploadClient {
         let url = env::var(FILE_UPLOAD_ENDPOINT).unwrap_or("http://uploads".into());
         let client = reqwest::Client::new();
         FileUploadClient { url, client }
+    }
+
+    pub async fn upload_bytes(
+        &self,
+        x_user_info_header: &str,
+        param: UploadFileRequestUriParams,
+        file_name: &str,
+        bytes: &[u8],
+    ) -> Result<FileUpload, Box<dyn Error>> {
+        let temp_file_path = std::env::temp_dir().join(&format!(
+            "{}_{file_name}",
+            SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
+        ));
+        tokio::fs::write(&temp_file_path, bytes).await?;
+        let upl = {
+            let file = tokio::fs::OpenOptions::new()
+                .read(true)
+                .open(&temp_file_path)
+                .await?;
+            self.upload_file(x_user_info_header, param, file_name, file)
+                .await
+        }?;
+        tokio::fs::remove_file(temp_file_path).await?;
+        Ok(upl)
     }
 
     pub async fn upload_file(

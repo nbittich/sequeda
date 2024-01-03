@@ -1,8 +1,8 @@
 FROM rust:1.75 AS chef 
 # We only pay the installation cost once, 
 # it will be cached from the second build onwards
-RUN apt update && apt upgrade -y
-RUN apt install -y libssl-dev build-essential cmake
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y libssl-dev build-essential cmake
 RUN cargo install cargo-chef 
 
 WORKDIR /app
@@ -24,11 +24,15 @@ RUN cargo build --release --bin ${CRATE_NAME}
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
-RUN apt  update && apt upgrade -y
-RUN apt install -y ca-certificates
+RUN apt  update && apt-get upgrade -y
+RUN apt-get install -y ca-certificates
 ARG WITH_LIBREOFFICE
-RUN if [ $WITH_LIBREOFFICE = "yes" ]; then apt update && apt upgrade -y && \
-  apt install  --no-install-recommends -y libreoffice;fi
+ARG WITH_CHROMIUM
+RUN if [ $WITH_LIBREOFFICE = "yes" ]; then apt-get update && apt-get upgrade -y && \
+  apt-get install  --no-install-recommends -y libreoffice;fi
+RUN if [ $WITH_CHROMIUM = "yes" ]; then apt-get update && apt-get install -y \
+  chromium \
+  --no-install-recommends;fi
 
 FROM runtime
 ARG CRATE_NAME

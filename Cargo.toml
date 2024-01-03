@@ -17,7 +17,10 @@ members = [
     "services/gateway",
     "libraries/message_common",
     "libraries/store",
-    "libraries/message_client", "libraries/file_upload_common", "libraries/file_upload_client", "services/domain/template",
+    "libraries/message_client",
+    "libraries/file_upload_common",
+    "libraries/file_upload_client",
+    "services/domain/template",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -65,7 +68,8 @@ image = "0.24.7"
 hyper-util = "0.1.2"
 hyper-tls = "0.6.0"
 bytes = "1.5.0"
-
+minijinja = "1.0.10"
+headless_chrome = "1.0.8"
 [workspace.package]
 version = "0.1.0"
 authors = ["Nordine Bittich"]

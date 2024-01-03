@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use chrono::{Local, NaiveDateTime};
 use sequeda_service_common::IdGenerator;
-use serde::{de, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

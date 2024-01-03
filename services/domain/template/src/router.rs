@@ -1,14 +1,15 @@
-use std::env::var;
+use std::{env::var, io::Cursor};
 
 use axum::{
     extract::{Multipart, Path, Query},
-    http::StatusCode,
-    response::IntoResponse,
+    http::{header, StatusCode},
+    response::{AppendHeaders, IntoResponse},
     routing::{delete, get, post},
     Extension, Json, Router,
 };
 use axum_extra::headers::ContentType;
 use chrono::Local;
+use mime_guess::mime::APPLICATION_PDF;
 use sequeda_file_upload_client::{FileUploadClient, UploadFileRequestUriParams};
 use sequeda_service_common::{
     user_header::ExtractUserInfo, QueryIds, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
@@ -19,8 +20,9 @@ use sequeda_store::{
 use serde::Deserialize;
 use serde_json::json;
 use tokio::io::AsyncWriteExt;
+use tokio_util::io::ReaderStream;
 
-use crate::entity::{Context, Template, TemplateUpsert};
+use crate::entity::{Context, RenderRequest, Template, TemplateUpsert};
 
 pub fn get_router(store_client: StoreClient, file_upload_client: FileUploadClient) -> Router {
     let collection_name: String =
@@ -32,16 +34,67 @@ pub fn get_router(store_client: StoreClient, file_upload_client: FileUploadClien
         .route("/find-by-context", get(find_by_context))
         .route("/find-one/:templ_id", get(find_one))
         .route("/delete/:templ_id", delete(delete_by_id))
+        .route("/render", post(render))
         .route("/", post(upsert))
         .layer(Extension(store_client))
         .layer(Extension(file_upload_client))
         .layer(Extension(StoreCollection(collection_name)))
 }
 
+async fn render(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        header,
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+    Extension(file_upload_client): Extension<FileUploadClient>,
+    Json(req): Json<RenderRequest>,
+) -> impl IntoResponse {
+    tracing::debug!("Template render route entered!");
+    let repository: StoreRepository<Template> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_by_id(&req.template_id).await {
+        Ok(Some(tpl)) => {
+            let pdf = crate::render::render(&tpl, &req.context, &file_upload_client, &header)
+                .await
+                .unwrap();
+            let cursor = Cursor::new(pdf);
+            let stream = ReaderStream::new(cursor);
+            let body = axum::body::Body::from_stream(stream);
+            let content_header = (
+                header::CONTENT_DISPOSITION,
+                format!(r#"attachment; filename="{}""#, &req.file_name),
+            );
+
+            let content_type = (header::CONTENT_TYPE, APPLICATION_PDF.to_string());
+
+            let headers = AppendHeaders([content_type, content_header]);
+
+            (StatusCode::OK, headers, body).into_response()
+        }
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "template not found"})),
+        )
+            .into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+
 #[derive(Deserialize)]
 pub struct ContextQuery {
     context: Context,
 }
+
 async fn find_by_context(
     Extension(client): Extension<StoreClient>,
     ExtractUserInfo {
@@ -130,10 +183,12 @@ async fn upsert(
     if let Err(e) = session.start_transaction(None).await {
         return handle_err(e);
     }
+
     let template_collection = session
         .client()
         .database(&tenant)
         .collection::<Template>(&collection);
+
     let maybe_template = {
         if let Some(id) = query.id {
             let i = template_collection

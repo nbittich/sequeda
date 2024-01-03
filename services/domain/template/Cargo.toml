@@ -25,4 +25,6 @@ axum-extra = { workspace = true, features = ["typed-header"] }
 sequeda_file_upload_client = { path = "../../../libraries/file_upload_client" }
 minijinja = { workspace = true }
 headless_chrome = { workspace = true }
+tokio-util = { workspace = true }
+
 mime_guess.workspace = true

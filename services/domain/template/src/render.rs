@@ -6,9 +6,7 @@ use std::{
 
 use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use minijinja::Environment;
-use sequeda_file_upload_client::{
-    DownloadFileRequestUriParams, FileUpload, FileUploadClient, UploadFileRequestUriParams,
-};
+use sequeda_file_upload_client::{DownloadFileRequestUriParams, FileUploadClient};
 use sequeda_service_common::IdGenerator;
 use serde::Serialize;
 
@@ -31,10 +29,8 @@ pub async fn render<T: Serialize>(
     templ: &Template,
     templ_ctx: &T,
     file_client: &FileUploadClient,
-    options: UploadFileRequestUriParams,
-    file_name: &str,
     x_user_info: &str,
-) -> Result<FileUpload, Box<dyn Error>> {
+) -> Result<Vec<u8>, Box<dyn Error>> {
     let templ_file = file_client
         .download(
             x_user_info,
@@ -47,9 +43,7 @@ pub async fn render<T: Serialize>(
         TemplateType::Html => html_to_pdf(&templ_file, templ_ctx).await,
     }?;
 
-    file_client
-        .upload_bytes(x_user_info, options, file_name, &pdf)
-        .await
+    Ok(pdf)
 }
 
 async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8>, Box<dyn Error>> {
@@ -116,16 +110,33 @@ mod test {
     use sequeda_service_common::IdGenerator;
 
     use super::html_to_pdf;
-    use std::collections::HashMap;
 
     #[tokio::test]
     async fn test_html_to_pdf() {
         let templ = r#"
-        <p>Greeting, {{name}}!</p>
+        <p>Greeting, {{name}}! You are {{age}} years old!</p>
+        <ul>
+           {% for stock in stuff.stocks %}
+            <li>{{stock}}</li>
+           {% endfor %}
+
+        </ul>
         "#;
-        let res = html_to_pdf(templ.as_bytes(), &HashMap::from([("name", "nordine")]))
-            .await
-            .unwrap();
+        let res = html_to_pdf(
+            templ.as_bytes(),
+            &serde_json::json!({
+            "name": "Nordine",
+            "age": 35,
+            "stuff": {
+                "stocks": ["apple", "bananas", "tomatos"]
+
+            }
+
+
+            }),
+        )
+        .await
+        .unwrap();
         let p = std::env::temp_dir().join(format!("{}.pdf", IdGenerator.get()));
         tokio::fs::write(&p, res).await.unwrap();
         println!("path {p:?}");

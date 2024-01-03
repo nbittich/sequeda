@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use chrono::{Local, NaiveDateTime};
 use sequeda_service_common::IdGenerator;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,4 +64,12 @@ impl Default for Template {
             description: Default::default(),
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RenderRequest {
+    pub template_id: String,
+    pub context: serde_json::Value,
+    pub file_name: String,
+    pub corelation_id: String,
 }

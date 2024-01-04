@@ -20,7 +20,7 @@ members = [
     "libraries/message_client",
     "libraries/file_upload_common",
     "libraries/file_upload_client",
-    "services/domain/template",
+    "services/domain/template", "libraries/template_common", "libraries/template_client",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

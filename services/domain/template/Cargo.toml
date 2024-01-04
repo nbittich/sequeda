@@ -21,6 +21,7 @@ uuid = { workspace = true, features = ["v4"] }
 tower-http = { workspace = true, features = ["cors"] }
 sequeda_store = { path = "../../../libraries/store" }
 sequeda_service_common = { path = "../../../libraries/service_common" }
+sequeda_template_common = { path = "../../../libraries/template_common" }
 axum-extra = { workspace = true, features = ["typed-header"] }
 sequeda_file_upload_client = { path = "../../../libraries/file_upload_client" }
 minijinja = { workspace = true }

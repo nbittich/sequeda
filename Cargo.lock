@@ -3446,6 +3446,7 @@ dependencies = [
  "sequeda_file_upload_client",
  "sequeda_service_common",
  "sequeda_store",
+ "sequeda_template_common",
  "serde",
  "serde_json",
  "tokio",
@@ -3454,6 +3455,16 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid 1.6.1",
+]
+
+[[package]]
+name = "sequeda_template_common"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -3876,6 +3887,14 @@ dependencies = [
  "redox_syscall",
  "rustix 0.38.28",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "template_client"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "sequeda_template_common",
 ]
 
 [[package]]

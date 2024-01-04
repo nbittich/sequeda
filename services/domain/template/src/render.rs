@@ -8,9 +8,9 @@ use headless_chrome::{Browser, LaunchOptionsBuilder, Tab};
 use minijinja::Environment;
 use sequeda_file_upload_client::{DownloadFileRequestUriParams, FileUploadClient};
 use sequeda_service_common::IdGenerator;
+use sequeda_template_common::{Template, TemplateType};
 use serde::Serialize;
 
-use crate::entity::{Template, TemplateType};
 static JINJA_ENGINE: OnceLock<Environment<'static>> = OnceLock::new();
 static CHROMIUM_TAB: OnceLock<(Browser, Arc<Tab>)> = OnceLock::new();
 

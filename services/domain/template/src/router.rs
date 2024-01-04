@@ -17,12 +17,12 @@ use sequeda_service_common::{
 use sequeda_store::{
     doc, FindOneAndReplaceOptions, MongoError, Repository, StoreClient, StoreRepository,
 };
-use serde::Deserialize;
+use sequeda_template_common::{ContextQuery, RenderRequest, Template, TemplateType};
 use serde_json::json;
 use tokio::io::AsyncWriteExt;
 use tokio_util::io::ReaderStream;
 
-use crate::entity::{Context, RenderRequest, Template, TemplateUpsert};
+use crate::entity::{TemplateUpsert, TemplateWrapper};
 
 pub fn get_router(store_client: StoreClient, file_upload_client: FileUploadClient) -> Router {
     let collection_name: String =
@@ -88,11 +88,6 @@ async fn render(
         )
             .into_response(),
     }
-}
-
-#[derive(Deserialize)]
-pub struct ContextQuery {
-    context: Context,
 }
 
 async fn find_by_context(
@@ -197,7 +192,7 @@ async fn upsert(
             match i {
                 Ok(Some(mut i)) => {
                     i.updated_date = Some(Local::now().naive_local());
-                    i
+                    TemplateWrapper(i)
                 }
                 Err(e) => return handle_err(e),
                 _ => Default::default(),
@@ -206,6 +201,7 @@ async fn upsert(
             Default::default()
         }
     };
+    let maybe_template = maybe_template.0;
 
     let TemplateUpsert {
         id: _,
@@ -238,7 +234,7 @@ async fn upsert(
             temp_file.write_all(&chunk).await.unwrap();
         }
         match &template_type {
-            crate::entity::TemplateType::Html => {
+            TemplateType::Html => {
                 if let Some(ct) = mime_guess::from_path(&temp_path).first() {
                     tokio::fs::remove_file(&temp_path).await.unwrap();
                     if ContentType::from(ct) != ContentType::html() {

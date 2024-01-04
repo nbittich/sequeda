@@ -1,0 +1,15 @@
+[package]
+name = "template_client"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { workspace = true, features = ["multipart", "json", "stream"] }
+sequeda_template_common = { path = "../template_common" }

@@ -17,7 +17,7 @@ chrono = { workspace = true, features = ["serde"] }
 uuid = { workspace = true, features = ["v4"] }
 tower-http = { workspace = true, features = ["cors", "limit"] }
 sequeda_store = { path = "../../../libraries/store" }
-sequeda_service_common = { path = "../../service_common" }
+sequeda_service_common = { path = "../../../libraries/service_common" }
 sequeda_file_upload_common = { path = "../../../libraries/file_upload_common" }
 sequeda_message_client = { path = "../../../libraries/message_client" }
 axum-extra = { workspace = true }

@@ -25,7 +25,7 @@ openidconnect = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
 rand = { workspace = true, features = ["min_const_gen"] }
-sequeda_service_common = { path = "../service_common" }
+sequeda_service_common = { path = "../../libraries/service_common" }
 mongodb = { workspace = true }
 axum-extra = { workspace = true, features = ["typed-header"] }
 hyper-util = { workspace = true, features = [

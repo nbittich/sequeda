@@ -197,7 +197,7 @@ async fn write_field_to_temp_file<'a>(
     if !temp_volume.exists() {
         tokio::fs::create_dir(&temp_volume).await.unwrap();
     }
-    let temp_file_path = temp_volume.join(file_name.to_string());
+    let temp_file_path = temp_volume.join(file_name);
     if temp_file_path.exists() {
         tracing::info!(
             "file {file_name} exists. removing: {:?}",

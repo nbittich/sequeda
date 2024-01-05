@@ -91,6 +91,7 @@ impl Invoice {
 #[derive(Debug, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Invoicer {
+    pub logo_id: Option<String>,
     pub invoicer_id: Option<String>,
     pub is_org: bool,
     pub invoicer_name: String,

@@ -54,7 +54,7 @@ async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8
 
     let temp_html_file_path = std::env::temp_dir().join(format!("{}.html", IdGenerator.get()));
     tokio::fs::write(&temp_html_file_path, html).await?;
-    let page = format!("file://{}", temp_html_file_path.display().to_string());
+    let page = format!("file://{}", temp_html_file_path.display());
     tracing::info!("generate pdf from html page {page}");
     let pdf = tab
         .navigate_to(&page)?
@@ -70,7 +70,7 @@ fn get_jinja_engine<'a>() -> Result<&'a Environment<'static>, Box<dyn Error>> {
         if JINJA_ENGINE.get().is_none() {
             JINJA_ENGINE
                 .set(Environment::new())
-                .map_err(|_env| format!("could not setup jinja"))?;
+                .map_err(|_env| "could not setup jinja".to_string())?;
         }
         JINJA_ENGINE
             .get()
@@ -98,7 +98,7 @@ fn get_chromium_tab() -> Result<Arc<Tab>, Box<dyn Error>> {
 
             CHROMIUM_TAB
                 .set((browser, tab))
-                .map_err(|_tab| format!("could not setup chromium tab"))?;
+                .map_err(|_tab| "could not setup chromium tab".to_string())?;
         }
         CHROMIUM_TAB.get().ok_or("could not extract tab from cell")
     }?;

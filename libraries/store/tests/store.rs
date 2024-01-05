@@ -46,7 +46,7 @@ mod test {
         ];
         repository.insert_many(&books).await.unwrap();
         tracing::info!("from find by id");
-        let book = books.get(0).unwrap();
+        let book = books.first().unwrap();
         let id = &book.id;
         let result = repository.find_by_id(id).await.unwrap();
         assert!(result.is_some());
@@ -55,7 +55,7 @@ mod test {
                 "found the book {}",
                 serde_json::to_string_pretty(&book).unwrap()
             );
-            assert_eq!(&book, books.get(0).unwrap());
+            assert_eq!(&book, books.first().unwrap());
         }
         let cursor_books = repository.find_all().await.unwrap();
         assert_eq!(books.len(), cursor_books.len());

@@ -33,7 +33,7 @@ impl Display for Context {
             .map(|s| write!(f, "{s}"))
             .unwrap_or_else(|e| {
                 tracing::error!("could not fmt enum {e}");
-                Err(std::fmt::Error::default())
+                Err(std::fmt::Error)
             })
     }
 }
@@ -46,6 +46,4 @@ pub struct RenderRequest {
     pub template_id: String,
     pub context: serde_json::Value,
     pub file_name: String,
-    pub corelation_id: String,
 }
-

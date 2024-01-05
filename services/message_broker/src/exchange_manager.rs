@@ -155,6 +155,9 @@ impl ExchangeManager {
         Ok(())
     }
 }
+pub fn to_service_error(e: impl Error) -> ExchangeError {
+    ExchangeError { msg: e.to_string() }
+}
 
 #[cfg(test)]
 mod test {
@@ -190,7 +193,4 @@ mod test {
         }
         println!("{s}");
     }
-}
-pub fn to_service_error(e: impl Error) -> ExchangeError {
-    ExchangeError { msg: e.to_string() }
 }

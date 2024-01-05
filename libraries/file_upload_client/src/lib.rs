@@ -17,6 +17,12 @@ pub struct FileUploadClient {
     url: String,
     client: reqwest::Client,
 }
+impl Default for FileUploadClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FileUploadClient {
     pub fn new() -> Self {
         let url = env::var(FILE_UPLOAD_ENDPOINT).unwrap_or("http://uploads".into());
@@ -31,7 +37,7 @@ impl FileUploadClient {
         file_name: &str,
         bytes: &[u8],
     ) -> Result<FileUpload, Box<dyn Error>> {
-        let temp_file_path = std::env::temp_dir().join(&format!(
+        let temp_file_path = std::env::temp_dir().join(format!(
             "{}_{file_name}",
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis()
         ));

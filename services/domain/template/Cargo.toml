@@ -24,7 +24,12 @@ sequeda_service_common = { path = "../../../libraries/service_common" }
 sequeda_template_common = { path = "../../../libraries/template_common" }
 axum-extra = { workspace = true, features = ["typed-header"] }
 sequeda_file_upload_client = { path = "../../../libraries/file_upload_client" }
-minijinja = { workspace = true }
+minijinja = { workspace = true, default-features = false, features = [
+  "builtins",
+  "macros",
+  "speedups",
+  "urlencode",
+] }
 headless_chrome = { workspace = true }
 tokio-util = { workspace = true }
 

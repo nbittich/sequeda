@@ -1,5 +1,5 @@
 [package]
-name = "template_client"
+name = "sequeda_template_client"
 version.workspace = true
 authors.workspace = true
 description.workspace = true

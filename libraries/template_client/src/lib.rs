@@ -1,13 +1,13 @@
-use std::{env, error::Error};
+use std::{env, error::Error, sync::Arc};
 
 use reqwest::StatusCode;
-pub use sequeda_template_common::RenderRequest;
 use sequeda_template_common::Template;
+pub use sequeda_template_common::{Context, RenderRequest};
 const X_USER_INFO_HEADER: &str = "X-USER-INFO";
 pub const TEMPLATE_ENDPOINT: &str = "TEMPLATE_ENDPOINT";
 #[derive(Clone)]
 pub struct TemplateClient {
-    url: String,
+    url: Arc<String>,
     client: reqwest::Client,
 }
 
@@ -19,7 +19,7 @@ impl Default for TemplateClient {
 
 impl TemplateClient {
     pub fn new() -> Self {
-        let url = env::var(TEMPLATE_ENDPOINT).unwrap_or("http://template".into());
+        let url = Arc::new(env::var(TEMPLATE_ENDPOINT).unwrap_or("http://template".into()));
         let client = reqwest::Client::new();
         Self { url, client }
     }

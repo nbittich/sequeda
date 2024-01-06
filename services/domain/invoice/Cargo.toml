@@ -18,6 +18,10 @@ uuid = { workspace = true, features = ["v4"] }
 tower-http = { workspace = true, features = ["cors"] }
 sequeda_store = { path = "../../../libraries/store" }
 sequeda_service_common = { path = "../../../libraries/service_common" }
+sequeda_file_upload_client = { path = "../../../libraries/file_upload_client" }
+sequeda_template_client = { path = "../../../libraries/template_client" }
+
 axum-extra = { workspace = true }
 rand = { workspace = true }
 futures-util = { workspace = true }
+base64 = { workspace = true }

@@ -2,8 +2,10 @@
 
 use std::{env::var, net::SocketAddr, str::FromStr};
 
+use sequeda_file_upload_client::FileUploadClient;
 use sequeda_service_common::{setup_tracing, SERVICE_APPLICATION_NAME, SERVICE_HOST, SERVICE_PORT};
 use sequeda_store::StoreClient;
+use sequeda_template_client::TemplateClient;
 mod entity;
 mod router;
 #[tokio::main]
@@ -17,9 +19,11 @@ async fn main() {
 
     let addr = SocketAddr::from_str(&format!("{host}:{port}")).unwrap();
 
-    let client = StoreClient::new(app_name).await.unwrap();
-    let app = router::get_router(client.clone());
+    let store_client = StoreClient::new(app_name).await.unwrap();
+    let file_client = FileUploadClient::default();
+    let template_client = TemplateClient::default();
 
+    let app = router::get_router(store_client, file_client, template_client);
     tracing::info!("listening on {:?}", addr);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 

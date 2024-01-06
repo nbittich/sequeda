@@ -2,6 +2,7 @@ use std::{
     env,
     error::Error,
     path::Path,
+    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -14,7 +15,7 @@ const X_USER_INFO_HEADER: &str = "X-USER-INFO";
 pub const FILE_UPLOAD_ENDPOINT: &str = "FILE_UPLOAD_ENDPOINT";
 #[derive(Clone)]
 pub struct FileUploadClient {
-    url: String,
+    url: Arc<String>,
     client: reqwest::Client,
 }
 impl Default for FileUploadClient {
@@ -25,7 +26,7 @@ impl Default for FileUploadClient {
 
 impl FileUploadClient {
     pub fn new() -> Self {
-        let url = env::var(FILE_UPLOAD_ENDPOINT).unwrap_or("http://uploads".into());
+        let url = Arc::new(env::var(FILE_UPLOAD_ENDPOINT).unwrap_or("http://uploads".into()));
         let client = reqwest::Client::new();
         FileUploadClient { url, client }
     }

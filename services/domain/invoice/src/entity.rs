@@ -22,6 +22,7 @@ pub struct InvoiceSeq {
 pub struct Invoice {
     #[serde(rename = "_id")]
     pub id: String,
+    pub pdf_id: Option<String>,
     pub creation_date: NaiveDateTime,
     pub template_id: String,
     pub updated_date: Option<NaiveDateTime>,
@@ -52,6 +53,7 @@ pub struct InvoiceUpsert {
 impl Default for Invoice {
     fn default() -> Self {
         Self {
+            pdf_id: None,
             id: IdGenerator.get(),
             creation_date: Local::now().naive_local(),
             updated_date: Default::default(),

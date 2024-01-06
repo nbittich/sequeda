@@ -60,6 +60,13 @@ async fn render(
     .await;
     match repository.find_by_id(&req.template_id).await {
         Ok(Some(tpl)) => {
+            if tpl.template_context != req.template_context {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json! ({"error": "invalid template context"})),
+                )
+                    .into_response();
+            }
             let pdf = crate::render::render(&tpl, &req.context, &file_upload_client, &header)
                 .await
                 .unwrap();

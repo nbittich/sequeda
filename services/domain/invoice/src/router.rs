@@ -1,16 +1,25 @@
 use std::env::var;
 
 use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
+use base64::Engine;
 use chrono::Local;
+use sequeda_file_upload_client::{
+    DownloadFileRequestUriParams, FileUploadClient, UploadFileRequestUriParams,
+};
 use sequeda_service_common::{
     user_header::ExtractUserInfo, StoreCollection, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, FindOneAndReplaceOptions, MongoError, StoreClient};
+use sequeda_template_client::{Context, RenderRequest, TemplateClient};
 use serde_json::json;
 
 use crate::entity::{Invoice, InvoiceSeq, InvoiceUpsert, INVOICE_SEQ_ROW_ID};
 
-pub fn get_router(client: StoreClient) -> Router {
+pub fn get_router(
+    store_client: StoreClient,
+    file_client: FileUploadClient,
+    template_client: TemplateClient,
+) -> Router {
     let collection_name: String =
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("invoice"));
 
@@ -20,15 +29,19 @@ pub fn get_router(client: StoreClient) -> Router {
         // .route("/find-one/:person_id", get(find_one))
         // .route("/delete/:person_id", delete(delete_by_id))
         .route("/", post(upsert))
-        .layer(Extension(client))
+        .layer(Extension(store_client))
+        .layer(Extension(file_client))
+        .layer(Extension(template_client))
         .layer(Extension(StoreCollection(collection_name)))
 }
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(StoreCollection(collection)): Extension<StoreCollection>,
+    Extension(file_client): Extension<FileUploadClient>,
+    Extension(template_client): Extension<TemplateClient>,
     ExtractUserInfo {
         user_info: x_user_info,
-        ..
+        header: x_user_info_header,
     }: ExtractUserInfo,
     Json(invoice): Json<InvoiceUpsert>,
 ) -> impl IntoResponse {
@@ -155,6 +168,72 @@ async fn upsert(
         {
             return handle_err(e);
         }
+
+        let logo_base64 = if let Some(logo_id) = invoice
+            .invoicer
+            .logo_id
+            .as_ref()
+            .filter(|id| !id.is_empty())
+        {
+            let logo_metadata = file_client
+                .metadata(
+                    &x_user_info_header,
+                    DownloadFileRequestUriParams {
+                        id: logo_id.clone(),
+                    },
+                )
+                .await
+                .map_err(|e| format!("could not download metadata for logo: {e}"))
+                .unwrap();
+            let ct = logo_metadata
+                .content_type
+                .unwrap_or_else(|| "image/png".into());
+            let logo = file_client
+                .download(
+                    &x_user_info_header,
+                    DownloadFileRequestUriParams {
+                        id: logo_id.clone(),
+                    },
+                )
+                .await
+                .map_err(|e| format!("could not download logo: {e}"))
+                .unwrap();
+            let logo_base_64 = base64::engine::general_purpose::STANDARD.encode(logo);
+            Some(format!("data:{ct};base64,{logo_base_64}"))
+        } else {
+            None
+        };
+        let invoice_file_name = format!("{}.pdf", invoice.id);
+
+        let render_payload = json!({
+           "logo": logo_base64,
+           "invoice": invoice
+        });
+        let render_request = RenderRequest {
+            template_id: invoice.template_id.clone(),
+            context: render_payload,
+            file_name: invoice_file_name.clone(),
+            template_context: Context::Invoice,
+        };
+
+        let pdf_bytes = template_client
+            .render(&x_user_info_header, &render_request)
+            .await
+            .unwrap();
+        let upl = file_client
+            .upload_bytes(
+                &x_user_info_header,
+                UploadFileRequestUriParams {
+                    correlation_id: Some(invoice.id.clone()),
+                    id: invoice.pdf_id.take(),
+                    is_public: Some(false),
+                },
+                &invoice_file_name,
+                &pdf_bytes,
+            )
+            .await
+            .unwrap();
+        invoice.pdf_id = Some(upl.id);
     }
 
     if let Err(e) = invoice_collection

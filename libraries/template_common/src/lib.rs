@@ -46,4 +46,5 @@ pub struct RenderRequest {
     pub template_id: String,
     pub context: serde_json::Value,
     pub file_name: String,
+    pub template_context: Context,
 }

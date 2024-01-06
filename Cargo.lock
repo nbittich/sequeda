@@ -3237,11 +3237,14 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-extra",
+ "base64 0.21.5",
  "chrono",
  "futures-util",
  "rand",
+ "sequeda_file_upload_client",
  "sequeda_service_common",
  "sequeda_store",
+ "sequeda_template_client",
  "serde",
  "serde_json",
  "tokio",
@@ -3457,6 +3460,14 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid 1.6.1",
+]
+
+[[package]]
+name = "sequeda_template_client"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "sequeda_template_common",
 ]
 
 [[package]]
@@ -3889,14 +3900,6 @@ dependencies = [
  "redox_syscall",
  "rustix 0.38.28",
  "windows-sys 0.48.0",
-]
-
-[[package]]
-name = "template_client"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "sequeda_template_common",
 ]
 
 [[package]]

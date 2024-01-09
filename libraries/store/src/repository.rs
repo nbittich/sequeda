@@ -85,6 +85,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(collection)
     }
+
     async fn count(&self) -> Result<u64, StoreError> {
         let collection = self.get_collection();
         let count = collection
@@ -215,9 +216,13 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     }
 
     async fn delete_by_id(&self, id: &str) -> Result<Option<T>, StoreError> {
+        self.delete_by_query(doc! {"_id": id}).await
+    }
+
+    async fn delete_by_query(&self, query: Document) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection
-            .find_one_and_delete(doc! {"_id": id}, None)
+            .find_one_and_delete(query, None)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)

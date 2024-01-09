@@ -1,15 +1,23 @@
 use std::env::var;
 
-use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{delete, get, post},
+    Extension, Json, Router,
+};
 use base64::Engine;
 use chrono::Local;
 use sequeda_file_upload_client::{
     DownloadFileRequestUriParams, FileUploadClient, UploadFileRequestUriParams,
 };
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, StoreCollection, SERVICE_COLLECTION_NAME,
+    user_header::ExtractUserInfo, QueryIds, StoreCollection, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
-use sequeda_store::{doc, FindOneAndReplaceOptions, MongoError, StoreClient};
+use sequeda_store::{
+    doc, FindOneAndReplaceOptions, MongoError, Repository, StoreClient, StoreRepository,
+};
 use sequeda_template_client::{Context, RenderRequest, TemplateClient};
 use serde_json::json;
 
@@ -24,15 +32,136 @@ pub fn get_router(
         var(SERVICE_COLLECTION_NAME).unwrap_or_else(|_| String::from("invoice"));
 
     Router::new()
-        // .route("/find-all", get(find_all))
-        // .route("/find-by-ids", post(find_by_ids))
-        // .route("/find-one/:person_id", get(find_one))
-        // .route("/delete/:person_id", delete(delete_by_id))
+        .route("/find-all", get(find_all))
+        .route("/find-by-ids", post(find_by_ids))
+        .route("/find-one/:id", get(find_one))
+        .route("/delete/:person_id", delete(delete_by_id))
         .route("/", post(upsert))
         .layer(Extension(store_client))
         .layer(Extension(file_client))
         .layer(Extension(template_client))
         .layer(Extension(StoreCollection(collection_name)))
+}
+
+async fn delete_by_id(
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Path(invoice_id): Path<String>,
+) -> impl IntoResponse {
+    tracing::debug!("Invoice delete one route entered!");
+    let Some(tenant) = x_user_info.tenant else {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "result": "tenant is missing"
+            })),
+        );
+    };
+    let repository: StoreRepository<Invoice> =
+        StoreRepository::get_repository(client, &collection.0, &tenant).await;
+
+    match repository
+        .delete_by_query(doc! {"_id":&invoice_id, "locked": false})
+        .await
+    {
+        Ok(Some(invoice)) => (
+            StatusCode::OK,
+            Json(json!({
+                "result": format!("invoice with id {} deleted", &invoice.id)
+            })),
+        ),
+        Ok(None) => (
+            StatusCode::NO_CONTENT,
+            Json(json!({
+                "result": format!("invoice with id {} not found", &invoice_id)
+            })),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({ "error": e.to_string() })),
+        ),
+    }
+}
+
+async fn find_one(
+    Extension(client): Extension<StoreClient>,
+    Extension(collection): Extension<StoreCollection>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    tracing::debug!("Invoice find one route entered!");
+    let repository: StoreRepository<Invoice> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+
+    match repository.find_by_id(&id).await {
+        Ok(invoice) => (StatusCode::OK, Json(invoice)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+async fn find_by_ids(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+    Json(QueryIds(query_ids)): Json<QueryIds>,
+) -> impl IntoResponse {
+    tracing::debug!("Invoice list by ids route entered!");
+    let repository: StoreRepository<Invoice> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_by_ids(query_ids).await {
+        Ok(products) => (StatusCode::OK, Json(products)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
+}
+
+async fn find_all(
+    Extension(client): Extension<StoreClient>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Extension(collection): Extension<StoreCollection>,
+) -> impl IntoResponse {
+    tracing::debug!("Invoice list route entered!");
+    let repository: StoreRepository<Invoice> = StoreRepository::get_repository(
+        client,
+        &collection.0,
+        &x_user_info.tenant.unwrap_or_else(|| PUBLIC_TENANT.into()),
+    )
+    .await;
+    match repository.find_all().await {
+        Ok(invoices) => (StatusCode::OK, Json(invoices)).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+            .into_response(),
+    }
 }
 async fn upsert(
     Extension(client): Extension<StoreClient>,

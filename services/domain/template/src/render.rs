@@ -20,7 +20,7 @@ pub fn init() -> Result<(), Box<dyn Error>> {
     tracing::info!("init chromium...");
     get_chromium_tab()?;
     tracing::info!("init jinja...");
-    get_jinja_engine()?;
+    get_jinja_engine();
     tracing::info!("init done!");
     Ok(())
 }
@@ -47,7 +47,7 @@ pub async fn render<T: Serialize>(
 }
 
 async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8>, Box<dyn Error>> {
-    let engine = get_jinja_engine()?;
+    let engine = get_jinja_engine();
 
     let html = engine.render_str(std::str::from_utf8(templ)?, templ_ctx)?;
     let tab = get_chromium_tab()?;
@@ -65,28 +65,21 @@ async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8
     Ok(pdf)
 }
 
-fn get_jinja_engine<'a>() -> Result<&'a Environment<'static>, Box<dyn Error>> {
-    let engine = {
-        if JINJA_ENGINE.get().is_none() {
-            let mut env = Environment::new();
-            env.add_global("TIMEZONE", "Europe/Brussels");
-            env.add_global("DATETIME_FORMAT", "[day]/[month]/[year] [hour]:[minute]");
-            env.add_global("DATE_FORMAT", "[day]/[month]/[year]");
-            minijinja_contrib::add_to_environment(&mut env);
-            JINJA_ENGINE
-                .set(env)
-                .map_err(|_env| "could not setup jinja".to_string())?;
-        }
-        JINJA_ENGINE
-            .get()
-            .ok_or("could not extract engine from cell")
-    }?;
-    Ok(engine)
+fn get_jinja_engine<'a>() -> &'a Environment<'static> {
+    JINJA_ENGINE.get_or_init(|| {
+        let mut env = Environment::new();
+        env.add_global("TIMEZONE", "Europe/Brussels");
+        env.add_global("DATETIME_FORMAT", "[day]/[month]/[year] [hour]:[minute]");
+        env.add_global("DATE_FORMAT", "[day]/[month]/[year]");
+        minijinja_contrib::add_to_environment(&mut env);
+        env
+    })
 }
 
 fn get_chromium_tab() -> Result<Arc<Tab>, Box<dyn Error>> {
-    let (_, tab) = {
-        if CHROMIUM_TAB.get().is_none() {
+    match CHROMIUM_TAB.get() {
+        Some((_, tab)) => Ok(tab.clone()),
+        None => {
             let options = LaunchOptionsBuilder::default()
                 .sandbox(
                     std::env::var(CHROMIUM_SANDBOXED)
@@ -102,12 +95,11 @@ fn get_chromium_tab() -> Result<Arc<Tab>, Box<dyn Error>> {
             let tab = browser.new_tab()?;
 
             CHROMIUM_TAB
-                .set((browser, tab))
+                .set((browser, tab.clone()))
                 .map_err(|_tab| "could not setup chromium tab".to_string())?;
+            Ok(tab)
         }
-        CHROMIUM_TAB.get().ok_or("could not extract tab from cell")
-    }?;
-    Ok(tab.clone())
+    }
 }
 
 #[cfg(test)]
@@ -163,7 +155,7 @@ mod test {
             d: NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
         };
 
-        let engine = get_jinja_engine().unwrap();
+        let engine = get_jinja_engine();
         assert_eq!(
             "01/01/2024",
             engine.render_str(r#"{{ d|dateformat }}"#, &ctx).unwrap()

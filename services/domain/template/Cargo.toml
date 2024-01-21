@@ -25,11 +25,13 @@ sequeda_template_common = { path = "../../../libraries/template_common" }
 axum-extra = { workspace = true, features = ["typed-header"] }
 sequeda_file_upload_client = { path = "../../../libraries/file_upload_client" }
 minijinja = { workspace = true, default-features = false, features = [
+
   "builtins",
   "macros",
   "speedups",
   "urlencode",
 ] }
+minijinja-contrib = { workspace = true, features = ["datetime", "timezone", "time-tz", "time"] }
 headless_chrome = { workspace = true }
 tokio-util = { workspace = true }
 

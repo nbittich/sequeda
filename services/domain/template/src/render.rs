@@ -49,7 +49,7 @@ pub async fn render<T: Serialize>(
 async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8>, Box<dyn Error>> {
     let engine = get_jinja_engine()?;
 
-    let html = engine.render_str(&String::from_utf8_lossy(templ), templ_ctx)?;
+    let html = engine.render_str(std::str::from_utf8(templ)?, templ_ctx)?;
     let tab = get_chromium_tab()?;
 
     let temp_html_file_path = std::env::temp_dir().join(format!("{}.html", IdGenerator.get()));
@@ -68,8 +68,13 @@ async fn html_to_pdf<T: Serialize>(templ: &[u8], templ_ctx: &T) -> Result<Vec<u8
 fn get_jinja_engine<'a>() -> Result<&'a Environment<'static>, Box<dyn Error>> {
     let engine = {
         if JINJA_ENGINE.get().is_none() {
+            let mut env = Environment::new();
+            env.add_global("TIMEZONE", "Europe/Brussels");
+            env.add_global("DATETIME_FORMAT", "[day]/[month]/[year] [hour]:[minute]");
+            env.add_global("DATE_FORMAT", "[day]/[month]/[year]");
+            minijinja_contrib::add_to_environment(&mut env);
             JINJA_ENGINE
-                .set(Environment::new())
+                .set(env)
                 .map_err(|_env| "could not setup jinja".to_string())?;
         }
         JINJA_ENGINE
@@ -107,7 +112,11 @@ fn get_chromium_tab() -> Result<Arc<Tab>, Box<dyn Error>> {
 
 #[cfg(test)]
 mod test {
+    use chrono::{NaiveDate, NaiveDateTime};
     use sequeda_service_common::IdGenerator;
+    use serde::{Deserialize, Serialize};
+
+    use crate::render::get_jinja_engine;
 
     use super::html_to_pdf;
 
@@ -140,5 +149,37 @@ mod test {
         let p = std::env::temp_dir().join(format!("{}.pdf", IdGenerator.get()));
         tokio::fs::write(&p, res).await.unwrap();
         println!("path {p:?}");
+    }
+    #[tokio::test]
+    async fn test_date_and_time() {
+        #[derive(Serialize, Deserialize)]
+        struct Whatever {
+            dt: NaiveDateTime,
+            d: NaiveDate,
+        }
+
+        let ctx = Whatever {
+            dt: NaiveDateTime::from_timestamp_millis(1662921288000).unwrap(),
+            d: NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
+        };
+
+        let engine = get_jinja_engine().unwrap();
+        assert_eq!(
+            "01/01/2024",
+            engine.render_str(r#"{{ d|dateformat }}"#, &ctx).unwrap()
+        );
+        assert_eq!(
+            "11/09/2022 18:34",
+            engine
+                .render_str(r#"{{ dt|datetimeformat }}"#, &ctx)
+                .unwrap()
+        );
+
+        assert_eq!(
+            "11/09/2022 18:34:48",
+            engine
+                .render_str(r#"{{ dt|datetimeformat(format="[day]/[month]/[year] [hour]:[minute]:[second]",tz='Europe/Paris') }}"#, ctx)
+                .unwrap()
+        );
     }
 }

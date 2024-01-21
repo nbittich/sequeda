@@ -1,0 +1,59 @@
+order: 1
+routes:
+  - id: invoice_find_all
+    uri: http://invoice
+    predicates:
+      - !path /invoice/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /invoice/find-all/**
+        dest: /find-all
+  - id: invoice_find_by_ids
+    uri: http://invoice
+    predicates:
+      - !path /invoice/find-by-ids/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /invoice/find-by-ids/**
+        dest: /find-by-ids
+  - id: invoice_find_one
+    uri: http://invoice
+    predicates:
+      - !path /invoice/find-one/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /invoice/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
+  - id: invoice_upsert
+    uri: http://invoice
+    filters:
+      - !rewrite_path
+        source: /invoice/**
+        dest: /
+    predicates:
+      - !path /invoice/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo

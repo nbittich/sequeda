@@ -1,0 +1,73 @@
+order: 1
+routes:
+  - id: template_find_all
+    uri: http://template
+    predicates:
+      - !path /template/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /template/find-all/**
+        dest: /find-all
+  - id: template_find_by_ids
+    uri: http://template
+    predicates:
+      - !path /template/find-by-ids/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /template/find-by-ids/**
+        dest: /find-by-ids
+  - id: template_find_by_context
+    uri: http://template
+    predicates:
+      - !path /template/find-by-context/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /template/find-by-context/**
+        dest: /find-by-context
+  - id: template_find_one
+    uri: http://template
+    predicates:
+      - !path /template/find-one/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /template/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
+  - id: template_upsert
+    uri: http://template
+    filters:
+      - !rewrite_path
+        source: /template/**
+        dest: /
+    predicates:
+      - !path /template/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo

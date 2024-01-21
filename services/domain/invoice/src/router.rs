@@ -35,7 +35,7 @@ pub fn get_router(
         .route("/find-all", get(find_all))
         .route("/find-by-ids", post(find_by_ids))
         .route("/find-one/:id", get(find_one))
-        .route("/delete/:person_id", delete(delete_by_id))
+        .route("/delete/:invoice_id", delete(delete_by_id))
         .route("/", post(upsert))
         .layer(Extension(store_client))
         .layer(Extension(file_client))

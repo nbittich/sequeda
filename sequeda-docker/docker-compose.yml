@@ -92,6 +92,17 @@ services:
     restart: "always"
     networks:
       sequeda:
+  ####### service template  #######
+  template:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_template
+        WITH_CHROMIUM: "yes"
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
 
   ####### service product  #######
   product:

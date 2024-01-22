@@ -1,5 +1,6 @@
 <script lang="ts">
-import { Product, productUnitTypes } from 'src/models/product';
+import { Product } from 'src/models/product';
+import { unitTypes } from 'src/models/shared';
 import useProductStore from 'src/stores/product';
 import { computed, defineComponent, ref } from 'vue';
 import ImageUpload from 'src/components/shared/image-upload.vue';
@@ -45,7 +46,7 @@ export default defineComponent({
       unitUpdated,
       mainPictureFile,
       productTagsUpdated,
-      productUnitTypes,
+      unitTypes,
       tagOptions,
       async filterTags(val: string, update: (arg0: () => void) => void) {
         if (val.trim().length) {
@@ -111,7 +112,7 @@ export default defineComponent({
           </q-input>
         </div>
         <div class="col-6">
-          <q-select :key="unitUpdated" dense outlined label="Unit Type" :options="productUnitTypes" option-label="label"
+          <q-select :key="unitUpdated" dense outlined label="Unit Type" :options="unitTypes" option-label="label"
             option-value="value" @update:model-value="unitUpdated += 1" emit-value map-options v-model="product.unitType">
           </q-select>
         </div>

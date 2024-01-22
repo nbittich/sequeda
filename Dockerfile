@@ -36,8 +36,14 @@ RUN if [ $WITH_CHROMIUM = "yes" ]; then apt-get update && apt-get install -y \
 
 FROM runtime
 ARG CRATE_NAME
+ARG USERNAME=${CRATE_NAME}
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
 
-RUN rm -rfv /var/lib/apt/lists/*
+# Create the user, enable this once volume are properly mapped
+# RUN groupadd --gid $USER_GID $USERNAME \
+#     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME 
+# RUN rm -rfv /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -45,5 +51,5 @@ COPY --from=builder /app/target/release/${CRATE_NAME} /app
 
 ENV CRATE=${CRATE_NAME}
 ENV RUST_LOG=INFO
-
+# USER $USERNAME
 ENTRYPOINT  "/app/${CRATE}"

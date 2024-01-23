@@ -56,6 +56,21 @@ routes:
       - !rewrite_path
         source: /template/find-one/(?P<segment>.*)
         dest: /find-one/${segment}
+  - id: template_render
+    uri: http://template
+    filters:
+      - !rewrite_path
+        source: /template/render/**
+        dest: /render
+    predicates:
+      - !path /template/render/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
   - id: template_upsert
     uri: http://template
     filters:

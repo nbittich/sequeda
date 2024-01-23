@@ -42,6 +42,7 @@ pub struct ContextQuery {
     pub context: Context,
 }
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderRequest {
     pub template_id: String,
     pub context: serde_json::Value,

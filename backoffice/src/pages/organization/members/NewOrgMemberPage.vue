@@ -65,7 +65,10 @@ export default defineComponent({
         remarks: this.remarks,
       };
       await memberStore.update(member);
-      this.$router.push({ name: 'org.members.root' });
+      this.$router.push({
+        name: 'org.members.root',
+        query: { t: new Date().getTime() },
+      });
     },
     async reset() {
       this.$router.push({ name: 'org.members.root' });

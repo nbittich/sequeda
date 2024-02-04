@@ -64,7 +64,10 @@ export default defineComponent({
 
       this.member.managedBy = this.managedByIds;
       await memberStore.update(this.member);
-      this.$router.push({ name: 'org.members.root' });
+      this.$router.push({
+        name: 'org.members.root',
+        query: { t: new Date().getTime() },
+      });
     },
     async reset() {
       this.$router.push({ name: 'org.members.root' });
@@ -78,7 +81,7 @@ export default defineComponent({
     <div class="col-12">
       <q-card>
         <OrgMemberForm
-          :key="$route.url"
+          :key="$route.path as string"
           :title="'Edit Member'"
           :responsible-of="responsibleOf"
           v-model:person-model="person"

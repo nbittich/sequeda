@@ -7,11 +7,12 @@ use std::fmt::Display;
 
 pub use client::StoreClient;
 pub use constants::{MONGO_ADMIN_DATABASE, MONGO_HOST, MONGO_PASSWORD, MONGO_PORT, MONGO_USERNAME};
-pub use mongodb::bson::{doc, oid::ObjectId, to_document, Document};
-pub use mongodb::{options::ClientOptions, Client, Collection, Database};
 pub use mongodb::{
-    options::FindOptions, results::DeleteResult, results::InsertManyResult,
-    results::InsertOneResult, results::UpdateResult, Cursor,
+    bson::{doc, oid::ObjectId, to_document, Document, Regex},
+    error::Error as MongoError,
+    options::{ClientOptions, FindOneAndReplaceOptions, FindOptions},
+    results::{DeleteResult, InsertManyResult, InsertOneResult, UpdateResult},
+    Client, ClientSession, Collection, Cursor, Database,
 };
 pub use repository::{Page, Pageable, Repository, StoreRepository};
 use serde::{Deserialize, Serialize};

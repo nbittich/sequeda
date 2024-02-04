@@ -1,0 +1,18 @@
+[package]
+name = "sequeda_file_upload_client"
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sequeda_file_upload_common = { path = "../file_upload_common" }
+reqwest = { workspace = true, features = ["multipart", "json", "stream"] }
+tokio = { workspace = true, features = ["fs"] }
+tokio-util = { workspace = true, features = ["codec"] }
+mime_guess = { workspace = true }

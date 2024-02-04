@@ -1,9 +1,8 @@
 use std::{env::var, net::SocketAddr, str::FromStr};
 
-use sequeda_store::StoreClient;
-
 use sequeda_service_common::{setup_tracing, SERVICE_APPLICATION_NAME, SERVICE_HOST, SERVICE_PORT};
 
+use sequeda_store::StoreClient;
 mod entity;
 mod router;
 

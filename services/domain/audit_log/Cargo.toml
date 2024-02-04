@@ -16,6 +16,5 @@ uuid = { workspace = true, features = ["v4"] }
 tower-http = { workspace = true, features = ["cors"] }
 sequeda_store = { path = "../../../libraries/store" }
 sequeda_message_client = { path = "../../../libraries/message_client" }
-sequeda_service_common = { path = "../../service_common" }
+sequeda_service_common = { path = "../../../libraries/service_common" }
 axum-extra = { workspace = true }
-

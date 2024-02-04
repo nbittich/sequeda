@@ -78,6 +78,7 @@ export default defineComponent({
     ref="fileRef"
     style="display: none"
     v-model="pictureFile"
+    :accept="'image/*'"
     @update:model-value="pictureUrlChange()"
   />
 </template>

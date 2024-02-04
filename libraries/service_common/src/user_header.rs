@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use axum::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
@@ -11,14 +9,9 @@ use serde_json::json;
 
 use crate::constants::X_USER_INFO_HEADER;
 
-pub struct ExtractUserInfo(pub UserInfo);
-
-impl Deref for ExtractUserInfo {
-    type Target = UserInfo;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+pub struct ExtractUserInfo {
+    pub user_info: UserInfo,
+    pub header: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,10 +41,18 @@ where
                 .to_str()
                 .ok()
                 .filter(|u| !u.trim().is_empty())
-                .and_then(|u| base64::engine::general_purpose::STANDARD.decode(u).ok())
-                .and_then(|u| serde_json::from_slice::<UserInfo>(&u).ok())
-            {
-                Some(user_info) => Ok(ExtractUserInfo(user_info)),
+                .and_then(|u| {
+                    base64::engine::general_purpose::STANDARD
+                        .decode(u)
+                        .map(|b| (u.to_string(), b))
+                        .ok()
+                })
+                .and_then(|(e, d)| {
+                    serde_json::from_slice::<UserInfo>(&d)
+                        .map(|des| (e, des))
+                        .ok()
+                }) {
+                Some((header, user_info)) => Ok(ExtractUserInfo { user_info, header }),
                 _ => Err((
                     StatusCode::BAD_REQUEST,
                     Json(json!({"error":"X-USER-INFO is invalid"})),

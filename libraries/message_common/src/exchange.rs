@@ -42,7 +42,6 @@ impl Exchange {
     pub fn deserialize(s: &[u8]) -> Result<Exchange, Box<bincode::ErrorKind>> {
         bincode::deserialize(s)
     }
-    #[allow(dead_code)]
     pub fn serialize(&self) -> Result<Vec<u8>, Box<bincode::ErrorKind>> {
         bincode::serialize(&self)
     }

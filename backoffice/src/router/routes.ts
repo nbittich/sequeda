@@ -29,6 +29,29 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/product',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'products.root',
+        component: () => import('pages/product/ProductPage.vue'),
+        children: [
+          {
+            path: '/new',
+            name: 'products.new',
+            component: () => import('pages/product/NewProductPage.vue'),
+          },
+          {
+            name: 'products.edit',
+            path: ':id/edit',
+            component: () => import('pages/product/EditProductPage.vue'),
+          },
+        ],
+      },
+    ],
+  },
 
   {
     path: '/org',

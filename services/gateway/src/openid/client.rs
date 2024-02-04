@@ -19,7 +19,6 @@ use crate::constant::{OPENID_CLIENT_ID, OPENID_CLIENT_SECRET, OPENID_ISSUER_URL,
 use crate::openid::CustomIdTokenClaims;
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct OpenIdClient {
     client: RawOpenIdClient,
 }
@@ -30,7 +29,6 @@ pub struct OpenIdToken {
     pub token: CustomTokenResponse,
 }
 
-#[allow(dead_code)]
 impl OpenIdClient {
     fn get_scopes() -> Vec<Scope> {
         env::var(OPENID_SCOPES)

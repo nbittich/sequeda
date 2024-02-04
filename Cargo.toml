@@ -3,72 +3,82 @@ resolver = "2"
 
 members = [
     "services/domain/person",
+    "services/domain/product",
     "services/domain/org/org_member",
     "services/domain/org/org_customer",
     "services/domain/org/org_position",
     "services/domain/org/orgs",
     "services/domain/file_upload",
+    "services/domain/invoice",
     "services/domain/audit_log",
-    "services/service_common",
     "services/message_broker",
     "services/geo_service",
     "services/gateway",
-    "libraries/common",
+    "libraries/message_common",
     "libraries/store",
+    "libraries/service_common",
     "libraries/message_client",
+    "libraries/file_upload_common",
+    "libraries/file_upload_client",
+    "services/domain/template",
+    "libraries/template_common",
+    "libraries/template_client",
 ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace.dependencies]
 http-body-util = "0.1.0"
-serde = "1.0.193"
-serde_json = "1.0.108"
+serde = "1.0.195"
+serde_json = "1.0.111"
 bincode = "1.3.3"
-tokio = "1.35.0"
-uuid = "1.6.1"
+tokio = "1.35.1"
+uuid = "1.7.0"
 mongodb = "2.8.0"
-chrono = "0.4.31"
+chrono = "0.4.32"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-axum = "0.7.2"
-tower-http = "0.5.0"
-futures-util = "0.3.29"
-async-trait = "0.1.74"
+axum = "0.7.4"
+tower-http = "0.5.1"
+futures-util = "0.3.30"
+async-trait = "0.1.77"
 dirs = "5.0.1"
 tower = "0.4.13"
 queue-file = "1.4.10"
-reqwest = "0.11.22"
+reqwest = "0.11.23"
 tokio-tungstenite = "0.21.0"
-futures = "0.3.29"
-axum-core = "0.4.1"
-hyper = "1.0.1"
+futures = "0.3.30"
+axum-core = "0.4.3"
+hyper = "1.1.0"
 toml = "0.8.8"
-serde_yaml = "0.9"
-regex = "1.10.2"
-hyper-rustls = "0.24.2"
-rustls = "0.22.1"
+serde_yaml = "0.9.30"
+regex = "1.10.3"
+hyper-rustls = "0.26.0"
+rustls = "0.22.2"
 openidconnect = "3.4.0"
 async-redis-session-v2 = "0.2.3"
 async-session = "3.0.0"
 axum-sessions = "0.6.1"
-axum-extra = "0.9.0"
+axum-extra = "0.9.2"
 rand = "0.8.5"
-base64 = "0.21.5"
+base64 = "0.21.7"
 jsonwebtoken = "9.2.0"
 mime_guess = "2.0.4"
 multipart = "0.18.0"
 tokio-util = "0.7.10"
-image = "0.24.7"
-hyper-util = "0.1.1"
+image = "0.24.8"
+hyper-util = "0.1.2"
 hyper-tls = "0.6.0"
 bytes = "1.5.0"
+minijinja = { version = "1.0.12", default-features = false }
+minijinja-contrib = "1.0.12"
+headless_chrome = "1.0.8"
 
 [workspace.package]
 version = "0.1.0"
 authors = ["Nordine Bittich"]
 description = "Simple ERP"
 documentation = "https://github.com/nbittich/sequeda"
-rust-version = "1.74"
+rust-version = "1.75"
 edition = "2021"
 license = "MPL-2.0"

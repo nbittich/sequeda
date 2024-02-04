@@ -13,7 +13,6 @@ impl TextMessage {
         serde_json::from_str(s)
     }
 
-    #[allow(dead_code)]
     pub fn serialize(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(&self)
     }

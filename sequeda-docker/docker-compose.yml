@@ -92,6 +92,39 @@ services:
     restart: "always"
     networks:
       sequeda:
+  ####### service template  #######
+  template:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_template
+        WITH_CHROMIUM: "yes"
+    environment:
+      <<: *common-variables
+      CHROMIUM_SANDBOXED: "false" # set to true when refactoring volume mapping / enable user in Dockerfile
+    restart: "always"
+    networks:
+      sequeda:
+  ####### service invoice  #######
+  invoice:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_invoice
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
+  ####### service product  #######
+  product:
+    build:
+      context: ../
+      args:
+        CRATE_NAME: sequeda_product
+    environment: *common-variables
+    restart: "always"
+    networks:
+      sequeda:
   ####### service org_position  #######
   org-position:
     build:

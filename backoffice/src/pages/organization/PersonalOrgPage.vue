@@ -117,14 +117,20 @@ export default defineComponent({
       </q-card>
     </q-tab-panel>
     <q-tab-panel name="positions">
-      <router-view :key="$route.params.id as string" />
+      <router-view
+        :key="($route.params.id as string) || $route.query.t?.toString()"
+      />
     </q-tab-panel>
 
     <q-tab-panel name="customers">
-      <router-view :key="$route.params.id as string" />
+      <router-view
+        :key="($route.params.id as string) || $route.query.t?.toString()"
+      />
     </q-tab-panel>
     <q-tab-panel name="members">
-      <router-view :key="$route.params.id as string" />
+      <router-view
+        :key="($route.params.id as string) || $route.query.t?.toString()"
+      />
     </q-tab-panel>
   </q-tab-panels>
 </template>

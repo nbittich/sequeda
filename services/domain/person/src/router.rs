@@ -9,8 +9,8 @@ use axum::{
 };
 use chrono::Local;
 use sequeda_service_common::{
-    user_header::ExtractUserInfo, ContactDetail, QueryIds, StoreCollection, PUBLIC_TENANT,
-    SERVICE_COLLECTION_NAME,
+    common_domain_types::ContactDetail, user_header::ExtractUserInfo, QueryIds, StoreCollection,
+    PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
 };
 use sequeda_store::{doc, Repository, StoreClient, StoreRepository};
 use serde_json::json;
@@ -37,7 +37,10 @@ pub fn get_router(client: StoreClient) -> Router {
 // get current user profile or insert it
 async fn current(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("Person get current route entered!");
@@ -87,7 +90,10 @@ async fn current(
 
 async fn find_all(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
 ) -> impl IntoResponse {
     tracing::debug!("Person list route entered!");
@@ -108,7 +114,10 @@ async fn find_all(
 }
 async fn find_by_ids(
     Extension(client): Extension<StoreClient>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Extension(collection): Extension<StoreCollection>,
     extract::Json(QueryIds(query_ids)): extract::Json<QueryIds>,
 ) -> impl IntoResponse {
@@ -131,7 +140,10 @@ async fn find_by_ids(
 async fn find_one(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(person_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("Person find one route entered!");
@@ -155,7 +167,10 @@ async fn find_one(
 async fn delete_by_id(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     Path(person_id): Path<String>,
 ) -> impl IntoResponse {
     tracing::debug!("Person delete one route entered!");
@@ -193,7 +208,10 @@ async fn delete_by_id(
 async fn upsert(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
     extract::Json(payload): extract::Json<PersonUpsert>,
 ) -> impl IntoResponse {
     tracing::debug!("Upsert person route entered!");

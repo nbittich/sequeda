@@ -1,0 +1,73 @@
+order: 1
+routes:
+  - id: product_find_one
+    uri: http://product
+    predicates:
+      - !path /product/find-one/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /product/find-one/(?P<segment>.*)
+        dest: /find-one/${segment}
+  - id: product_find_by_ids
+    uri: http://product
+    predicates:
+      - !path /product/find-by-ids/**
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /product/find-by-ids/**
+        dest: /find-by-ids
+  - id: product_find_all
+    uri: http://product
+    predicates:
+      - !path /product/find-all/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /product/find-all/**
+        dest: /find-all
+  - id: product_tag_search
+    uri: http://product
+    predicates:
+      - !path /product/tag/search/**
+    authorizations:
+      - !authorization
+        method: "GET"
+        has_roles:
+          - creep
+          - demo
+    filters:
+      - !rewrite_path
+        source: /product/tag/search/**
+        dest: /tag/search
+  - id: product_upsert
+    uri: http://product
+    filters:
+      - !rewrite_path
+        source: /product/**
+        dest: /
+    predicates:
+      - !path /product/**
+      - !method POST
+    authorizations:
+      - !authorization
+        method: "POST"
+        has_roles:
+          - creep
+          - demo

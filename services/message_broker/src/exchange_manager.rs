@@ -2,7 +2,7 @@ use crate::constants::PUB_PERSISTENT_DIR;
 use axum::extract::ws::{Message, WebSocket};
 use futures_util::{stream::SplitSink, SinkExt};
 use queue_file::QueueFile;
-use sequeda_common::exchange::Exchange;
+use sequeda_message_common::exchange::Exchange;
 use std::{env::var, error::Error, fmt::Display, path::PathBuf};
 #[derive(Debug)]
 pub struct ExchangeError {
@@ -155,11 +155,14 @@ impl ExchangeManager {
         Ok(())
     }
 }
+pub fn to_service_error(e: impl Error) -> ExchangeError {
+    ExchangeError { msg: e.to_string() }
+}
 
 #[cfg(test)]
 mod test {
 
-    use sequeda_common::{exchange::Exchange, TextMessage};
+    use sequeda_message_common::{exchange::Exchange, TextMessage};
 
     #[test]
     fn make_text_message() {
@@ -190,7 +193,4 @@ mod test {
         }
         println!("{s}");
     }
-}
-pub fn to_service_error(e: impl Error) -> ExchangeError {
-    ExchangeError { msg: e.to_string() }
 }

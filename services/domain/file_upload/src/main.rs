@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{env::var, net::SocketAddr, str::FromStr};
 
+use axum::extract::multipart::Field;
 use axum::http::{header, StatusCode};
 use axum::response::{AppendHeaders, IntoResponse};
 use axum::routing::get;
@@ -9,28 +10,33 @@ use axum::Json;
 use axum::{routing::post, Extension, Router};
 
 use axum::extract::{Multipart, Query};
+use chrono::Local;
 use mime_guess::mime::APPLICATION_OCTET_STREAM;
+use sequeda_file_upload_common::{
+    DownloadFileRequestUriParams, FileUpload, UploadFileRequestUriParams,
+};
 use sequeda_message_client::{Exchange, MessageClient};
 use sequeda_service_common::user_header::ExtractUserInfo;
 use sequeda_service_common::{
-    setup_tracing, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT, SERVICE_COLLECTION_NAME,
-    SERVICE_HOST, SERVICE_PORT,
+    setup_tracing, IdGenerator, StoreCollection, BODY_SIZE_LIMIT, PUBLIC_TENANT,
+    SERVICE_COLLECTION_NAME, SERVICE_HOST, SERVICE_PORT,
 };
 use sequeda_store::{Repository, StoreClient, StoreRepository};
 use serde_json::json;
+use tokio::io::AsyncWriteExt;
 use tokio::sync::broadcast::Sender;
 use tokio_util::io::ReaderStream;
 use tower_http::limit::RequestBodyLimitLayer;
 
-use crate::file_upload::{FileUpload, SHARE_DRIVE_PATH};
+use crate::file_upload_service::{FileService, SHARE_DRIVE_PATH};
 
-mod file_upload;
+mod file_upload_service;
 mod soffice;
 
 #[derive(Clone, Debug)]
 struct ShareDrive(String);
 
-const TOPIC: &str = "TOPIC_UPLOAD";
+const TOPIC_UPLOAD: &str = "TOPIC_UPLOAD";
 
 #[tokio::main]
 async fn main() {
@@ -58,8 +64,8 @@ async fn main() {
     let mut server = tokio::spawn(async move {
         let app = Router::new()
             .route("/upload", post(upload))
-            .route("/download/:id", get(download))
-            .route("/metadata/:id", get(metadata))
+            .route("/download", get(download))
+            .route("/metadata", get(metadata))
             .layer(RequestBodyLimitLayer::new(body_size_limit))
             .layer(Extension(client))
             .layer(Extension(sender))
@@ -87,12 +93,12 @@ async fn metadata(
     Extension(client): Extension<StoreClient>,
     Extension(collection): Extension<StoreCollection>,
     x_user_info: Option<ExtractUserInfo>,
-    axum::extract::Path(id): axum::extract::Path<String>,
+    Query(DownloadFileRequestUriParams { id }): Query<DownloadFileRequestUriParams>,
 ) -> impl IntoResponse {
     tracing::debug!("Metadata route entered!");
 
     match get_file_upload(&id, &x_user_info, &client, &collection).await {
-        Some(upl) => Json(upl).into_response(),
+        Some((_, upl)) => Json(upl).into_response(),
         None => (StatusCode::NOT_FOUND, Json(json!({"error": "Not found"}))).into_response(),
     }
 }
@@ -102,7 +108,7 @@ async fn get_file_upload(
     x_user_info: &Option<ExtractUserInfo>,
     client: &StoreClient,
     collection: &StoreCollection,
-) -> Option<FileUpload> {
+) -> Option<(StoreRepository<FileUpload>, FileUpload)> {
     async fn get_upload(repository: &StoreRepository<FileUpload>, id: &str) -> Option<FileUpload> {
         match repository.find_by_id(id).await {
             Ok(Some(response)) => Some(response),
@@ -118,15 +124,17 @@ async fn get_file_upload(
         StoreRepository::get_repository(client.clone(), &collection.0, PUBLIC_TENANT).await;
 
     if let Some(fu) = get_upload(&public_repository, id).await {
-        Some(fu)
+        Some((public_repository, fu))
     } else if let Some(tenant) = x_user_info
         .as_ref()
-        .map(|u| &u.0)
+        .map(|u| &u.user_info)
         .and_then(|u| u.tenant.clone())
     {
         let private_repository: StoreRepository<FileUpload> =
             StoreRepository::get_repository(client.clone(), &collection.0, &tenant).await;
-        get_upload(&private_repository, id).await
+        get_upload(&private_repository, id)
+            .await
+            .map(|fu| (private_repository, fu))
     } else {
         None
     }
@@ -138,15 +146,19 @@ async fn download(
     Extension(collection): Extension<StoreCollection>,
     Extension(ShareDrive(share_drive_path)): Extension<ShareDrive>,
     x_user_info: Option<ExtractUserInfo>,
-    axum::extract::Path(id): axum::extract::Path<String>,
+    Query(DownloadFileRequestUriParams { id }): Query<DownloadFileRequestUriParams>,
 ) -> impl IntoResponse {
     tracing::debug!("Download route entered!");
 
     tracing::debug!("trying to fetch document with id {id}");
 
     match get_file_upload(&id, &x_user_info, &client, &collection).await {
-        Some(file) => {
-            let file_handle = file.download(&share_drive_path).await.unwrap();
+        Some((repo, file)) => {
+            let file_service = FileService {
+                share_drive_path: &share_drive_path,
+                store: &repo,
+            };
+            let file_handle = file_service.download(&file).await.unwrap();
             let stream = ReaderStream::new(file_handle);
             let body = axum::body::Body::from_stream(stream);
 
@@ -173,20 +185,55 @@ async fn download(
     }
 }
 
+async fn write_field_to_temp_file<'a>(
+    field: &mut Field<'a>,
+    volume: impl Into<PathBuf>,
+    file_name: &str,
+) -> (PathBuf, u64) {
+    let volume = volume.into();
+    let temp_volume = volume.join("tmp"); // necessary to
+                                          // then move the file in the same volume
+    tracing::debug!("temp_volume: - {temp_volume:?}");
+    if !temp_volume.exists() {
+        tokio::fs::create_dir(&temp_volume).await.unwrap();
+    }
+    let temp_file_path = temp_volume.join(file_name);
+    if temp_file_path.exists() {
+        tracing::info!(
+            "file {file_name} exists. removing: {:?}",
+            tokio::fs::remove_file(&temp_file_path).await
+        );
+    }
+
+    let mut temp_file = {
+        let mut o = tokio::fs::OpenOptions::new();
+        o.append(true).create(true).open(&temp_file_path).await
+    }
+    .unwrap();
+
+    while let Ok(Some(chunk)) = field.chunk().await {
+        temp_file.write_all(&chunk).await.unwrap();
+    }
+    let metadata = temp_file.metadata().await.unwrap();
+    (temp_file_path, metadata.len())
+}
 async fn upload(
     Extension(client): Extension<StoreClient>,
     Extension(message_sender): Extension<Sender<Exchange>>,
     Extension(collection): Extension<StoreCollection>,
     Extension(ShareDrive(share_drive_path)): Extension<ShareDrive>,
-    ExtractUserInfo(x_user_info): ExtractUserInfo,
-    Query(mut query): Query<HashMap<String, String>>,
+    ExtractUserInfo {
+        user_info: x_user_info,
+        ..
+    }: ExtractUserInfo,
+    Query(mut query): Query<UploadFileRequestUriParams>,
     mut multipart: Multipart,
 ) -> impl IntoResponse {
     tracing::debug!("Upload route entered!");
 
     let mut uploads = HashMap::new();
 
-    while let Some(field) = multipart.next_field().await.unwrap() {
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
         let file_name = field.file_name().unwrap().to_string();
 
         let mut file_upload = FileUpload {
@@ -195,36 +242,33 @@ async fn upload(
                     .first_raw()
                     .map(|ct| ct.into())
             }),
-            correlation_id: query.get("correlation_id").cloned(),
+            correlation_id: query.correlation_id.take(),
             extension: Path::new(&file_name)
                 .extension()
                 .map(|s| s.to_string_lossy().to_string()),
             original_filename: file_name.to_string(),
-            ..Default::default()
+            ..make_default_file_upload()
         };
+        let (temp_file_path, len) =
+            write_field_to_temp_file(&mut field, &share_drive_path, &file_name).await;
 
-        let data = field.bytes().await.unwrap();
+        file_upload.size = len;
 
-        file_upload.size = data.len();
+        tracing::debug!("Length of `{}` is {} bytes", file_name, len);
 
-        tracing::debug!("Length of `{}` is {} bytes", file_name, data.len());
-
-        uploads.insert(file_name, (file_upload, data));
+        uploads.insert(file_name, (file_upload, temp_file_path));
     }
 
     if uploads.len() == 1 {
-        let Some((_, (mut upl, data))) = uploads.into_iter().last() else {
+        let Some((_, (mut upl, temp_file_path))) = uploads.into_iter().last() else {
             unreachable!("should never happen")
         };
 
-        if let Some(id) = query.remove("id") {
+        if let Some(id) = query.id.take() {
             upl.id = id;
         }
 
-        upl.public_resource = query
-            .get("public")
-            .and_then(|s| s.parse::<bool>().ok())
-            .unwrap_or(false);
+        upl.public_resource = query.is_public.unwrap_or(false);
 
         let tenant = if upl.public_resource {
             PUBLIC_TENANT.into()
@@ -234,7 +278,12 @@ async fn upload(
 
         let repository: StoreRepository<FileUpload> =
             StoreRepository::get_repository(client, &collection.0, &tenant).await;
-        upl.upload(&share_drive_path, Some(&data), &repository)
+        let file_service = FileService {
+            share_drive_path: &share_drive_path,
+            store: &repository,
+        };
+        let upl = file_service
+            .upload(upl, Some(&temp_file_path))
             .await
             .unwrap();
         if let Err(e) = message_sender.send(Exchange::new(
@@ -245,7 +294,7 @@ async fn upload(
                 &upl.id
             )
             .as_bytes(),
-            TOPIC,
+            TOPIC_UPLOAD,
             Some(tenant),
             HashMap::new(),
         )) {
@@ -259,8 +308,13 @@ async fn upload(
         let tenant = &x_user_info.tenant.unwrap();
         let repository: StoreRepository<FileUpload> =
             StoreRepository::get_repository(client, &collection.0, tenant).await;
-        for (_, (mut upl, data)) in uploads {
-            upl.upload(&share_drive_path, Some(&data), &repository)
+        let file_service = FileService {
+            share_drive_path: &share_drive_path,
+            store: &repository,
+        };
+        for (_, (upl, temp_file_path)) in uploads {
+            let upl = file_service
+                .upload(upl, Some(&temp_file_path))
                 .await
                 .unwrap();
             if let Err(e) = message_sender.send(Exchange::new(
@@ -269,7 +323,7 @@ async fn upload(
                     &username, &upl.original_filename, &upl.id
                 )
                 .as_bytes(),
-                TOPIC,
+                TOPIC_UPLOAD,
                 Some(tenant.clone()),
                 HashMap::new(),
             )) {
@@ -278,5 +332,20 @@ async fn upload(
             uploads_resp.push(upl);
         }
         (StatusCode::OK, Json(uploads_resp)).into_response()
+    }
+}
+fn make_default_file_upload() -> FileUpload {
+    FileUpload {
+        id: IdGenerator.get(),
+        content_type: Default::default(),
+        original_filename: Default::default(),
+        internal_name: Default::default(),
+        extension: Default::default(),
+        creation_date: Local::now().naive_local(),
+        updated_date: Default::default(),
+        thumbnail_id: Default::default(),
+        size: Default::default(),
+        public_resource: Default::default(),
+        correlation_id: Default::default(),
     }
 }

@@ -22,14 +22,20 @@ pub struct Page<T: Serialize + DeserializeOwned> {
 
 pub struct StoreRepository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     collection: Collection<T>,
+    _db_name: String,
+    _collection_name: String,
 }
 
 impl<T> StoreRepository<T>
 where
     T: Serialize + DeserializeOwned + Unpin + Send + Sync,
 {
-    pub fn new(collection: Collection<T>) -> Self {
-        StoreRepository { collection }
+    pub fn new(collection: Collection<T>, collection_name: &str, tenant_id: &str) -> Self {
+        StoreRepository {
+            collection,
+            _db_name: tenant_id.to_string(),
+            _collection_name: collection_name.to_string(),
+        }
     }
 }
 
@@ -42,17 +48,15 @@ where
         collection_name: &str,
         tenant_id: &str,
     ) -> Self {
-        StoreRepository::from_collection_name(&client, tenant_id, collection_name).await
-    }
-
-    pub async fn from_collection_name(
-        client: &StoreClient,
-        db_name: &str,
-        collection_name: &str,
-    ) -> Self {
-        let db = client.get_db(db_name);
+        let db = client.get_db(tenant_id);
         let collection = db.collection::<T>(collection_name);
-        StoreRepository::new(collection)
+        StoreRepository::new(collection, collection_name, tenant_id)
+    }
+    pub fn get_collection_name(&self) -> &str {
+        &self._collection_name
+    }
+    pub fn get_db_name(&self) -> &str {
+        &self._db_name
     }
 }
 
@@ -68,6 +72,7 @@ where
 #[async_trait::async_trait]
 pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     fn get_collection(&self) -> &Collection<T>;
+
     async fn find_all(&self) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection
@@ -80,6 +85,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(collection)
     }
+
     async fn count(&self) -> Result<u64, StoreError> {
         let collection = self.get_collection();
         let count = collection
@@ -90,13 +96,17 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     }
 
     async fn find_by_ids(&self, ids: Vec<String>) -> Result<Vec<T>, StoreError> {
-        self.find_by_query(doc! {"_id": {"$in": ids}}).await
+        self.find_by_query(doc! {"_id": {"$in": ids}}, None).await
     }
 
-    async fn find_by_query(&self, query: Document) -> Result<Vec<T>, StoreError> {
+    async fn find_by_query(
+        &self,
+        query: Document,
+        options: impl Into<Option<FindOptions>> + Send,
+    ) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection
-            .find(query, None)
+            .find(query, options)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         cursor
@@ -206,9 +216,13 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     }
 
     async fn delete_by_id(&self, id: &str) -> Result<Option<T>, StoreError> {
+        self.delete_by_query(doc! {"_id": id}).await
+    }
+
+    async fn delete_by_query(&self, query: Document) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection
-            .find_one_and_delete(doc! {"_id": id}, None)
+            .find_one_and_delete(query, None)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)

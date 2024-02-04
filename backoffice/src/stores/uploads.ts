@@ -14,7 +14,7 @@ const useUploadStore = defineStore('upload', {
       file: File,
       id?: string,
       correlationId?: string,
-      publicResource = false
+      publicResource = false,
     ): Promise<FileUpload> {
       const multipart = new FormData();
       multipart.append('file', file);
@@ -31,15 +31,15 @@ const useUploadStore = defineStore('upload', {
 
       const response = await api.post<FileUpload>(
         `/uploads/upload?${urlParams.toString()}`,
-        multipart
+        multipart,
       );
       return response.data;
     },
     getDownloadUrl(id?: string) {
-      return `/api/uploads/download/${id}`;
+      return `/api/uploads/download?id=${id}`;
     },
     async getMetadata(id: string): Promise<FileUpload> {
-      const resp = await api.get<FileUpload>(`/uploads/metadata/${id}`);
+      const resp = await api.get<FileUpload>(`/uploads/metadata?id=${id}`);
       return resp.data;
     },
   },

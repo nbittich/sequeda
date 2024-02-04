@@ -9,6 +9,7 @@ pub struct Customer {
     pub id: String,
     pub customer_type: CustomerType,
     pub org_id: String,
+    pub recurring_product_ids: Option<Vec<String>>,
     pub represented_by_id: String,
     pub started: NaiveDate,
     pub ended: Option<NaiveDate>,
@@ -27,8 +28,6 @@ pub enum CustomerType {
     Organization,
 }
 
-
-
 #[derive(Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Communication {
@@ -45,6 +44,7 @@ impl Default for Customer {
         Customer {
             id: IdGenerator.get(),
             started: Default::default(),
+            recurring_product_ids: Default::default(),
             ended: Default::default(),
             org_id: Default::default(),
             customer_type: Default::default(),
@@ -64,6 +64,7 @@ pub struct CustomerUpsert {
     pub id: Option<String>,
     pub org_id: String,
     pub customer_type: CustomerType,
+    pub recurring_product_ids: Option<Vec<String>>,
     pub started: NaiveDate,
     pub ended: Option<NaiveDate>,
     pub represented_by_id: String,

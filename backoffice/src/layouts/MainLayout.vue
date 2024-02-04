@@ -55,6 +55,13 @@
               <q-item-section> Customers </q-item-section>
             </q-item>
           </q-expansion-item>
+
+          <q-item clickable v-ripple to="/product">
+            <q-item-section avatar>
+              <q-icon name="local_mall" />
+            </q-item-section>
+            <q-item-section> Products </q-item-section>
+          </q-item>
           <q-item clickable v-ripple to="/admin">
             <q-item-section avatar>
               <q-icon name="admin_panel_settings" />
@@ -85,7 +92,9 @@
       <q-page>
         <Suspense>
           <template #default>
-            <router-view :key="$route.params.id as string" />
+            <router-view
+              :key="($route.params.id as string) || $route.query.t?.toString()"
+            />
           </template>
           <template #fallback>
             <div>Loading...</div>

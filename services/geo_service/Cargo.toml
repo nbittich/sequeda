@@ -16,5 +16,5 @@ axum = { workspace = true, features = ["ws"] }
 chrono = { workspace = true, features = ["serde"] }
 uuid = { workspace = true, features = ["v4"] }
 tower-http = { workspace = true, features = ["cors"] }
-sequeda_service_common = { path = "../service_common" }
+sequeda_service_common = { path = "../../libraries/service_common" }
 axum-extra = { workspace = true }

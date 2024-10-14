@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::{env::var, net::SocketAddr, str::FromStr};
 
 use sequeda_file_upload_client::FileUploadClient;

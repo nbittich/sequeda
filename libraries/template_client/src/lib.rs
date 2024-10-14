@@ -30,7 +30,7 @@ impl TemplateClient {
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         let resp = self
             .client
-            .get(&format!("{}/render", self.url))
+            .get(format!("{}/render", self.url))
             .header(X_USER_INFO_HEADER, x_user_info_header)
             .json(render_request)
             .send()
@@ -56,7 +56,7 @@ impl TemplateClient {
     ) -> Result<Template, Box<dyn Error>> {
         let resp = self
             .client
-            .get(&format!("{}/find-one/{}", self.url, id))
+            .get(format!("{}/find-one/{}", self.url, id))
             .header(X_USER_INFO_HEADER, x_user_info_header)
             .send()
             .await?;

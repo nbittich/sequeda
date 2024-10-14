@@ -45,7 +45,7 @@ pub enum Filter {
 impl Config {
     #[allow(unused)]
     pub fn deserialize(yaml: &str) -> Self {
-        match serde_yaml::from_str(yaml) {
+        match serde_yml::from_str(yaml) {
             Ok(yaml) => yaml,
             Err(e) => panic!("could not deserialize yaml {e}"),
         }
@@ -57,7 +57,7 @@ impl Config {
     pub fn from_file(config_path: &Path) -> Self {
         let file = File::open(config_path).unwrap();
         let buf_reader = BufReader::new(file);
-        serde_yaml::from_reader(buf_reader).unwrap()
+        serde_yml::from_reader(buf_reader).unwrap()
     }
 
     pub fn from_dir(service_volume_path: &Path) -> Self {
@@ -84,7 +84,7 @@ impl Config {
 
     #[allow(unused)]
     pub fn serialize(&self) -> String {
-        match serde_yaml::to_string(&self) {
+        match serde_yml::to_string(&self) {
             Ok(toml) => toml,
             Err(e) => panic!("could not serialize toml {e}"),
         }

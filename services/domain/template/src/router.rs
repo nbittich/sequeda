@@ -177,12 +177,12 @@ async fn upsert(
             .into_response();
     };
     let client = client.get_raw_client(); // todo, maybe make a SessionStoreRepository or something
-    let mut session = match client.start_session(None).await {
+    let mut session = match client.start_session().await {
         Ok(session) => session,
         Err(e) => return handle_err(e),
     };
 
-    if let Err(e) = session.start_transaction(None).await {
+    if let Err(e) = session.start_transaction().await {
         return handle_err(e);
     }
 
@@ -193,9 +193,7 @@ async fn upsert(
 
     let maybe_template = {
         if let Some(id) = query.id {
-            let i = template_collection
-                .find_one_with_session(doc! {"_id": id}, None, &mut session)
-                .await;
+            let i = template_collection.find_one(doc! {"_id": id}).await;
             match i {
                 Ok(Some(mut i)) => {
                     i.updated_date = Some(Local::now().naive_local());
@@ -281,12 +279,8 @@ async fn upsert(
             .into_response();
     }
     if let Err(e) = template_collection
-        .find_one_and_replace_with_session(
-            doc! {"_id": &template.id},
-            &template,
-            options,
-            &mut session,
-        )
+        .find_one_and_replace(doc! {"_id": &template.id}, &template)
+        .with_options(options)
         .await
     {
         return handle_err(e);

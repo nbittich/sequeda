@@ -1,6 +1,7 @@
 mod auth_redirect;
 mod auth_request;
 mod client;
+mod reqwest_client;
 mod router;
 mod user;
 

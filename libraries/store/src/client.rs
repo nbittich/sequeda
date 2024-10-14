@@ -47,7 +47,7 @@ impl StoreClient {
 
         let _ = client
             .database(&mongo_admin_db)
-            .run_command(doc! {"ping": 1}, None)
+            .run_command(doc! {"ping": 1})
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
 

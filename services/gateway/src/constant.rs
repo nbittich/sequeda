@@ -8,5 +8,6 @@ pub const OPENID_ISSUER_URL: &str = "OPENID_ISSUER_URL";
 pub const OPENID_SCOPES: &str = "OPENID_SCOPES";
 pub const APP_ROOT_URL: &str = "APP_ROOT_URL";
 pub const OPENID_ENABLED: &str = "OPENID_ENABLED";
+pub const OPENID_DISABLE_SSL_ISSUER: &str = "OPENID_DISABLE_SSL_ISSUER";
 
 pub use sequeda_service_common::{SERVICE_CONFIG_VOLUME, SERVICE_HOST, SERVICE_PORT};

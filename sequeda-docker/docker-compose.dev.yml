@@ -3,6 +3,7 @@ services:
   gateway:
     environment:
       DEMO_ACCOUNT: "true" # todo this doesn't go to production
+      OPENID_DISABLE_SSL_ISSUER: "true"
 
   mongo-express:
     image: mongo-express
@@ -19,14 +20,16 @@ services:
       - 8081:8081
   keycloak:
     environment:
-      KC_HOSTNAME: auth.somehost.org
+      KC_HOSTNAME_URL: "https://auth.somehost.org"
+      KC_HOSTNAME_ADMIN_URL: "https://auth.somehost.org"
       KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: root
     user: root
     networks:
       sequeda:
-    command: start --optimized --http-port=80  --log-level=DEBUG
+    #command: start --optimized --http-port=80  --log-level=DEBUG
     volumes:
       - ./config/keycloak-dev/export:/tmp/export
       - ./config/keycloak-dev/import:/tmp/import

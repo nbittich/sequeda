@@ -1,11 +1,11 @@
 use std::env;
 use std::fmt::Display;
 
+use super::reqwest_client::async_http_client;
 use async_session::chrono::Utc;
 use openidconnect::core::{
     CoreGenderClaim, CoreIdTokenVerifier, CoreResponseType, CoreRevocableToken,
 };
-use openidconnect::reqwest::async_http_client;
 use openidconnect::url::Url;
 use openidconnect::{
     AuthenticationFlow, AuthorizationCode, CsrfToken, Nonce, OAuth2TokenResponse, RedirectUrl,

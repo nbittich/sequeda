@@ -11,7 +11,7 @@ axum = { workspace = true, features = ["multipart"] }
 hyper = { workspace = true, features = ["full"] }
 tokio = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }
-serde_yaml = { workspace = true }
+serde_yml = { workspace = true }
 serde_json = { workspace = true }
 regex = { workspace = true }
 tracing = { workspace = true }
@@ -33,5 +33,6 @@ hyper-util = { workspace = true, features = [
   "client-legacy",
   "http1",
 ] }
+reqwest.workspace=true
 http-body-util = { workspace = true }
 tower = { workspace = true }

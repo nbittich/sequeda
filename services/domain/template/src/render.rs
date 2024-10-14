@@ -104,7 +104,7 @@ fn get_chromium_tab() -> Result<Arc<Tab>, Box<dyn Error>> {
 
 #[cfg(test)]
 mod test {
-    use chrono::{NaiveDate, NaiveDateTime};
+    use chrono::{DateTime, NaiveDate, NaiveDateTime};
     use sequeda_service_common::IdGenerator;
     use serde::{Deserialize, Serialize};
 
@@ -151,7 +151,9 @@ mod test {
         }
 
         let ctx = Whatever {
-            dt: NaiveDateTime::from_timestamp_millis(1662921288000).unwrap(),
+            dt: DateTime::from_timestamp_millis(1662921288000)
+                .unwrap()
+                .naive_utc(),
             d: NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
         };
 

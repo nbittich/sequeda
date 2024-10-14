@@ -17,7 +17,7 @@ pub async fn convert_to(
             to.to_str(),
             "--outdir",
             temp_dir,
-            &input_path_str,
+            input_path_str,
         ])
         .stdout(Stdio::piped())
         .output()

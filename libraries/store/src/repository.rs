@@ -76,7 +76,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn find_all(&self) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection
-            .find(doc! {}, None)
+            .find(doc! {})
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         let collection: Vec<T> = cursor
@@ -89,7 +89,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn count(&self) -> Result<u64, StoreError> {
         let collection = self.get_collection();
         let count = collection
-            .count_documents(doc! {}, None)
+            .count_documents(doc! {})
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(count)
@@ -106,7 +106,8 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     ) -> Result<Vec<T>, StoreError> {
         let collection = self.get_collection();
         let cursor = collection
-            .find(query, options)
+            .find(query)
+            .with_options(options)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         cursor
@@ -142,7 +143,8 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .limit(Some(pageable.limit))
             .build();
         let cursor = collection
-            .find(query, Some(options))
+            .find(query)
+            .with_options(options)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         let collection: Vec<T> = cursor
@@ -173,7 +175,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
         };
         let res = self
             .get_collection()
-            .delete_many(query, None)
+            .delete_many(query)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -182,7 +184,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn insert_many(&self, data: &Vec<T>) -> Result<InsertManyResult, StoreError> {
         let res = self
             .get_collection()
-            .insert_many(data, None)
+            .insert_many(data)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -191,7 +193,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn insert_one(&self, data: &T) -> Result<InsertOneResult, StoreError> {
         let res = self
             .get_collection()
-            .insert_one(data, None)
+            .insert_one(data)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -200,7 +202,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn find_by_id(&self, id: &str) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection
-            .find_one(doc! {"_id": id}, None)
+            .find_one(doc! {"_id": id})
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -209,7 +211,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn find_one(&self, query: Option<Document>) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection
-            .find_one(query, None)
+            .find_one(query.unwrap_or_else(|| doc! {})) // it should always have a document, FIXME
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -222,7 +224,7 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
     async fn delete_by_query(&self, query: Document) -> Result<Option<T>, StoreError> {
         let collection = self.get_collection();
         let res = collection
-            .find_one_and_delete(query, None)
+            .find_one_and_delete(query)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)
@@ -234,7 +236,8 @@ pub trait Repository<T: Serialize + DeserializeOwned + Unpin + Send + Sync> {
             .upsert(Some(true))
             .build();
         let res = collection
-            .find_one_and_replace(doc! {"_id": id}, entity, options)
+            .find_one_and_replace(doc! {"_id": id}, entity)
+            .with_options(options)
             .await
             .map_err(|e| StoreError { msg: e.to_string() })?;
         Ok(res)

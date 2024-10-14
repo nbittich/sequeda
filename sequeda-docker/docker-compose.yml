@@ -40,7 +40,7 @@ services:
       - ./data/keycloak_postgresql:/var/lib/postgresql/data
   keycloak:
     restart: always
-    image: nbittich/keycloak:23.0.1
+    image: nbittich/keycloak:24.0.2
     networks:
       sequeda:
     environment:
@@ -48,10 +48,11 @@ services:
       KC_DB_PASSWORD: keycloak
       KC_DB: "postgres"
       KC_DB_URL: "jdbc:postgresql://keycloak-postgresql:5432/keycloak"
-      KC_PROXY: edge
-    command: start --optimized --http-port=80
+      # KC_PROXY: edge
+    command: start --optimized --proxy-headers xforwarded --http-port=80
     depends_on:
       - keycloak-postgresql
+    user: root
 
   ####### Redis #######
   redis:

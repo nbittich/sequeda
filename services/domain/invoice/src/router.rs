@@ -190,12 +190,12 @@ async fn upsert(
             .into_response();
     };
     let client = client.get_raw_client(); // todo, maybe make a SessionStoreRepository or something
-    let mut session = match client.start_session(None).await {
+    let mut session = match client.start_session().await {
         Ok(session) => session,
         Err(e) => return handle_err(e),
     };
 
-    if let Err(e) = session.start_transaction(None).await {
+    if let Err(e) = session.start_transaction().await {
         return handle_err(e);
     }
     let invoice_collection = session
@@ -204,9 +204,7 @@ async fn upsert(
         .collection::<Invoice>(&collection);
     let maybe_invoice = {
         if let Some(id) = &invoice.id {
-            let i = invoice_collection
-                .find_one_with_session(doc! {"_id": id}, None, &mut session)
-                .await;
+            let i = invoice_collection.find_one(doc! {"_id": id}).await;
             match i {
                 Ok(Some(mut i)) => {
                     i.updated_date = Some(Local::now().naive_local());
@@ -270,7 +268,7 @@ async fn upsert(
             .collection::<InvoiceSeq>("invoice_seq");
 
         let seq = match invoice_seq_collection
-            .find_one_with_session(doc! {"_id": INVOICE_SEQ_ROW_ID}, None, &mut session)
+            .find_one(doc! {"_id": INVOICE_SEQ_ROW_ID})
             .await
         {
             Ok(Some(mut seq)) => {
@@ -287,12 +285,8 @@ async fn upsert(
         invoice.number = Some(format!("{}-{:03}", Local::now().format("%m%Y"), seq.seq));
 
         if let Err(e) = invoice_seq_collection
-            .find_one_and_replace_with_session(
-                doc! {"_id": INVOICE_SEQ_ROW_ID},
-                &seq,
-                options.clone(),
-                &mut session,
-            )
+            .find_one_and_replace(doc! {"_id": INVOICE_SEQ_ROW_ID}, &seq)
+            .with_options(options.clone())
             .await
         {
             return handle_err(e);
@@ -366,12 +360,8 @@ async fn upsert(
     }
 
     if let Err(e) = invoice_collection
-        .find_one_and_replace_with_session(
-            doc! {"_id": &invoice.id},
-            &invoice,
-            options,
-            &mut session,
-        )
+        .find_one_and_replace(doc! {"_id": &invoice.id}, &invoice)
+        .with_options(options)
         .await
     {
         return handle_err(e);

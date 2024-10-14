@@ -87,7 +87,7 @@ impl FileUploadClient {
             .part("file", part);
         let resp = self
             .client
-            .post(&format!("{}/upload", self.url))
+            .post(format!("{}/upload", self.url))
             .multipart(form)
             .header(X_USER_INFO_HEADER, x_user_info_header)
             .send()
@@ -113,7 +113,7 @@ impl FileUploadClient {
     ) -> Result<FileUpload, Box<dyn Error>> {
         let resp = self
             .client
-            .get(&format!("{}/metadata?id={}", self.url, param.id))
+            .get(format!("{}/metadata?id={}", self.url, param.id))
             .header(X_USER_INFO_HEADER, x_user_info_header)
             .send()
             .await?;
@@ -138,7 +138,7 @@ impl FileUploadClient {
     ) -> Result<Vec<u8>, Box<dyn Error>> {
         let resp = self
             .client
-            .get(&format!("{}/download?id={}", self.url, param.id))
+            .get(format!("{}/download?id={}", self.url, param.id))
             .header(X_USER_INFO_HEADER, x_user_info_header)
             .send()
             .await?;

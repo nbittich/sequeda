@@ -78,6 +78,7 @@ impl Default for Invoice {
         }
     }
 }
+#[allow(unused)]
 impl Invoice {
     pub fn get_sub_total(&self) -> f64 {
         round(self.items.iter().map(|i| i.get_sub_total()).sum(), 2)

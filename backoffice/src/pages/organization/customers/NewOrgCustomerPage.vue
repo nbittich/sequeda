@@ -23,14 +23,14 @@ const uploadStore = useUploadStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
 const productStore = useProductStore();
-const products = await productStore.findAll();
-const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
   name: 'NewOrgCustomerPage',
   components: { OrgForm, PersonForm, RemarkForm },
   computed: {},
   async setup() {
+    const products = await productStore.findAll();
+    const currentOrg = await orgStore.fetchCurrent();
     const representedByPerson = ref({
       contactDetail: { address: {} as Address } as ContactDetail,
       bankAccount: {} as BankAccount,
@@ -58,6 +58,7 @@ export default defineComponent({
       customerType,
       products,
       started,
+      currentOrg,
       ended,
     };
   },
@@ -86,7 +87,7 @@ export default defineComponent({
       }
       let customer: OrgCustomer = {
         customerType: this.customerType,
-        orgId: currentOrg._id,
+        orgId: this.currentOrg._id,
         documentIds: [],
         started: this.started,
         recurringProductIds: this.recurringProducts,

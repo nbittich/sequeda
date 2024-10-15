@@ -6,7 +6,6 @@ import { computed, defineComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
 const uploadStore = useUploadStore();
 const orgStore = useOrgsStore();
-await orgStore.fetchCurrent();
 
 const imageKey = ref(0);
 const reload = () => {
@@ -17,6 +16,7 @@ export default defineComponent({
   components: { OrgForm },
   computed: {},
   async setup() {
+    await orgStore.fetchCurrent();
     const route = useRoute();
     const path = route.path;
     const tab = path.includes('members')
@@ -35,8 +35,7 @@ export default defineComponent({
       current,
       title: computed(
         () =>
-          `${current.value.name} ${
-            current.value.vatNumber ? '(' + current.value.vatNumber + ')' : ''
+          `${current.value.name} ${current.value.vatNumber ? '(' + current.value.vatNumber + ')' : ''
           }`,
       ),
     };
@@ -69,44 +68,18 @@ export default defineComponent({
 </script>
 
 <template>
-  <q-tabs
-    v-model="tab"
-    class="text-teal"
-    inline-label
-    outside-arrows
-    mobile-arrows
-  >
+  <q-tabs v-model="tab" class="text-teal" inline-label outside-arrows mobile-arrows>
     <q-route-tab to="/org" name="general" icon="store" label="General" />
-    <q-route-tab
-      to="/org/positions"
-      name="positions"
-      icon="school"
-      label="Positions"
-    />
-    <q-route-tab
-      to="/org/members"
-      name="members"
-      icon="badge"
-      label="Members"
-    />
+    <q-route-tab to="/org/positions" name="positions" icon="school" label="Positions" />
+    <q-route-tab to="/org/members" name="members" icon="badge" label="Members" />
 
-    <q-route-tab
-      to="/org/customers"
-      name="customers"
-      icon="recent_actors"
-      label="Customers"
-    />
+    <q-route-tab to="/org/customers" name="customers" icon="recent_actors" label="Customers" />
   </q-tabs>
   <q-separator />
   <q-tab-panels v-model="tab" v-if="current" animated>
     <q-tab-panel name="general">
       <q-card>
-        <OrgForm
-          :image-key="imageKey"
-          v-model:orgModel="current"
-          v-model:orgLogo="logoFile"
-          :title="title"
-        />
+        <OrgForm :image-key="imageKey" v-model:orgModel="current" v-model:orgLogo="logoFile" :title="title" />
 
         <q-separator />
 
@@ -117,20 +90,14 @@ export default defineComponent({
       </q-card>
     </q-tab-panel>
     <q-tab-panel name="positions">
-      <router-view
-        :key="($route.params.id as string) || $route.query.t?.toString()"
-      />
+      <router-view :key="($route.params.id as string) || $route.query.t?.toString()" />
     </q-tab-panel>
 
     <q-tab-panel name="customers">
-      <router-view
-        :key="($route.params.id as string) || $route.query.t?.toString()"
-      />
+      <router-view :key="($route.params.id as string) || $route.query.t?.toString()" />
     </q-tab-panel>
     <q-tab-panel name="members">
-      <router-view
-        :key="($route.params.id as string) || $route.query.t?.toString()"
-      />
+      <router-view :key="($route.params.id as string) || $route.query.t?.toString()" />
     </q-tab-panel>
   </q-tab-panels>
 </template>

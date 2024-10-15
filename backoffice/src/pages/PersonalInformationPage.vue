@@ -6,20 +6,21 @@ import PersonForm from 'src/components/person/person-form.vue';
 
 const personStore = usePersonStore();
 const uploadStore = useUploadStore();
-await personStore.fetchCurrent();
 
 const imageKey = ref(0);
 const reload = () => {
   imageKey.value += 1;
 };
-const current = ref(personStore.current);
-const profilePictureFile = ref(null as unknown as File);
-const signatureFile = ref(null as unknown as File);
+
 export default defineComponent({
   name: 'PersonalInformation',
   components: { PersonForm },
 
   async setup() {
+    await personStore.fetchCurrent();
+    const current = ref(personStore.current);
+    const profilePictureFile = ref(null as unknown as File);
+    const signatureFile = ref(null as unknown as File);
     return {
       tab: ref('general'), // in case adding more tabs, see PersonalOrgPage.vue for an example
       imageKey,

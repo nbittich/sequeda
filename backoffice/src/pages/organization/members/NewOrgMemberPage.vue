@@ -14,13 +14,13 @@ const memberStore = useMemberStore();
 const uploadStore = useUploadStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
-const currentOrg = await orgStore.fetchCurrent();
 
 export default defineComponent({
   name: 'NewOrgMemberPage',
   components: { OrgMemberForm },
   computed: {},
   async setup() {
+    const currentOrg = await orgStore.fetchCurrent();
     const person = ref({
       contactDetail: { address: {} as Address } as ContactDetail,
       bankAccount: {} as BankAccount,
@@ -39,6 +39,7 @@ export default defineComponent({
       managedByIds,
       positionId,
       started,
+      currentOrg,
       ended,
     };
   },
@@ -56,7 +57,7 @@ export default defineComponent({
         person = await personStore.update(person);
       }
       let member: OrgMember = {
-        orgId: currentOrg._id,
+        orgId: this.currentOrg._id,
         started: this.started,
         ended: this.ended,
         personId: person._id,

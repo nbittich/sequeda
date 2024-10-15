@@ -134,8 +134,8 @@ export default defineComponent({
       </div>
 
       <div class="col-lg-6 col-12">
-        <q-select dense class="q-mr-md-xs" outlined v-model="person.academicTitle" :options="academicTitles" label="Title"
-          option-label="label" option-value="value" emit-value map-options />
+        <q-select dense class="q-mr-md-xs" outlined v-model="person.academicTitle" :options="academicTitles"
+          label="Title" option-label="label" option-value="value" emit-value map-options />
       </div>
     </div>
   </q-card-section>

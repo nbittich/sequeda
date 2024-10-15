@@ -3,9 +3,6 @@ import useGeoStore from 'src/stores/geoentities';
 import { ContactDetail, PostalCode } from 'src/models/contact-detail';
 import { computed, defineComponent, ref } from 'vue';
 
-const geoStore = useGeoStore();
-await geoStore.fetchCountries();
-
 export default defineComponent({
   name: 'ContactDetailForm',
   props: {
@@ -19,11 +16,13 @@ export default defineComponent({
     },
     modelValue: {
       type: Object,
-      default: () => ({} as ContactDetail),
+      default: () => ({}) as ContactDetail,
     },
   },
   emits: ['update:modelValue', 'deleted'],
   async setup(props, context) {
+    const geoStore = useGeoStore();
+    await geoStore.fetchCountries();
     const contactDetail = computed({
       get: () => props.modelValue,
       set: (value) => context.emit('update:modelValue', value),
@@ -31,7 +30,7 @@ export default defineComponent({
     const countries = geoStore.countries;
     const countriesOptions = ref(geoStore.countries);
     const country = countries.find(
-      (c) => c.label === contactDetail.value.address.country
+      (c) => c.label === contactDetail.value.address.country,
     );
     const municipality = contactDetail.value.address.municipality;
     const selectedCountry = ref(country);
@@ -62,27 +61,27 @@ export default defineComponent({
 
       filterCountry(
         val: string,
-        update: (arg0: () => void) => void
+        update: (arg0: () => void) => void,
         // _abort: any
       ) {
         update(() => {
           const needle = val.toLocaleLowerCase();
           countriesOptions.value = countries.filter(
-            (v) => v.label?.toLocaleLowerCase()?.indexOf(needle) > -1
+            (v) => v.label?.toLocaleLowerCase()?.indexOf(needle) > -1,
           );
         });
       },
 
       async filterPostalCodes(
         val: string,
-        update: (arg0: () => void) => void
+        update: (arg0: () => void) => void,
         // _abort: any
       ) {
         let postCodes: PostalCode[] = [];
         if (selectedCountry.value) {
           postCodes = await geoStore.postCodesByQuery(
             selectedCountry.value,
-            val.trim()
+            val.trim(),
           );
         }
         update(() => {

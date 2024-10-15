@@ -17,13 +17,13 @@ const personStore = usePersonStore();
 const orgStore = useOrgsStore();
 const productStore = useProductStore();
 
-const products = await productStore.findAll();
-
 export default defineComponent({
   name: 'EditOrgCustomerPage',
   components: { OrgForm, PersonForm, RemarkForm },
   computed: {},
   async setup() {
+    const products = await productStore.findAll();
+
     const route = useRoute();
 
     const customerId = route.params.id as string;

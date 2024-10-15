@@ -3,11 +3,12 @@ import { defineComponent, ref } from 'vue';
 import usePersonStore from 'src/stores/person';
 import { useRoute } from 'vue-router';
 const personStore = usePersonStore();
-await personStore.fetchCurrent();
+
 export default defineComponent({
   name: 'AdminPage',
 
   async setup() {
+    await personStore.fetchCurrent();
     const current = ref(personStore.current);
     const route = useRoute();
     const path = route.path;

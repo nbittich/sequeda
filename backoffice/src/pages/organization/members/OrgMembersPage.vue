@@ -13,10 +13,6 @@ const memberStore = useMemberStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
 
-const currentOrg = await orgStore.fetchCurrent();
-
-const positions = await positionStore.fetchPositions();
-
 const columns: QTableColumn[] = [
   {
     name: 'name',
@@ -60,6 +56,9 @@ export default defineComponent({
   components: {},
   computed: {},
   async setup() {
+    const currentOrg = await orgStore.fetchCurrent();
+
+    const positions = await positionStore.fetchPositions();
     const pageRequest = ref({ limit: 10, page: 0 } as Pageable);
     const members = ref(null as unknown as Page<OrgMemberDetail>);
     const pagination = ref({ page: 1, rowsPerPage: 10 } as {

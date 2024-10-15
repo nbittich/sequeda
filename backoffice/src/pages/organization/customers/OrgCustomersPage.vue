@@ -16,7 +16,6 @@ const customerStore = useCustomerStore();
 const personStore = usePersonStore();
 const orgStore = useOrgsStore();
 
-const currentOrg = await orgStore.fetchCurrent();
 const columns: QTableColumn[] = [
   {
     name: 'name',
@@ -53,6 +52,7 @@ export default defineComponent({
   components: {},
   computed: {},
   async setup() {
+    const currentOrg = await orgStore.fetchCurrent();
     const pageRequest = ref({ limit: 10, page: 0 } as Pageable);
     const customers = ref(null as unknown as Page<OrgCustomerDetail>);
     const pagination = ref({ page: 1, rowsPerPage: 10 } as {
